@@ -1,0 +1,49 @@
+<?xml version="1.0"?>
+<smooks-resource-list
+        xmlns="https://www.smooks.org/xsd/smooks-2.0.xsd"
+        xmlns:edi="https://www.smooks.org/xsd/smooks/edi-2.0.xsd"
+        xmlns:camel="https://www.smooks.org/xsd/smooks/camel-1.5.xsd"
+        xmlns:ftl="https://www.smooks.org/xsd/smooks/freemarker-2.1.xsd"
+        xmlns:core="https://www.smooks.org/xsd/smooks/smooks-core-1.6.xsd">
+
+    <reader>
+        <features>
+            <setOff feature="http://www.smooks.org/sax/features/generate-java-event-stream" />
+        </features>
+    </reader>
+
+    <core:exports>
+        <core:result type="org.smooks.io.sink.StringSink"/>
+    </core:exports>
+
+    <core:smooks filterSourceOn="#document">
+        <core:action>
+            <core:inline>
+                <core:replace/>
+            </core:inline>
+        </core:action>
+        <core:config>
+            <smooks-resource-list>
+                <core:rewrite>
+                    <ftl:freemarker applyOnElement="#document">
+                        <ftl:template baseDir="../ftl">x12-ack.xml.ftl</ftl:template>
+                    </ftl:freemarker>
+                </core:rewrite>
+
+                <core:smooks filterSourceOn="#document">
+                    <core:action>
+                        <core:bindTo id="x12AckAsXml"/>
+                    </core:action>
+                </core:smooks>
+
+                <camel:route beanId="x12AckAsXml" routeOnElement="#document">
+                    <camel:to endpoint="direct:track"/>
+                </camel:route>
+
+                <edi:unparser schemaUri="../dfdl/edi.dfdl.xsd" segmentTerminator="~%NL;" dataElementSeparator="*"
+                              compositeDataElementSeparator="^" unparseOnNode="*"/>
+            </smooks-resource-list>
+        </core:config>
+    </core:smooks>
+
+</smooks-resource-list>

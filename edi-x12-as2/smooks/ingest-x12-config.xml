@@ -1,0 +1,70 @@
+<?xml version="1.0"?>
+<smooks-resource-list
+        xmlns="https://www.smooks.org/xsd/smooks-2.0.xsd"
+        xmlns:jb="https://www.smooks.org/xsd/smooks/javabean-1.6.xsd"
+        xmlns:edi="https://www.smooks.org/xsd/smooks/edi-2.0.xsd"
+        xmlns:camel="https://www.smooks.org/xsd/smooks/camel-1.5.xsd"
+        xmlns:ftl="https://www.smooks.org/xsd/smooks/freemarker-2.1.xsd"
+        xmlns:core="https://www.smooks.org/xsd/smooks/smooks-core-1.6.xsd">
+
+    <core:filterSettings terminateOnException="false"/>
+
+    <!-- Turn EDI into an event stream   -->
+    <edi:parser schemaUri="../dfdl/edi.dfdl.xsd" segmentTerminator="~%WSP*; %NL;%WSP*;" dataElementSeparator="*"
+                compositeDataElementSeparator="^"/>
+
+    <!--  Apply pipeline on each 'segment' event and keep its child 'dataElement' events in memory since maxNodeDepth is
+          set to 0 (i.e., max possible depth) -->
+    <core:smooks filterSourceOn="segment" maxNodeDepth="0">
+        <core:config>
+            <smooks-resource-list>
+                <!-- Rewrite the root event (i.e., 'segment') such that it has an attribute called 'segmentId' holding
+                     the segment ID. This allows us to write selectors based on the segment ID rather than on segment position
+                     in the stream -->
+                <core:rewrite>
+                    <ftl:freemarker applyOnElement="#document">
+                        <ftl:template baseDir="../ftl">segment-id-attr.xml.ftl</ftl:template>
+                    </ftl:freemarker>
+                </core:rewrite>
+
+                <!-- bind the "segment" event and its child "dataElement" events to a HashMap named 'isa' when the segmentId attribute is equal to 'ISA' -->
+                <jb:bean beanId="isa" class="java.util.HashMap" createOnElement="segment[@segmentId = 'ISA']" retain="true">
+                    <jb:value property="interchangeSenderIdQualifier" data="#/dataElement[5]"/>
+                    <jb:value property="interchangeSenderId" data="#/dataElement[6]"/>
+                    <jb:value property="interchangeReceiverIdQualifier" data="#/dataElement[7]"/>
+                    <jb:value property="interchangeReceiverId" data="#/dataElement[8]"/>
+                    <jb:value property="interchangeControlNumber" data="#/dataElement[13]"/>
+                </jb:bean>
+
+                <!-- bind the "segment" event and its child "dataElement" events to a HashMap named 'gs' when the segmentId attribute is equal to 'GS' -->
+                <jb:bean beanId="gs" class="java.util.HashMap" createOnElement="segment[@segmentId = 'GS']" retain="true">
+                    <jb:value property="functionalIdCode" data="#/dataElement[1]" />
+                    <jb:value property="applicationSenderCode" data="#/dataElement[2]" />
+                    <jb:value property="applicationReceiverCode" data="#/dataElement[3]" />
+                    <jb:value property="groupControlNumber" data="#/dataElement[6]" />
+                </jb:bean>
+                <!-- route the bean 'gs' to the 'direct:tpm' Camel endpoint named 'gs' when the segment having the
+                     segmentId equal to 'GS' is visited-->
+                <camel:route beanId="gs" routeOnElement="segment[@segmentId = 'GS']">
+                    <camel:to endpoint="direct:tpm"/>
+                </camel:route>
+
+                <jb:bean beanId="purchaseOrder" class="java.util.HashMap" createOnElement="segment[@segmentId = 'PO1']" retain="true">
+                    <jb:value property="quantityOrdered" data="#/dataElement[2]" />
+                    <jb:value property="totalAmount" data="segment[@segmentId = 'AMT']/dataElement[2]" />
+                    <jb:expression property="status" initVal="'open'"/>
+                    <jb:expression property="priority" initVal="'standard'"/>
+                </jb:bean>
+
+                <camel:route beanId="purchaseOrder" routeOnElement="segment[@segmentId = 'AMT']">
+                    <camel:to endpoint="direct:erp"/>
+                </camel:route>
+
+                <jb:bean beanId="st" class="java.util.HashMap" createOnElement="segment[@segmentId = 'ST']" retain="true">
+                    <jb:value property="transactionSetIdentifier" data="#/dataElement[1]" />
+                </jb:bean>
+            </smooks-resource-list>
+        </core:config>
+    </core:smooks>
+
+</smooks-resource-list>

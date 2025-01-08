@@ -84,6 +84,10 @@ jobs:
           pushd aws/aws-sqs/test
           jbang citrus@citrusframework/citrus run http-to-aws-sqs.camel.it.yaml
           popd
+          
+          pushd edi-x12-as2/test
+          jbang citrus@citrusframework/citrus run edi-x12-as2.camel.it.yaml
+          popd
       - uses: actions/upload-artifact@50769540e7f4bd5e21e526ee35c689e35e0d6874 # v4.4.0
         if: always()
         with:
