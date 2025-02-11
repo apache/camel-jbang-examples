@@ -1,6 +1,6 @@
 = EDI X12 over AS2
 
-This example is contributed from the https://www.smooks.org/[Smooks] community. As depicted below, it illustrates a common supply chain transaction flow where (1) a customer transmits an EDI purchase order, requesting goods or services, to a supplier and (2) the supplier acknowledges the transaction. Along the way, the supplier tracks the customer purchase order while also exchanging bits and pieces of the order with its internal systems.
+This example is contributed from the https://www.smooks.org/[Smooks] community. As depicted below, it illustrates a common supply chain transaction flow where (1) a customer transmits an EDI purchase order to a supplier requesting goods or services followed by (2) the supplier acknowledging the transaction. Between receiving the purchase order and acknowledging it, the supplier exchanges bits and pieces of the order with its internal systems.
 
 image::edi-x12-as2-camel-smooks.png[EDI X12 over AS2 with Camel & Smooks]
 
