@@ -15,6 +15,7 @@ actions:
           file: "compose.yaml"
   - camel:
       jbang:
+        camelVersion: 4.10.0
         run:
           resources:
             - "../camel/InvalidPartnerException.java"
