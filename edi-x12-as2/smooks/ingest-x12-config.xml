@@ -7,27 +7,43 @@
         xmlns:ftl="https://www.smooks.org/xsd/smooks/freemarker-2.1.xsd"
         xmlns:core="https://www.smooks.org/xsd/smooks/smooks-core-1.6.xsd">
 
+    <!-- Configures Smooks to tolerate run-time exceptions which allows the EDI to be tracked even when
+         errors occur -->
     <core:filterSettings terminateOnException="false"/>
 
-    <!-- Turn EDI into an event stream   -->
-    <edi:parser schemaUri="../dfdl/edi.dfdl.xsd" segmentTerminator="~%WSP*; %NL;%WSP*;" dataElementSeparator="*"
-                compositeDataElementSeparator="^"/>
+    <!-- Emits an event stream from the EDI input. The 'segmentTerminator' and 'dataElementSeparator' attributes
+         configure the expected EDI delimiters ('%WSP*;' means zero or more whitespaces while '%NL;' means a newline). The default
+         schema driving the parsing behaviour is a generic EDI schema written in DFDL but can be overridden with the 'schemaUri'
+         config attribute -->
+    <edi:parser segmentTerminator="~%WSP*; %NL;%WSP*;" dataElementSeparator="*"/>
 
-    <!--  Apply pipeline on each 'segment' event and keep its child 'dataElement' events in memory since maxNodeDepth is
-          set to 0 (i.e., max possible depth) -->
+    <!-- Runs a pipeline (essentially a nested Smooks execution) on each 'segment' event in order to rewrite the
+         segments events, making it easier to target the segments we are interested in. The child 'dataElement' events
+         for the segment being processed are kept in-memory since the 'maxNodeDepth' attribute is set to 0 (i.e., max
+         possible depth) -->
     <core:smooks filterSourceOn="segment" maxNodeDepth="0">
         <core:config>
             <smooks-resource-list>
-                <!-- Rewrite the root event (i.e., 'segment') such that it has an attribute called 'segmentId' holding
-                     the segment ID. This allows us to write selectors based on the segment ID rather than on segment position
-                     in the stream -->
+                <!-- Rewrites the pipeline root event (i.e., the first event which is 'segment') with a custom FreeMarker template such
+                     that it has an attribute called 'segmentId' holding the segment ID. For example:
+
+                     <segment>...</segment>
+
+                     becomes
+
+                     <segment segmentId="ISA">...</segment>
+
+                     Side note: the EDI parser's underlying DFDL processor doesn't support attributes but the
+                     'core:rewrite' construct allows us to add attributes which permits us to target segments based on
+                     the segment ID rather than on the segment position in the stream -->
                 <core:rewrite>
                     <ftl:freemarker applyOnElement="#document">
                         <ftl:template baseDir="../ftl">segment-id-attr.xml.ftl</ftl:template>
                     </ftl:freemarker>
                 </core:rewrite>
 
-                <!-- bind the "segment" event and its child "dataElement" events to a HashMap named 'isa' when the segmentId attribute is equal to 'ISA' -->
+                <!-- Materialises the FreeMarker template when it encounters the pipeline root event. The template can be
+                     viewed at: https://github.com/cjmamo/camel-jbang-examples/blob/edi-x12-as2/edi-x12-as2/ftl/segment-id-attr.xml.ftl -->
                 <jb:bean beanId="isa" class="java.util.HashMap" createOnElement="segment[@segmentId = 'ISA']" retain="true">
                     <jb:value property="interchangeSenderIdQualifier" data="#/dataElement[5]"/>
                     <jb:value property="interchangeSenderId" data="#/dataElement[6]"/>
@@ -36,19 +52,20 @@
                     <jb:value property="interchangeControlNumber" data="#/dataElement[13]"/>
                 </jb:bean>
 
-                <!-- bind the "segment" event and its child "dataElement" events to a HashMap named 'gs' when the segmentId attribute is equal to 'GS' -->
+                <!-- Binds the segment event having the segmentId attribute 'GS' to a HashMap named 'gs' -->
                 <jb:bean beanId="gs" class="java.util.HashMap" createOnElement="segment[@segmentId = 'GS']" retain="true">
                     <jb:value property="functionalIdCode" data="#/dataElement[1]" />
                     <jb:value property="applicationSenderCode" data="#/dataElement[2]" />
                     <jb:value property="applicationReceiverCode" data="#/dataElement[3]" />
                     <jb:value property="groupControlNumber" data="#/dataElement[6]" />
                 </jb:bean>
-                <!-- route the bean 'gs' to the 'direct:tpm' Camel endpoint named 'gs' when the segment having the
-                     segmentId equal to 'GS' is visited-->
+                <!-- Sends the bean 'gs' to the 'direct:tpm' Camel endpoint when the segment attribute is 'GS' -->
                 <camel:route beanId="gs" routeOnElement="segment[@segmentId = 'GS']">
                     <camel:to endpoint="direct:tpm"/>
                 </camel:route>
 
+                <!-- Binds the segment event having the segmentId attribute 'PO1' to a HashMap named
+                     'purchaseOrder' -->
                 <jb:bean beanId="purchaseOrder" class="java.util.HashMap" createOnElement="segment[@segmentId = 'PO1']" retain="true">
                     <jb:value property="quantityOrdered" data="#/dataElement[2]" />
                     <jb:value property="totalAmount" data="segment[@segmentId = 'AMT']/dataElement[2]" />
@@ -56,10 +73,13 @@
                     <jb:expression property="priority" initVal="'standard'"/>
                 </jb:bean>
 
+                <!-- Sends the bean 'purchaseOrder' to the 'direct:erp' Camel endpoint when the segment attribute is
+                     equal to 'AMT' -->
                 <camel:route beanId="purchaseOrder" routeOnElement="segment[@segmentId = 'AMT']">
                     <camel:to endpoint="direct:erp"/>
                 </camel:route>
 
+                <!-- Binds the segment event having the segmentId attribute 'ST' to a HashMap named 'st' -->
                 <jb:bean beanId="st" class="java.util.HashMap" createOnElement="segment[@segmentId = 'ST']" retain="true">
                     <jb:value property="transactionSetIdentifier" data="#/dataElement[1]" />
                 </jb:bean>

@@ -1,10 +1,7 @@
-# camel-k: dependency=mvn:org.smooks:smooks-core:2.2.0
-# camel-k: dependency=mvn:org.smooks.cartridges:smooks-javabean-cartridge:2.0.2
 # camel-k: dependency=mvn:org.apache.activemq:artemis-jakarta-server:2.38.0
-# camel-k: dependency=mvn:org.apache.camel:camel-http:4.9.0
-# camel-k: dependency=mvn:org.smooks.cartridges:smooks-camel-cartridge:4.0.0
-# camel-k: dependency=mvn:org.smooks.cartridges.edi:smooks-edi-cartridge:2.0.1
-# camel-k: dependency=mvn:org.smooks.cartridges:smooks-templating-cartridge:2.1.0
+# camel-k: dependency=mvn:org.apache.camel:camel-http:4.10.0
+# camel-k: dependency=mvn:org.smooks.cartridges.edi:smooks-edi-cartridge:2.1.0
+# camel-k: dependency=mvn:org.smooks.cartridges:smooks-templating-cartridge:2.1.2
 
 - routeConfiguration:
     id: as2Error
@@ -18,7 +15,8 @@
             - script:
                 groovy: |
                   httpContext = exchangeProperties['CamelAs2.interchange']
-                  httpContext.setAttribute(org.apache.camel.component.as2.api.AS2Header.DISPOSITION_TYPE, org.apache.camel.component.as2.api.entity.AS2DispositionType.FAILED)
+                  httpContext.setAttribute(org.apache.camel.component.as2.api.AS2Header.DISPOSITION_TYPE, 
+                                           org.apache.camel.component.as2.api.entity.AS2DispositionType.FAILED)
 
 - route:
     id: receivePurchaseOrder
@@ -47,9 +45,7 @@
       steps:
         - setBody:
             groovy: |
-              javaSource = new org.smooks.io.source.JavaSource([*:headers.CamelSmooksExecutionContext.beanContext.beanMap])
-              javaSource.eventStreamRequired = false
-              javaSource
+              new org.smooks.io.source.JavaSource([*:headers.CamelSmooksExecutionContext.beanContext.beanMap])
         - choice:
             when:
               - simple: ${headers.CamelSmooksExecutionContext.getTerminationError} == null

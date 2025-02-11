@@ -20,7 +20,7 @@ include::../install.adoc[see installation]
 cd camel && camel run *
 ----
 
-2. From another terminal window, send an X12 850 purchase order to the AS2 Camel endpoint, or better still, dispatch the message from Camel JBang as shown next:
+2. From another terminal window, send an X12 850 purchase order to the AS2 Camel endpoint, or better yet, dispatch the message from Camel JBang as shown next:
 +
 [source,shell]
 ----
