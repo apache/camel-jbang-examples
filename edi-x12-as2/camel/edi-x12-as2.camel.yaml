@@ -1,8 +1,3 @@
-# camel-k: dependency=mvn:org.apache.activemq:artemis-jakarta-server:2.38.0
-# camel-k: dependency=mvn:org.apache.camel:camel-http:4.10.0
-# camel-k: dependency=mvn:org.smooks.cartridges.edi:smooks-edi-cartridge:2.1.0
-# camel-k: dependency=mvn:org.smooks.cartridges:smooks-templating-cartridge:2.1.2
-
 - routeConfiguration:
     id: as2Error
     onException:

@@ -18,6 +18,7 @@ actions:
         camelVersion: 4.10.0
         run:
           resources:
+            - "../camel/App.java"
             - "../camel/InvalidPartnerException.java"
             - "../camel/application.properties"
             - "../camel/fake.camel.yaml"
