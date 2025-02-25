@@ -13,34 +13,34 @@ include::../install.adoc[see installation]
 == How to run
 
 1. Run the Camel integration from the terminal with:
-+
-[source,shell].camel-jbang/
-.citrus-jbang/
-----
-cd camel && camel run *
-----
+
+    [source,shell].camel-jbang/
+    .citrus-jbang/
+    ----
+    cd camel && camel run *
+    ----
 
 2. From another terminal window, send an X12 850 purchase order to the AS2 Camel endpoint, or better yet, dispatch the message from Camel JBang as shown next:
-+
-[source,shell]
-----
-camel cmd send --body="$(cat test/payload.edi)" --endpoint="as2:client/send?inBody=ediMessage&targetHostName=localhost&targetPortNumber=8081&ediMessageContentType=application/edi-x12;charset=US-ASCII&as2From=acme&as2To=mycorp&from=alice@example.org&requestUri=/mycorp/orders&subject=Purchase Order&as2MessageStructure=PLAIN"
-----
 
-The above command will send an AS2 message where the body is read from the local file named `payload.edi`. The message is sent to the running Camel integration that will process the AS2 message. The Camel integration will then consume the payload and print to the console:
+    [source,shell]
+    ----
+    camel cmd send --body="$(cat test/payload.edi)" --endpoint="as2:client/send?inBody=ediMessage&targetHostName=localhost&targetPortNumber=8081&ediMessageContentType=application/edi-x12;charset=US-ASCII&as2From=acme&as2To=mycorp&from=alice@example.org&requestUri=/mycorp/orders&subject=Purchase Order&as2MessageStructure=PLAIN"
+    ----
 
-[source,text]
-----
-Received functional ack:
-ISA*00*          *00*          *ZZ*MYCORP         *ZZ*ACME           *250108*0821*U*00204*000000264*1*T*>~
-GS*FA*MYCORP*ACME*20250108*082104*000000001*X*004010~
-ST*997*0001~
-AK1*850*000000001~
-AK9*A~
-SE*4*0001~
-GE*1*000000001~
-IEA*1*000000264~
-----
+    The above command will send an AS2 message where the body is read from the local file named `payload.edi`. The message is sent to the running Camel integration that will process the AS2 message. The Camel integration will then consume the payload and print to the console:
+
+    [source,text]
+    ----
+    Received functional ack:
+    ISA*00*          *00*          *ZZ*MYCORP         *ZZ*ACME           *250108*0821*U*00204*000000264*1*T*>~
+    GS*FA*MYCORP*ACME*20250108*082104*000000001*X*004010~
+    ST*997*0001~
+    AK1*850*000000001~
+    AK9*A~
+    SE*4*0001~
+    GE*1*000000001~
+    IEA*1*000000264~
+    ----
 
 == Integration testing
 
