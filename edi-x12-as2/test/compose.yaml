@@ -1,6 +1,6 @@
 services:
   artemis:
-    image: apache/activemq-artemis:2.38.0
+    image: apache/activemq-artemis:2.40.0
     ports:
       - "8161:8161"
       - "61616:61616"
