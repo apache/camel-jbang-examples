@@ -24,7 +24,7 @@ include::../install.adoc[see installation]
 
     [source,shell]
     ----
-    camel cmd send --body="$(cat test/payload.edi)" --endpoint="as2:client/send?inBody=ediMessage&targetHostName=localhost&targetPortNumber=8081&ediMessageContentType=application/edi-x12;charset=US-ASCII&as2From=acme&as2To=mycorp&from=alice@example.org&requestUri=/mycorp/orders&subject=Purchase Order&as2MessageStructure=PLAIN"
+    camel cmd send --body="$(cat test/payload.edi)" --endpoint="as2:client/send?inBody=ediMessage&targetHostName=localhost&targetPortNumber=8081&ediMessageContentType=application/edi-x12&ediMessageCharset=US-ASCII&as2From=acme&as2To=mycorp&from=alice@example.org&requestUri=/mycorp/orders&subject=Purchase Order&as2MessageStructure=PLAIN"
     ----
 
     The above command will send an AS2 message where the body is read from the local file named `payload.edi`. The message is sent to the running Camel integration that will process the AS2 message. The Camel integration will then consume the payload and print to the console:
