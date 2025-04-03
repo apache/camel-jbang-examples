@@ -61,7 +61,7 @@ The REST service in Camel is configured to load example response data from a dir
 
 == Integration testing
 
-The example provides an automated integration test (`pestore.camel.it.yaml`) that you can run with the https://citrusframework.org/[Citrus] test framework.
+The example provides an automated integration test (`petstore.camel.it.yaml`) that you can run with the https://citrusframework.org/[Citrus] test framework.
 Please make sure to install Citrus as a JBang application (see link:../../install-citrus.adoc[Citrus installation guide]).
 
 You can run the test with:
@@ -69,7 +69,7 @@ You can run the test with:
 [source,shell]
 ----
 cd test
-citrus run pestore.camel.it.yaml
+citrus run petstore.camel.it.yaml
 ----
 
 The test prepares the complete infrastructure and starts the Camel route automatically via JBang.
