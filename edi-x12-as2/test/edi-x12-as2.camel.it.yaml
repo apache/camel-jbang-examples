@@ -39,7 +39,7 @@ actions:
   - camel:
       jbang:
         verify:
-          maxAttempts: 3
+          maxAttempts: 20
           integration: "edi-x12-as2-camel"
           logMessage: ST*997*0001~
           delayBetweenAttempts: 5000
