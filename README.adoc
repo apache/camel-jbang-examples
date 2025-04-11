@@ -1,5 +1,7 @@
 = Apache Camel JBang Examples
 
+dummy change to test behavior on CI
+
 http://camel.apache.org/[Apache Camel] is a powerful open source integration framework based on known
 Enterprise Integration Patterns with powerful bean integration.
 
