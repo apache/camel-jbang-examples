@@ -1,0 +1,4 @@
+- from:
+    uri: jms:numbers
+    steps:
+      - log: ${body}

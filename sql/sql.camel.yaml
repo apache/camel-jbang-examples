@@ -1,0 +1,20 @@
+- route:
+    from:
+      uri: timer:create?repeatCount=1&delay=500
+      steps:
+        - to:
+            uri: sql:CREATE TABLE IF NOT EXISTS users(id integer PRIMARY KEY, name varchar(20), byear integer);
+- route:
+    from:
+      uri: timer:insert?repeatCount=1&delay=1000
+      steps:
+        - to:
+            uri: sql:INSERT INTO users(id, name, byear) VALUES(1, 'Camel', 2025) ON CONFLICT DO NOTHING;
+- route:
+    from:
+      uri: timer:select?repeatCount=1&delay=2000
+      steps:
+        - to:
+            uri: sql:SELECT * FROM users
+        - log:
+            message: ${body}

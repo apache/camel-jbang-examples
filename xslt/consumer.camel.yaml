@@ -1,0 +1,13 @@
+- route:
+    from:
+      uri: file://input
+      parameters:
+        fileName: account.xml
+        noop: true
+      steps:
+        - to:
+            uri: xslt
+            parameters:
+              resourceUri: stylesheet.xsl
+        - log:
+            message: Transformed data:\n ${prettyBody}
