@@ -12,7 +12,23 @@ include::../install.adoc[see installation]
 
 You need both an ActiveMQ Artemis broker, and FTP server up and running.
 
-You can run both via Docker Compose (or Podman)
+=== Using Camel Infra
+
+You can run both services using Camel Infra
+
+[source,shell]
+----
+camel infra run artemis
+----
+
+[source,shell]
+----
+camel infra run ftp
+----
+
+=== Using Docker Compose
+
+You can run both services via Docker Compose (or Podman)
 
 [source,shell]
 ----
