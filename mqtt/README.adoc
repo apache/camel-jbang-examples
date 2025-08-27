@@ -9,9 +9,20 @@ image::mqtt-kaoto.png[Apache Camel Kaoto online designer]
 
 include::../install.adoc[see installation]
 
-== How to run
+== Running MQTT Broker
 
-You need to run a MQTT broker such as via Docker, or download and run Apache ActiveMQ Artemis.
+You need to run a MQTT broker such as via Docker, Camel Infra, or download and run Apache ActiveMQ Artemis.
+
+=== Using Camel Infra
+
+The MQTT broker can be run using Camel Infra command:
+
+[source,shell]
+----
+camel infra run mqtt
+----
+
+=== Using Docker compose
 
 To use docker (docker compose), you can run the following command:
 
@@ -26,6 +37,8 @@ Or use
 ----
 docker compose up --detach
 ----
+
+== How to run
 
 Then you can run the Camel integration using:
 

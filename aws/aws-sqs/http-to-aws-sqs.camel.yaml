@@ -28,3 +28,4 @@
             region: "{{aws.region}}"
             overrideEndpoint: "{{aws.overrideEndpoint:false}}"
             uriEndpointOverride: "{{aws.uriEndpointOverride:none}}"
+            autoCreateQueue: "{{aws.autoCreateQueue:false}}"

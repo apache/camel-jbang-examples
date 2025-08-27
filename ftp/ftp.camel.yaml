@@ -1,12 +1,14 @@
-- from:
-    uri: "jms:cheese"
-    steps:
-      - log: "Incoming: ${body}"
-      - to:
-          uri: ftp
-          parameters:
-            host: localhost
-            port: 21
-            username: myuser
-            password: mypassword
-            passiveMode: true
+- route:
+    id: route-1133
+    from:
+      uri: jms:cheese
+      steps:
+        - log: "Incoming: ${body}"
+        - to:
+            uri: ftp
+            parameters:
+              host: localhost
+              passiveMode: true
+              password: admin
+              port: 2221
+              username: admin
