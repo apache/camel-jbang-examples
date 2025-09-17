@@ -1,0 +1,8 @@
+- route:
+    from:
+      uri: timer:start
+      steps:
+        - setBody:
+            simple: ${random(100)}
+        - to:
+            uri: jms:numbers

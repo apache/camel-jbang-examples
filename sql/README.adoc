@@ -1,0 +1,77 @@
+== SQL
+
+This example shows how to use a SQL database with Camel.
+
+The example comes with a `docker compose` file for running a local Postgres database.
+There is also a `application.properties` configuration file that setup
+a JDBC `DataSource` for connecting to the database.
+
+=== Install JBang
+
+First install JBang according to https://www.jbang.dev
+
+When JBang is installed then you should be able to run from a shell:
+
+[source,sh]
+----
+$ jbang --version
+----
+
+This will output the version of JBang.
+
+To run this example you can either install Camel on JBang via:
+
+[source,sh]
+----
+$ jbang app install camel@apache/camel
+----
+
+Which allows to run Camel JBang with `camel` as shown below.
+
+=== How to run
+
+You can run PostgreSQL using
+
+[source,sh]
+----
+$ camel infra run postgres
+----
+
+Alternatively, you can run it with Docker Compose:
+
+[source,sh]
+----
+$ docker compose up
+----
+
+or manually with just Docker
+
+[source,sh]
+----
+$ docker run \
+--env POSTGRES_DB=test \
+--env POSTGRES_USER=postgres \
+--env POSTGRES_PASSWORD=postgres \
+--publish 5432:5432 \
+postgres
+----
+
+After Docker starts and pulls down the Postgres image, you can run this example using:
+
+[source,sh]
+----
+$ camel run *
+----
+
+This runs several routes. The first one sets up a new table called _users_, the second one fills
+it with data and the third one runs a query on that table and logs the results.
+
+=== Help and contributions
+
+If you hit any problem using Camel or have some feedback, then please
+https://camel.apache.org/community/support/[let us know].
+
+We also love contributors, so
+https://camel.apache.org/community/contributing/[get involved] :-)
+
+The Camel riders!

@@ -1,0 +1,12 @@
+- route:
+    id: greeting-route
+    from:
+      uri: timer:start
+      parameters:
+        period: 1000
+      steps:
+        - setBody:
+            simple: I'm ${routeId}
+        - bean:
+            ref: greeter
+        - log: ${body}
