@@ -1,0 +1,371 @@
+= Keycloak Security REST API
+
+This example demonstrates how to secure REST APIs using Apache Camel with Keycloak authentication and authorization.
+It shows how to use the `platform-http` component to create REST endpoints protected by Keycloak security policies.
+
+== Features
+
+* Public endpoint accessible without authentication
+* Protected endpoint requiring admin role
+* Integration with Keycloak using OAuth2/OpenID Connect
+* JWT token validation
+* Role-based access control (RBAC)
+
+== Prerequisites
+
+* JBang installed (https://www.jbang.dev)
+* Docker installed for running Keycloak
+* Basic understanding of OAuth2/OpenID Connect
+
+== Dependencies
+
+This example requires the `camel-keycloak` component which is automatically loaded via the dependency declaration in the `RestApi.java` file:
+
+[source,java]
+----
+// camel-k: dependency=camel:keycloak
+----
+
+This ensures that the Keycloak security policy classes are available at runtime.
+
+== Install JBang
+
+First install JBang according to https://www.jbang.dev
+
+When JBang is installed then you should be able to run from a shell:
+
+[source,sh]
+----
+$ jbang --version
+----
+
+This will output the version of JBang.
+
+To run this example you can either install Camel on JBang via:
+
+[source,sh]
+----
+$ jbang app install camel@apache/camel
+----
+
+Which allows to run Camel JBang with `camel` as shown below.
+
+== Running Keycloak
+
+Run Keycloak manually with Docker:
+
+[source,sh]
+----
+$ docker run -d \
+  --name keycloak \
+  -p 8180:8080 \
+  -e KEYCLOAK_ADMIN=admin \
+  -e KEYCLOAK_ADMIN_PASSWORD=admin \
+  quay.io/keycloak/keycloak:latest \
+  start-dev
+----
+
+Wait a few seconds for Keycloak to fully start before proceeding to configuration.
+
+== Keycloak Configuration
+
+After Keycloak starts, you need to configure it:
+
+=== 1. Access Keycloak Admin Console
+
+Open your browser and navigate to: http://localhost:8180
+
+Login with:
+* Username: `admin`
+* Password: `admin`
+
+=== 2. Create a Realm
+
+1. Click on the dropdown in the top left (says "master")
+2. Click "Create Realm"
+3. Enter realm name: `camel`
+4. Click "Create"
+
+=== 3. Create a Client
+
+1. In the left menu, click "Clients"
+2. Click "Create client"
+3. Enter Client ID: `camel-client`
+4. Click "Next"
+5. Enable "Client authentication"
+6. Enable "Service accounts roles"
+7. Click "Next"
+8. Add Valid Redirect URIs: `http://localhost:8080/*`
+9. Click "Save"
+10. Go to the "Credentials" tab
+11. Copy the "Client Secret" value
+12. Update the `application.properties` file with this secret:
++
+[source,properties]
+----
+keycloak.client.secret=<your-client-secret>
+----
+
+=== 4. Create an Admin Role
+
+1. In the left menu, click "Realm roles"
+2. Click "Create role"
+3. Enter role name: `admin`
+4. Click "Save"
+
+=== 5. Create Users
+
+==== Create Regular User (without admin role)
+
+1. In the left menu, click "Users"
+2. Click "Add user"
+3. Enter username: `testuser`
+4. Enter email: `testuser@example.com`
+5. Enter first name: `Test`
+6. Enter last name: `User`
+7. Click "Create"
+8. Go to "Credentials" tab
+9. Click "Set password"
+10. Enter password: `password`
+11. Disable "Temporary" toggle
+12. Click "Save"
+
+==== Create Admin User (with admin role)
+
+1. In the left menu, click "Users"
+2. Click "Add user"
+3. Enter username: `admin-user`
+4. Enter email: `admin@example.com`
+5. Enter first name: `Admin`
+6. Enter last name: `User`
+7. Click "Create"
+8. Go to "Credentials" tab
+9. Click "Set password"
+10. Enter password: `password`
+11. Disable "Temporary" toggle
+12. Click "Save"
+13. Go to "Role mapping" tab
+14. Click "Assign role"
+15. Select the `admin` role
+16. Click "Assign"
+
+== Running the Example
+
+After Keycloak is configured, start the Camel application:
+
+[source,sh]
+----
+$ camel run *
+----
+
+The application will start on port 8080 with the following endpoints:
+
+* `http://localhost:8080/api/public` - Public endpoint (no auth required)
+* `http://localhost:8080/api/protected` - Protected endpoint (admin role required)
+
+== Testing the Endpoints
+
+=== Test Public Endpoint (No Authentication)
+
+[source,sh]
+----
+$ curl http://localhost:8080/api/public
+----
+
+Expected response:
+[source,json]
+----
+{
+  "message": "This is a public endpoint, no authentication required",
+  "timestamp": "2024-10-06T10:30:00"
+}
+----
+
+=== Test Protected Endpoint with Regular User (Should Fail)
+
+First, try to access the protected endpoint with a regular user who doesn't have the admin role:
+
+[source,sh]
+----
+$ export ACCESS_TOKEN=$(curl -X POST http://localhost:8180/realms/camel/protocol/openid-connect/token \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "username=testuser" \
+  -d "password=password" \
+  -d "grant_type=password" \
+  -d "client_id=camel-client" \
+  -d "client_secret=<your-client-secret>" \
+  | jq -r '.access_token')
+
+$ curl -H "Authorization: Bearer $ACCESS_TOKEN" \
+  http://localhost:8080/api/protected
+----
+
+This will return a **403 Forbidden** error because `testuser` does not have the `admin` role.
+
+=== Test Protected Endpoint with Admin User (Should Succeed)
+
+Now, obtain a token for the admin user and access the protected endpoint:
+
+[source,sh]
+----
+$ export ADMIN_TOKEN=$(curl -X POST http://localhost:8180/realms/camel/protocol/openid-connect/token \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "username=admin-user" \
+  -d "password=password" \
+  -d "grant_type=password" \
+  -d "client_id=camel-client" \
+  -d "client_secret=<your-client-secret>" \
+  | jq -r '.access_token')
+
+$ curl -H "Authorization: Bearer $ADMIN_TOKEN" \
+  http://localhost:8080/api/protected
+----
+
+Expected response:
+[source,json]
+----
+{
+  "message": "This is a protected endpoint, admin role required",
+  "timestamp": "2024-10-06T10:30:00"
+}
+----
+
+Replace `<your-client-secret>` with the actual client secret from Keycloak.
+
+== How It Works
+
+=== Security Policies
+
+The example uses a Keycloak security policy to validate JWT tokens and enforce role-based access control.
+
+The policy is created in the `configure()` method of the `RestApi.java` file and requires the `admin` role:
+
+[source,java]
+----
+KeycloakSecurityPolicy policy = new KeycloakSecurityPolicy();
+policy.setServerUrl(keycloakServerUrl);
+policy.setRealm(realm);
+policy.setClientId(clientId);
+policy.setClientSecret(clientSecret);
+policy.setRequiredRoles(Arrays.asList("admin"));
+----
+
+The policy references configuration properties from `application.properties` using `@PropertyInject`:
+
+[source,java]
+----
+@PropertyInject("keycloak.server.url")
+private String keycloakServerUrl;
+
+@PropertyInject("keycloak.realm")
+private String realm;
+
+@PropertyInject("keycloak.client.id")
+private String clientId;
+
+@PropertyInject("keycloak.client.secret")
+private String clientSecret;
+----
+
+Configuration properties in `application.properties`:
+
+[source,properties]
+----
+keycloak.server.url=http://localhost:8180
+keycloak.realm=camel
+keycloak.client.id=camel-client
+keycloak.client.secret=<your-client-secret>
+----
+
+=== Route Protection
+
+Routes are protected by adding the policy to the route. The policy will validate the JWT token and check that the user has the required `admin` role:
+
+[source,java]
+----
+from("platform-http:/api/protected")
+    .routeId("protected-api")
+    .policy(policy)
+    .setBody()
+        .simple("{\n" +
+            "  \"message\": \"This is a protected endpoint, admin role required\",\n" +
+            "  \"timestamp\": \"${date:now:yyyy-MM-dd'T'HH:mm:ss}\"\n" +
+            "}")
+    .setHeader("Content-Type", constant("application/json"));
+----
+
+If a user without the `admin` role tries to access this endpoint, they will receive a 403 Forbidden response.
+
+== Developer Console
+
+You can enable the developer console via `--console` flag:
+
+[source,sh]
+----
+$ camel run * --console
+----
+
+Then you can browse: http://localhost:8080/q/dev to introspect the running Camel application.
+
+== Stopping
+
+To stop the Camel application, press `Ctrl+C`.
+
+To stop and remove the Keycloak container:
+
+[source,sh]
+----
+$ docker stop keycloak
+$ docker rm keycloak
+----
+
+== Troubleshooting
+
+=== 401 Unauthorized
+
+* Verify the access token is valid and not expired
+* Check that the Authorization header is properly formatted: `Bearer <token>`
+* Ensure the client secret in `application.properties` matches Keycloak
+
+=== 403 Forbidden
+
+* Verify the user has the required role (e.g., admin role for admin endpoints)
+* Check role assignments in Keycloak Admin Console
+
+=== Connection Refused
+
+* Ensure Keycloak is running on port 8180
+* Verify the Keycloak server URL in `application.properties`
+
+=== Invalid Client Credentials
+
+* Check that the client ID and secret in `application.properties` match the Keycloak client configuration
+* Verify the realm name is correct
+
+== Architecture
+
+This example demonstrates:
+
+1. **Platform HTTP Component**: Provides HTTP server capabilities
+2. **Keycloak Security Policy**: Validates OAuth2 JWT tokens
+3. **Role-Based Access Control**: Restricts endpoints based on user roles
+4. **RESTful API Design**: Multiple endpoints with different security levels
+
+== Next Steps
+
+* Add more granular role-based access control
+* Implement refresh token handling
+* Add API documentation with OpenAPI/Swagger
+* Implement request/response logging
+* Add rate limiting
+* Implement CORS configuration for web applications
+
+== Help and Contributions
+
+If you hit any problem using Camel or have some feedback, then please
+https://camel.apache.org/community/support/[let us know].
+
+We also love contributors, so
+https://camel.apache.org/community/contributing/[get involved] :-)
+
+The Camel riders!
