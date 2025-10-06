@@ -19,14 +19,7 @@ It shows how to use the `platform-http` component to create REST endpoints prote
 
 == Dependencies
 
-This example requires the `camel-keycloak` component which is automatically loaded via the dependency declaration in the `RestApi.java` file:
-
-[source,java]
-----
-// camel-k: dependency=camel:keycloak
-----
-
-This ensures that the Keycloak security policy classes are available at runtime.
+This example requires the `camel-keycloak` component.
 
 == Install JBang
 
@@ -155,7 +148,7 @@ After Keycloak is configured, start the Camel application:
 
 [source,sh]
 ----
-$ camel run *
+$ jbang -Dcamel.jbang.version=4.15.0-SNAPSHOT camel@apache/camel run *
 ----
 
 The application will start on port 8080 with the following endpoints:
@@ -238,36 +231,23 @@ Replace `<your-client-secret>` with the actual client secret from Keycloak.
 
 The example uses a Keycloak security policy to validate JWT tokens and enforce role-based access control.
 
-The policy is created in the `configure()` method of the `RestApi.java` file and requires the `admin` role:
+The policy is defined as a bean in the `rest-api.camel.yaml` file and requires the `admin` role:
 
-[source,java]
+[source,yaml]
 ----
-KeycloakSecurityPolicy policy = new KeycloakSecurityPolicy();
-policy.setServerUrl(keycloakServerUrl);
-policy.setRealm(realm);
-policy.setClientId(clientId);
-policy.setClientSecret(clientSecret);
-policy.setRequiredRoles(Arrays.asList("admin"));
-----
-
-The policy references configuration properties from `application.properties` using `@PropertyInject`:
-
-[source,java]
-----
-@PropertyInject("keycloak.server.url")
-private String keycloakServerUrl;
-
-@PropertyInject("keycloak.realm")
-private String realm;
-
-@PropertyInject("keycloak.client.id")
-private String clientId;
-
-@PropertyInject("keycloak.client.secret")
-private String clientSecret;
+- beans:
+  - name: keycloakPolicy
+    type: org.apache.camel.component.keycloak.security.KeycloakSecurityPolicy
+    properties:
+      serverUrl: "{{keycloak.server.url}}"
+      realm: "{{keycloak.realm}}"
+      clientId: "{{keycloak.client.id}}"
+      clientSecret: "{{keycloak.client.secret}}"
+      requiredRoles:
+      - "admin"
 ----
 
-Configuration properties in `application.properties`:
+The bean references configuration properties from `application.properties`:
 
 [source,properties]
 ----
@@ -279,19 +259,28 @@ keycloak.client.secret=<your-client-secret>
 
 === Route Protection
 
-Routes are protected by adding the policy to the route. The policy will validate the JWT token and check that the user has the required `admin` role:
+Routes are protected by adding a policy reference. The policy will validate the JWT token and check that the user has the required `admin` role:
 
-[source,java]
+[source,yaml]
 ----
-from("platform-http:/api/protected")
-    .routeId("protected-api")
-    .policy(policy)
-    .setBody()
-        .simple("{\n" +
-            "  \"message\": \"This is a protected endpoint, admin role required\",\n" +
-            "  \"timestamp\": \"${date:now:yyyy-MM-dd'T'HH:mm:ss}\"\n" +
-            "}")
-    .setHeader("Content-Type", constant("application/json"));
+- route:
+    id: protected-api
+    from:
+      uri: "platform-http:/api/protected"
+      steps:
+        - policy:
+            ref: keycloakPolicy
+        - setBody:
+            simple: |
+              {
+                "message": "This is a protected endpoint, admin role required",
+                "timestamp": "${date:now:yyyy-MM-dd'T'HH:mm:ss}"
+              }
+        - setHeader:
+            name: Content-Type
+            constant: application/json
+        - log:
+            message: "Protected API called"
 ----
 
 If a user without the `admin` role tries to access this endpoint, they will receive a 403 Forbidden response.
