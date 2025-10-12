@@ -45,7 +45,32 @@ Which allows to run Camel JBang with `camel` as shown below.
 
 == Running Keycloak
 
-Run Keycloak manually with Docker:
+=== Option 1: Using Camel JBang Infra (Recommended)
+
+Starting from Camel JBang 4.16.0-SNAPSHOT, you can easily run Keycloak using the built-in infrastructure support:
+
+[source,sh]
+----
+$ jbang -Dcamel.jbang.version=4.16.0-SNAPSHOT camel@apache/camel infra run keycloak
+----
+
+This will automatically start Keycloak configured with:
+* Admin username: `admin`
+* Admin password: `admin`
+* Port: `8080`
+
+Wait a few seconds for Keycloak to fully start before proceeding to configuration.
+
+To stop Keycloak later:
+
+[source,sh]
+----
+$ jbang -Dcamel.jbang.version=4.16.0-SNAPSHOT camel@apache/camel infra stop keycloak
+----
+
+=== Option 2: Using Docker Manually
+
+Alternatively, you can run Keycloak manually with Docker:
 
 [source,sh]
 ----
@@ -66,7 +91,9 @@ After Keycloak starts, you need to configure it:
 
 === 1. Access Keycloak Admin Console
 
-Open your browser and navigate to: http://localhost:8180
+Open your browser and navigate to:
+* If using Camel JBang infra: http://localhost:8080
+* If using Docker manually: http://localhost:8180
 
 Login with:
 * Username: `admin`
@@ -180,7 +207,10 @@ First, try to access the protected endpoint with a regular user who doesn't have
 
 [source,sh]
 ----
-$ export ACCESS_TOKEN=$(curl -X POST http://localhost:8180/realms/camel/protocol/openid-connect/token \
+# Set KEYCLOAK_PORT based on your setup (8080 for camel infra, 8180 for manual Docker)
+$ export KEYCLOAK_PORT=8080
+
+$ export ACCESS_TOKEN=$(curl -X POST http://localhost:${KEYCLOAK_PORT}/realms/camel/protocol/openid-connect/token \
   -H "Content-Type: application/x-www-form-urlencoded" \
   -d "username=testuser" \
   -d "password=password" \
@@ -201,7 +231,10 @@ Now, obtain a token for the admin user and access the protected endpoint:
 
 [source,sh]
 ----
-$ export ADMIN_TOKEN=$(curl -X POST http://localhost:8180/realms/camel/protocol/openid-connect/token \
+# Set KEYCLOAK_PORT based on your setup (8080 for camel infra, 8180 for manual Docker)
+$ export KEYCLOAK_PORT=8080
+
+$ export ADMIN_TOKEN=$(curl -X POST http://localhost:${KEYCLOAK_PORT}/realms/camel/protocol/openid-connect/token \
   -H "Content-Type: application/x-www-form-urlencoded" \
   -d "username=admin-user" \
   -d "password=password" \
@@ -251,7 +284,8 @@ The bean references configuration properties from `application.properties`:
 
 [source,properties]
 ----
-keycloak.server.url=http://localhost:8180
+# Use port 8080 if running via camel infra, or 8180 if using Docker manually
+keycloak.server.url=http://localhost:8080
 keycloak.realm=camel
 keycloak.client.id=camel-client
 keycloak.client.secret=<your-client-secret>
@@ -300,8 +334,15 @@ Then you can browse: http://localhost:8080/q/dev to introspect the running Camel
 
 To stop the Camel application, press `Ctrl+C`.
 
-To stop and remove the Keycloak container:
+To stop Keycloak:
 
+If you used Camel JBang infra:
+[source,sh]
+----
+$ jbang -Dcamel.jbang.version=4.16.0-SNAPSHOT camel@apache/camel infra stop keycloak
+----
+
+If you used Docker manually:
 [source,sh]
 ----
 $ docker stop keycloak
@@ -323,8 +364,8 @@ $ docker rm keycloak
 
 === Connection Refused
 
-* Ensure Keycloak is running on port 8180
-* Verify the Keycloak server URL in `application.properties`
+* Ensure Keycloak is running on the correct port (8080 for camel infra, 8180 for Docker)
+* Verify the Keycloak server URL in `application.properties` matches your setup
 
 === Invalid Client Credentials
 
