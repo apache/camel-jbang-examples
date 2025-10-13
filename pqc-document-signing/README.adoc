@@ -1,0 +1,324 @@
+= Post-Quantum Cryptography Document Signing with HashiCorp Vault
+
+This example demonstrates how to build a secure document signing service using Apache Camel with Post-Quantum Cryptography (PQC) and HashiCorp Vault for key lifecycle management.
+
+== Features
+
+* **Quantum-Resistant Signatures** - Signs documents using DILITHIUM, a NIST-standardized Post-Quantum Cryptographic algorithm
+* **HashiCorp Vault Integration** - Stores and manages PQC keys in HashiCorp Vault for enterprise-grade security
+* **Key Lifecycle Management** - Automatic tracking of key usage, age, rotation, and expiration
+* **Key Usage Tracking** - Demonstrates key expiration after a predefined number of usages (default: 10 signatures)
+* **Automatic Key Rotation** - When a key expires, a new key is **automatically generated and rotated**
+* **Key Metadata Tracking** - Real-time visibility into key status, usage count, age, and lifecycle events
+* **REST API** - HTTP endpoints for signing, verifying documents, and managing keys
+* **Scheduled Monitoring** - Periodic checks for key rotation needs based on age and usage thresholds
+* **Multi-Key Support** - Deprecated keys are retained for signature verification of old documents
+
+== Prerequisites
+
+* JBang installed (https://www.jbang.dev)
+* Docker installed for running HashiCorp Vault
+
+== Running HashiCorp Vault
+
+Run HashiCorp Vault using Docker:
+
+[source,sh]
+----
+$ docker run -d \
+  --name vault \
+  -p 8201:8200 \
+  -e VAULT_DEV_ROOT_TOKEN_ID=myroot \
+  -e VAULT_DEV_LISTEN_ADDRESS=0.0.0.0:8200 \
+  hashicorp/vault:latest
+----
+
+This will start HashiCorp Vault configured with:
+
+* Root token: `myroot`
+* Port: `8201` (mapped from container port 8200)
+* Secrets engine: `secret` (KV v2)
+
+Wait a few seconds for Vault to fully start before proceeding.
+
+== Project Structure
+
+The example consists of the following files:
+
+[source,text]
+----
+pqc-document-signing/
+├── PQCDocumentSigningRoutes.java  # Main RouteBuilder with 11 routes
+├── application.properties          # Configuration file
+└── README.adoc                    # This file
+----
+
+== Running the Example
+
+After Vault is configured and running, start the Camel application:
+
+[source,sh]
+----
+$ jbang -Dcamel.jbang.version=4.16.0-SNAPSHOT camel@apache/camel run PQCDocumentSigningRoutes.java
+----
+
+Or using Maven:
+
+[source,sh]
+----
+$ mvn compile exec:java
+----
+
+The application will:
+
+1. Connect to HashiCorp Vault
+2. Generate a DILITHIUM Post-Quantum Cryptographic key pair
+3. Store the key securely in Vault at path: `secret/data/pqc/keys/document-signing-key`
+4. Start REST API endpoints on port 8080
+5. Begin monitoring key lifecycle (usage count, age, rotation needs)
+
+== API Endpoints
+
+The application exposes the following REST endpoints:
+
+=== 1. Sign a Document
+
+Signs a document with a quantum-resistant signature.
+
+[source,sh]
+----
+$ curl -X POST http://localhost:8080/api/sign \
+  -H "Content-Type: text/plain" \
+  -d "This is a confidential document that needs quantum-resistant protection"
+----
+
+**Response:**
+[source,json]
+----
+{
+  "status": "signed",
+  "document": "This is a confidential document...",
+  "signature": "UMyKJt21oIYWNq0jDe6v63Xw8bs7JZ9hg9KEYXdFPIMxXS3AHwOa...",
+  "signatureAlgorithm": "DILITHIUM",
+  "keyId": "document-signing-key",
+  "keyMetadata": {
+    "keyId": "document-signing-key",
+    "algorithm": "DILITHIUM",
+    "status": "ACTIVE",
+    "usageCount": 1,
+    "ageInDays": 0
+  }
+}
+----
+
+Note: The `signature` field contains a base64-encoded quantum-resistant signature.
+
+=== 2. Get Key Metadata
+
+Retrieves detailed metadata about the signing key, including usage count and lifecycle status.
+
+[source,sh]
+----
+$ curl http://localhost:8080/api/key/metadata
+----
+
+**Response:**
+[source,json]
+----
+{
+  "keyId": "document-signing-key",
+  "algorithm": "DILITHIUM",
+  "status": "ACTIVE",
+  "createdAt": "2024-10-13T10:30:00Z",
+  "lastUsedAt": "2024-10-13T10:35:00Z",
+  "usageCount": 5,
+  "ageInDays": 0,
+  "expiresAt": null,
+  "nextRotationAt": null,
+  "expired": false,
+  "needsRotation": false
+}
+----
+
+=== 3. List All Keys
+
+Lists all PQC keys stored in Vault.
+
+[source,sh]
+----
+$ curl http://localhost:8080/api/keys
+----
+
+**Response:**
+[source,json]
+----
+{
+  "keys": [
+    {
+      "keyId": "document-signing-key",
+      "algorithm": "DILITHIUM",
+      "status": "ACTIVE",
+      "usageCount": 5
+    }
+  ]
+}
+----
+
+=== 4. Rotate Signing Key
+
+Manually rotates the signing key (creates a new key and deprecates the old one).
+
+[source,sh]
+----
+$ curl -X POST http://localhost:8080/api/key/rotate
+----
+
+**Response:**
+[source,json]
+----
+{
+  "status": "rotated",
+  "oldKey": "document-signing-key",
+  "newKey": "document-signing-key",
+  "message": "Key rotation completed successfully"
+}
+----
+
+== Automatic Key Rotation
+
+The example demonstrates automatic key rotation when keys reach expiration criteria:
+
+* **Usage-based**: After 10 signatures (configurable via `key.max.usage.count`)
+* **Age-based**: After 90 days (configurable via `key.max.age.days`)
+
+When a key expires, the system automatically rotates to a new key, marking the old key as `DEPRECATED` for verification of previously signed documents.
+
+**Test rotation:**
+[source,sh]
+----
+# Sign document 10 times to trigger automatic rotation
+$ for i in {1..10}; do
+  curl -X POST http://localhost:8080/api/sign \
+    -H "Content-Type: text/plain" \
+    -d "Document number $i"
+done
+
+# View both old and new keys
+$ curl http://localhost:8080/api/keys
+----
+
+== Key Storage in HashiCorp Vault
+
+The PQC keys are stored in Vault's KV v2 secrets engine with the following structure:
+
+[source,text]
+----
+secret/
+└── data/
+    └── pqc/
+        └── keys/
+            └── document-signing-key/
+                ├── private/       # PKCS#8 private key
+                ├── public/        # X.509 public key
+                └── metadata/      # Key metadata
+----
+
+This separation enables fine-grained access control where applications can access public keys for verification without having access to private keys for signing.
+
+== Configuration
+
+Configuration is managed in `application.properties`:
+
+[source,properties]
+----
+# Vault connection
+vault.host=localhost
+vault.port=8201
+vault.token=myroot
+
+# Key rotation policy
+key.max.usage.count=10        # Max signatures before rotation
+key.max.age.days=90            # Max key age in days
+key.rotation.check.period=60000 # Check interval (ms)
+----
+
+== Troubleshooting
+
+=== Connection to Vault Failed
+
+* Ensure Vault is running: `docker ps`
+* Verify the port in `application.properties` is set to `8201`
+* Check the Vault token is correct (default: `myroot`)
+
+=== Key Not Found in Vault
+
+* Check Vault UI at http://localhost:8201 (token: `myroot`)
+* Verify the secrets engine is enabled: `vault secrets list`
+* Check the key path: `secret/data/pqc/keys/document-signing-key`
+
+=== Signature Verification Failed
+
+* Ensure you're using the same document content for both signing and verification
+* Include the `CamelPQCSignature` header with the base64-encoded signature from the sign response
+* The signature must be passed exactly as received from the sign endpoint (base64 string)
+* Verify the key hasn't been rotated or revoked
+* Check logs for "ERROR during verification" messages which indicate signature format issues
+
+== Stopping
+
+To stop the Camel application, press `Ctrl+C`.
+
+To stop HashiCorp Vault:
+
+[source,sh]
+----
+$ docker stop vault
+$ docker rm vault
+----
+
+== Architecture
+
+This example demonstrates:
+
+1. **Post-Quantum Cryptography (PQC)** - Quantum-resistant digital signatures using DILITHIUM
+2. **HashiCorp Vault Integration** - Enterprise secret management for PQC keys
+3. **Key Lifecycle Management** - Automated tracking of key usage, rotation, and expiration
+4. **RESTful API** - Multiple endpoints for signing, verification, and key management
+5. **Platform HTTP Component** - Lightweight HTTP server for REST APIs
+6. **Java-based RouteBuilder** - Routes defined using Camel Java DSL
+7. **Bean Configuration** - Vault and key manager beans configured programmatically in Java
+8. **Scheduled Jobs** - Periodic key rotation checks
+9. **Dynamic Routing** - Uses `.toD()` for runtime endpoint creation with autowired KeyPair
+10. **Base64 Encoding** - Binary signatures converted to base64 for JSON transport
+
+=== Implementation Details
+
+The `PQCDocumentSigningRoutes.java` RouteBuilder:
+
+- Registers BouncyCastle security providers (BC, BCPQC)
+- Creates and binds Vault-related beans to the registry
+- Defines 11 Camel routes using Java DSL
+- Handles KeyPair registration after key generation
+- Converts binary signatures to/from base64 for JSON transport
+- Uses dynamic routing (`.toD()`) to create PQC endpoints at runtime
+- Implements automatic key rotation based on usage count and age
+
+== Security Notice
+
+This example uses **development settings**. For production:
+
+* Use HTTPS for Vault (`vault.scheme=https`)
+* Use AppRole or similar authentication instead of root tokens
+* Configure Vault access policies
+* Increase `key.max.usage.count` to realistic values (e.g., 100,000)
+* Enable Vault audit logging
+
+== Help and Contributions
+
+If you hit any problem using Camel or have some feedback, then please
+https://camel.apache.org/community/support/[let us know].
+
+We also love contributors, so
+https://camel.apache.org/community/contributing/[get involved] :-)
+
+The Camel riders!
