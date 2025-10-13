@@ -48,7 +48,7 @@ The example consists of the following files:
 [source,text]
 ----
 pqc-document-signing/
-├── PQCDocumentSigningRoutes.java  # Main RouteBuilder with 11 routes
+├── PQCDocumentSigningRoutes.java  # Main RouteBuilder with 12 routes
 ├── application.properties          # Configuration file
 └── README.adoc                    # This file
 ----
@@ -113,7 +113,32 @@ $ curl -X POST http://localhost:8080/api/sign \
 
 Note: The `signature` field contains a base64-encoded quantum-resistant signature.
 
-=== 2. Get Key Metadata
+=== 2. Verify a Document Signature
+
+Verifies the authenticity of a signed document using the signature from the sign response.
+
+[source,sh]
+----
+$ curl -X POST http://localhost:8080/api/verify \
+  -H "Content-Type: text/plain" \
+  -H "X-Signature: UMyKJt21oIYWNq0jDe6v63Xw8bs7JZ9hg9KEYXdFPIMxXS3AHwOa..." \
+  -d "This is a confidential document that needs quantum-resistant protection"
+----
+
+Note: Pass the base64-encoded signature from the sign response in the `X-Signature` header. The `X-Signature` header is used instead of `CamelPQCSignature` to avoid header filtering by REST frameworks.
+
+**Response:**
+[source,json]
+----
+{
+  "status": "verified",
+  "valid": true,
+  "message": "Document signature is valid",
+  "signatureAlgorithm": "DILITHIUM"
+}
+----
+
+=== 3. Get Key Metadata
 
 Retrieves detailed metadata about the signing key, including usage count and lifecycle status.
 
@@ -140,7 +165,7 @@ $ curl http://localhost:8080/api/key/metadata
 }
 ----
 
-=== 3. List All Keys
+=== 4. List All Keys
 
 Lists all PQC keys stored in Vault.
 
@@ -164,7 +189,7 @@ $ curl http://localhost:8080/api/keys
 }
 ----
 
-=== 4. Rotate Signing Key
+=== 5. Rotate Signing Key
 
 Manually rotates the signing key (creates a new key and deprecates the old one).
 
@@ -259,7 +284,7 @@ key.rotation.check.period=60000 # Check interval (ms)
 === Signature Verification Failed
 
 * Ensure you're using the same document content for both signing and verification
-* Include the `CamelPQCSignature` header with the base64-encoded signature from the sign response
+* Include the `X-Signature` header with the base64-encoded signature from the sign response
 * The signature must be passed exactly as received from the sign endpoint (base64 string)
 * Verify the key hasn't been rotated or revoked
 * Check logs for "ERROR during verification" messages which indicate signature format issues

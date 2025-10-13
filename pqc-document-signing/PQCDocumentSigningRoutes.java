@@ -31,9 +31,10 @@ import org.springframework.vault.core.VaultTemplate;
 /**
  * RouteBuilder for PQC Document Signing with HashiCorp Vault integration.
  *
- * This class defines 11 routes:
+ * This class defines 12 routes:
  * 1. Initialize PQC signing key on startup
- * 2. REST API - Sign and verify a document
+ * 2. REST API - Sign a document
+ * 3. REST API - Verify a document signature
  * 4. REST API - Get key metadata
  * 5. REST API - List all keys
  * 6. REST API - Rotate signing key
@@ -106,12 +107,17 @@ public class PQCDocumentSigningRoutes extends RouteBuilder {
                 "  \"keyMetadata\": ${body}\n" +
                 "}"))
             .setHeader("Content-Type", constant("application/json"))
-            .log("Response: ${body}")
-            // Decode base64 signature to binary
+            .log("Response: ${body}");
+
+        // Route 3: REST API - Verify a document signature
+        from("platform-http:/api/verify")
+            .routeId("verify-document-api")
+            .log("Received document verification request: ${body}")
+            // Get signature from X-Signature header (workaround for header filtering)
             .process(exchange -> {
-                String base64Signature = exchange.getMessage().getHeader("CamelPQCSignature", String.class);
+                String base64Signature = exchange.getIn().getHeader("X-Signature", String.class);
                 if (base64Signature == null || base64Signature.isEmpty()) {
-                    throw new IllegalArgumentException("CamelPQCSignature header is missing or empty");
+                    throw new IllegalArgumentException("X-Signature header is missing or empty");
                 }
                 byte[] signature = Base64.getDecoder().decode(base64Signature);
                 exchange.getIn().setHeader("CamelPQCSignature", signature);
@@ -143,7 +149,7 @@ public class PQCDocumentSigningRoutes extends RouteBuilder {
                         "}"))
             .end()
             .setHeader("Content-Type", constant("application/json"))
-            .log("Verification result: ${body}");;
+            .log("Verification result: ${body}");
 
         // Route 4: REST API - Get key metadata
         from("platform-http:/api/key/metadata")
