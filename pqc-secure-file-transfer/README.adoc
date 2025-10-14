@@ -1,0 +1,373 @@
+= Post-Quantum Secure File Transfer with ML-KEM
+
+This example demonstrates secure file transfer using Post-Quantum Cryptography (PQC) Key Encapsulation Mechanism (KEM) with Apache Camel.
+
+== Overview
+
+This application implements a quantum-resistant secure file transfer system using:
+
+* **ML-KEM-512** (Module-Lattice Key Encapsulation Mechanism) - NIST-standardized post-quantum algorithm
+* **AES** - Symmetric encryption for file content
+* **Hybrid Approach** - KEM for secure key exchange + AES for efficient file encryption
+
+== How It Works
+
+=== Key Encapsulation Mechanism (KEM)
+
+Traditional key exchange methods (RSA, ECDH) are vulnerable to quantum computer attacks. KEM provides quantum-resistant key exchange:
+
+1. **Key Generation** - Generate ML-KEM public/private key pair
+2. **Encapsulation** - Use public key to generate a shared secret and its encapsulation (ciphertext)
+3. **Decapsulation** - Use private key to extract the shared secret from encapsulation
+
+=== File Transfer Flow
+
+**Encryption (Sender Side):**
+
+1. Watch `input/` directory for new files
+2. Generate a random AES key using ML-KEM encapsulation
+3. Encrypt file content with AES
+4. Combine encapsulation + encrypted content
+5. Save to `encrypted/` directory with `.pqenc` extension
+
+**Decryption (Receiver Side):**
+
+1. Watch `encrypted/` directory for `.pqenc` files
+2. Parse encapsulation and encrypted content
+3. Decapsulate to extract AES key using ML-KEM private key
+4. Decrypt file content with AES
+5. Save decrypted file to `decrypted/` directory
+
+== Features
+
+* **Quantum-Resistant** - Uses NIST-standardized ML-KEM algorithm
+* **Efficient** - Hybrid approach: PQC for key exchange, AES for data encryption
+* **Automatic** - File watcher automatically processes new files
+* **Simple Format** - Encapsulation + encrypted data in single file
+* **REST API** - Monitor system status via HTTP endpoint
+
+== Prerequisites
+
+* JBang installed (https://www.jbang.dev)
+* Java 11 or later
+
+== Project Structure
+
+[source,text]
+----
+pqc-secure-file-transfer/
+├── pqc-secure-file-transfer.yaml  # YAML configuration (beans + routes)
+├── application.properties          # Configuration file
+├── README.adoc                     # This file
+├── input/                          # Place files here to encrypt
+├── encrypted/                      # Encrypted files (.pqenc)
+└── decrypted/                      # Decrypted files
+----
+
+== Running the Example
+
+Start the application:
+
+[source,sh]
+----
+$ jbang -Dcamel.jbang.version=4.16.0-SNAPSHOT camel@apache/camel run \
+  --dep=camel:pqc \
+  --dep=camel:crypto \
+  --dep=org.bouncycastle:bcprov-jdk18on:1.82 \
+  --properties=application.properties \
+  pqc-secure-file-transfer.yaml
+----
+
+**Note:** The BouncyCastle dependency (`bcprov-jdk18on:1.82`) is required for the Groovy scripts to compile successfully. This provides both the standard cryptographic providers and the PQC classes (including ML-KEM) used in the example.
+
+The application will:
+
+1. Register BouncyCastle PQC providers
+2. Generate ML-KEM-512 key pair
+3. Start file watchers on `input/` and `encrypted/` directories
+4. Start REST API on port 8080
+
+== Usage
+
+=== Encrypt a File
+
+1. Create the input directory if it doesn't exist:
+
+[source,sh]
+----
+$ mkdir -p input
+----
+
+2. Place a file in the `input/` directory:
+
+[source,sh]
+----
+$ echo "This is a secret message protected by quantum-resistant cryptography!" > input/secret.txt
+----
+
+3. The file will be automatically encrypted and saved to `encrypted/secret.txt.pqenc`
+
+4. Check the logs:
+
+[source,text]
+----
+Processing file: secret.txt
+Generating secret key encapsulation with ML-KEM...
+Secret key encapsulated.
+Secret key extracted for AES encryption
+File encrypted with AES.
+Encrypted file saved: secret.txt.pqenc
+----
+
+=== Decrypt a File
+
+The encrypted file is automatically decrypted:
+
+1. The system watches `encrypted/` directory
+2. Detects `secret.txt.pqenc`
+3. Decapsulates the AES key using ML-KEM private key
+4. Decrypts the file content
+5. Saves to `decrypted/secret.txt`
+
+Check the logs:
+
+[source,text]
+----
+Decrypting file: secret.txt.pqenc
+Parsed encapsulation from encrypted file
+Secret key decapsulated for AES decryption
+File decrypted successfully.
+Decrypted file saved: secret.txt
+----
+
+=== Verify Decryption
+
+[source,sh]
+----
+$ cat decrypted/secret.txt
+This is a secret message protected by quantum-resistant cryptography!
+----
+
+=== Check System Status
+
+[source,sh]
+----
+$ curl http://localhost:8080/api/status
+----
+
+**Response:**
+[source,json]
+----
+{
+  "status": "running",
+  "algorithm": "ML-KEM-512",
+  "symmetricEncryption": "AES",
+  "inputDirectory": "input",
+  "encryptedDirectory": "encrypted",
+  "decryptedDirectory": "decrypted",
+  "message": "Post-Quantum Secure File Transfer System is operational"
+}
+----
+
+== File Format
+
+Encrypted files use a simple binary format:
+
+[source,text]
+----
+[4 bytes: encapsulation length (big-endian)]
+[N bytes: ML-KEM encapsulation]
+[M bytes: AES encrypted content]
+----
+
+* **Encapsulation** - Contains the encrypted AES key (768 bytes for ML-KEM-512)
+* **Encrypted Content** - File content encrypted with AES (128-bit key)
+
+== Implementation Details
+
+=== Bean Configuration
+
+**1. Security Initialization** - Registers BouncyCastle providers:
+
+[source,yaml]
+----
+- beans:
+  - name: initSecurity
+    type: java.lang.Object
+    scriptLanguage: groovy
+    script: |
+      if (java.security.Security.getProvider("BC") == null) {
+          java.security.Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider())
+      }
+      if (java.security.Security.getProvider("BCPQC") == null) {
+          java.security.Security.addProvider(new org.bouncycastle.pqc.jcajce.provider.BouncyCastlePQCProvider())
+      }
+      return new Object()
+----
+
+=== Routes
+
+**1. initialize-kem-keypair** - Generates ML-KEM-512 key pair on startup
+
+**2. sender-encrypt-files** - Watches `input/` and encrypts files using KEM + AES
+
+**3. receiver-decrypt-files** - Watches `encrypted/` and decrypts `.pqenc` files
+
+**4. status-api** - GET `/api/status` - Returns system status
+
+=== Key Operations
+
+**Generate Secret Key Encapsulation:**
+
+[source,yaml]
+----
+- toD: "pqc:encrypt?operation=generateSecretKeyEncapsulation&symmetricKeyAlgorithm=AES&keyEncapsulationAlgorithm=MLKEM&keyPair=#kemKeyPair"
+----
+
+**Extract Encapsulation:**
+
+[source,yaml]
+----
+- toD: "pqc:encrypt?operation=extractSecretKeyEncapsulation&symmetricKeyAlgorithm=AES&keyEncapsulationAlgorithm=MLKEM"
+----
+
+**Extract Secret Key:**
+
+[source,yaml]
+----
+- toD: "pqc:encrypt?operation=extractSecretKeyFromEncapsulation&symmetricKeyAlgorithm=AES&keyEncapsulationAlgorithm=MLKEM&keyPair=#kemKeyPair"
+----
+
+== Security Considerations
+
+=== Current Implementation
+
+* **Development Setup** - Keys are generated in memory and not persisted
+* **Single KeyPair** - Same key pair used for all files (demonstration only)
+* **No Authentication** - No verification of sender/receiver identity
+
+=== Production Recommendations
+
+**1. Key Management**
+
+- Store keys in HashiCorp Vault or AWS Secrets Manager
+- Use different key pairs for different security domains
+- Implement key rotation policies
+- Back up private keys securely
+
+**2. Enhanced Security**
+
+- Add digital signatures for authentication (combine with PQC signatures)
+- Implement sender/receiver identity verification
+- Add message authentication codes (MACs) for integrity verification
+- Consider upgrading to authenticated encryption modes like AES-GCM
+
+**3. File Handling**
+
+- Validate file sizes before processing
+- Implement virus scanning
+- Add checksums for integrity verification
+- Secure delete original files after encryption
+
+**4. Network Security**
+
+- Use TLS for file transfer over network
+- Implement rate limiting
+- Add access controls and authentication
+
+== Advanced Usage
+
+=== Custom Directories
+
+Edit `application.properties`:
+
+[source,properties]
+----
+input.directory=/secure/upload
+encrypted.directory=/secure/encrypted
+decrypted.directory=/secure/decrypted
+----
+
+=== Different KEM Algorithms
+
+The example uses ML-KEM-512. Other options:
+
+* **ML-KEM-768** - Higher security level (recommended for most use cases)
+* **ML-KEM-1024** - Highest security level
+
+Modify the initialization script:
+
+[source,yaml]
+----
+kpg.initialize(MLKEMParameterSpec.ml_kem_768, new SecureRandom())
+----
+
+=== Batch Processing
+
+To process multiple files:
+
+[source,sh]
+----
+$ for file in file1.txt file2.pdf file3.doc; do
+  cp "$file" input/
+  sleep 2
+done
+----
+
+== Performance
+
+**ML-KEM-512 Performance (approximate):**
+
+* Key Generation: ~0.1ms
+* Encapsulation: ~0.1ms
+* Decapsulation: ~0.1ms
+* Encapsulation Size: 768 bytes
+
+**AES Performance:**
+
+* Encryption: ~100-200 MB/s (depends on CPU and mode)
+* Decryption: ~100-200 MB/s (depends on CPU and mode)
+* Key Size: 128 bits (generated via ML-KEM)
+
+== Comparison with Traditional Encryption
+
+[cols="1,2,2"]
+|===
+|Aspect |Traditional (RSA/ECDH) |This Example (ML-KEM)
+
+|Quantum Resistance
+|❌ Vulnerable
+|✅ Resistant
+
+|Key Exchange
+|RSA-2048 or ECDH-256
+|ML-KEM-512
+
+|Encapsulation Size
+|256 bytes (RSA-2048)
+|768 bytes (ML-KEM-512)
+
+|Performance
+|~10ms (RSA)
+|~0.1ms (ML-KEM)
+
+|Standardization
+|✅ NIST FIPS
+|✅ NIST FIPS 203
+|===
+
+== References
+
+* **ML-KEM** - NIST FIPS 203 (https://csrc.nist.gov/pubs/fips/203/final)
+* **Camel PQC Component** - /home/oscerd/workspace/apache-camel/camel/components/camel-pqc/
+* **BouncyCastle PQC** - https://www.bouncycastle.org/
+
+== Help and Contributions
+
+If you hit any problem using Camel or have some feedback, then please
+https://camel.apache.org/community/support/[let us know].
+
+We also love contributors, so
+https://camel.apache.org/community/contributing/[get involved] :-)
+
+The Camel riders!

@@ -1,0 +1,244 @@
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Post-Quantum Secure File Transfer using KEM (Key Encapsulation Mechanism)
+# This example demonstrates secure file transfer using ML-KEM for quantum-resistant encryption
+
+# Bean Definitions
+- beans:
+  # Register BouncyCastle providers
+  - name: initSecurity
+    type: java.lang.Object
+    scriptLanguage: groovy
+    script: |
+      if (java.security.Security.getProvider("BC") == null) {
+          java.security.Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider())
+      }
+      if (java.security.Security.getProvider("BCPQC") == null) {
+          java.security.Security.addProvider(new org.bouncycastle.pqc.jcajce.provider.BouncyCastlePQCProvider())
+      }
+      return new Object()
+
+# Route Definitions
+
+# Route 1: Initialize KEM KeyPair on startup
+- route:
+    id: initialize-kem-keypair
+    from:
+      uri: timer:init
+      parameters:
+        repeatCount: 1
+      steps:
+        - log: "Initializing ML-KEM key pair for secure file transfer..."
+        - script:
+            groovy: |
+              import org.bouncycastle.jcajce.spec.MLKEMParameterSpec
+              import java.security.KeyPairGenerator
+              import java.security.SecureRandom
+
+              // Generate ML-KEM-512 key pair
+              def kpg = KeyPairGenerator.getInstance("ML-KEM", "BC")
+              kpg.initialize(MLKEMParameterSpec.ml_kem_512, new SecureRandom())
+              def keyPair = kpg.generateKeyPair()
+
+              // Register in Camel registry
+              camelContext.registry.bind("kemKeyPair", keyPair)
+
+              exchange.message.setBody("ML-KEM key pair initialized")
+        - log: "ML-KEM key pair initialized successfully"
+
+# Route 2: Sender - Encrypt files using KEM
+- route:
+    id: sender-encrypt-files
+    from:
+      uri: file:{{input.directory}}
+      parameters:
+        noop: true
+        idempotent: true
+      steps:
+        - log: "Processing file: ${header.CamelFileName}"
+        - setProperty:
+            name: originalFileName
+            simple: "${header.CamelFileName}"
+        - setProperty:
+            name: originalFileContent
+            simple: "${body}"
+
+        # Step 1: Generate secret key and encapsulation using ML-KEM
+        - log: "Generating secret key encapsulation with ML-KEM..."
+        - toD: "pqc:encrypt?operation=generateSecretKeyEncapsulation&symmetricKeyAlgorithm=AES&keyEncapsulationAlgorithm=MLKEM&keyPair=#kemKeyPair"
+        - script:
+            groovy: |
+              import org.bouncycastle.jcajce.SecretKeyWithEncapsulation
+              // Save the SecretKeyWithEncapsulation and extract encapsulation bytes
+              def secretKeyWithEnc = exchange.message.getBody(SecretKeyWithEncapsulation.class)
+              def encapBytes = secretKeyWithEnc.getEncapsulation()
+              exchange.setProperty("encapsulationBytes", encapBytes)
+              // Keep SecretKeyWithEncapsulation in body for next step
+
+        # Step 2: Extract secret key from encapsulation
+        - toD: "pqc:encrypt?operation=extractSecretKeyFromEncapsulation&symmetricKeyAlgorithm=AES&keyEncapsulationAlgorithm=MLKEM&keyPair=#kemKeyPair&storeExtractedSecretKeyAsHeader=true"
+        - setHeader:
+            name: CamelCryptoKey
+            simple: "${header.CamelPQCSecretKey}"
+        - log: "Secret key extracted for AES encryption"
+
+        # Step 4: Encrypt the file content with AES using the secret key
+        - setBody:
+            simple: "${exchangeProperty.originalFileContent}"
+        - marshal:
+            crypto:
+              algorithm: "AES"
+        - script:
+            groovy: |
+              // Save encrypted content for later combination
+              exchange.setProperty("encryptedContent", exchange.message.getBody(byte[].class))
+        - log: "File encrypted with AES."
+
+        # Step 5: Combine encapsulation and encrypted content
+        - script:
+            groovy: |
+              import java.nio.ByteBuffer
+
+              // Create a combined format: [encapsulation_length(4 bytes)][encapsulation][encrypted_content]
+              def encapBytes = exchange.getProperty("encapsulationBytes", byte[].class)
+              def encryptedBytes = exchange.getProperty("encryptedContent", byte[].class)
+
+              def output = new ByteArrayOutputStream()
+              // Write encapsulation length (4 bytes, big-endian)
+              def lengthBytes = ByteBuffer.allocate(4).putInt(encapBytes.length).array()
+              output.write(lengthBytes)
+              // Write encapsulation
+              output.write(encapBytes)
+              // Write encrypted content
+              output.write(encryptedBytes)
+
+              exchange.message.setBody(output.toByteArray())
+
+        # Step 6: Write to encrypted directory
+        - setHeader:
+            name: CamelFileName
+            simple: "${exchangeProperty.originalFileName}.pqenc"
+        - to:
+            uri: file:{{encrypted.directory}}
+        - log: "Encrypted file saved: ${header.CamelFileName}"
+
+# Route 3: Receiver - Decrypt files using KEM
+- route:
+    id: receiver-decrypt-files
+    from:
+      uri: file:{{encrypted.directory}}
+      parameters:
+        include: ".*\\.pqenc"
+        noop: true
+        idempotent: true
+      steps:
+        - log: "Decrypting file: ${header.CamelFileName}"
+        - setProperty:
+            name: encryptedFileName
+            simple: "${header.CamelFileName}"
+
+        # Step 1: Parse combined file format
+        - script:
+            groovy: |
+              import java.nio.ByteBuffer
+              import java.util.Arrays
+
+              def combinedBytes = exchange.message.getBody(byte[].class)
+
+              // Read encapsulation length (first 4 bytes)
+              def lengthBytes = Arrays.copyOfRange(combinedBytes, 0, 4)
+              def encapLength = ByteBuffer.wrap(lengthBytes).getInt()
+
+              // Extract encapsulation
+              def encapBytes = Arrays.copyOfRange(combinedBytes, 4, 4 + encapLength)
+
+              // Extract encrypted content
+              def encryptedBytes = Arrays.copyOfRange(combinedBytes, 4 + encapLength, combinedBytes.length)
+
+              exchange.setProperty("encapsulationBytes", encapBytes)
+              exchange.setProperty("encryptedContent", encryptedBytes)
+
+              // Set encapsulation as body for next step
+              exchange.message.setBody(encapBytes)
+        - log: "Parsed encapsulation from encrypted file"
+
+        # Step 2: Decapsulate to extract secret key using the private key
+        - script:
+            groovy: |
+              import org.bouncycastle.jcajce.SecretKeyWithEncapsulation
+              import org.bouncycastle.jcajce.spec.KEMExtractSpec
+              import javax.crypto.KeyGenerator
+              import java.security.SecureRandom
+
+              // Get the encapsulation bytes and keypair
+              def encapBytes = exchange.message.getBody(byte[].class)
+              def keyPair = camelContext.registry.lookupByName("kemKeyPair")
+
+              // Use KeyGenerator to decapsulate and extract the secret (use 128 bits, the default)
+              def keyGenerator = KeyGenerator.getInstance("ML-KEM")
+              keyGenerator.init(
+                new KEMExtractSpec(keyPair.getPrivate(), encapBytes, "AES", 128),
+                new SecureRandom())
+
+              // Generate the secret key
+              def secretKeyWithEnc = (SecretKeyWithEncapsulation) keyGenerator.generateKey()
+              def secretKey = secretKeyWithEnc
+
+              // Store in header for CryptoDataFormat
+              exchange.message.setHeader("CamelCryptoKey", secretKey)
+        - log: "Secret key decapsulated for AES decryption"
+
+        # Step 3: Decrypt the file content with AES
+        - setBody:
+            simple: "${exchangeProperty.encryptedContent}"
+        - unmarshal:
+            crypto:
+              algorithm: "AES"
+        - log: "File decrypted successfully."
+
+        # Step 4: Write to decrypted directory
+        - script:
+            groovy: |
+              // Remove .pqenc extension from filename
+              def fileName = exchange.getProperty("encryptedFileName")
+              def decryptedFileName = fileName.replaceAll("\\.pqenc\$", "")
+              exchange.message.setHeader("CamelFileName", decryptedFileName)
+        - to:
+            uri: file:{{decrypted.directory}}
+        - log: "Decrypted file saved: ${header.CamelFileName}"
+
+# Route 4: Status API - Monitor transfer statistics
+- route:
+    id: status-api
+    from:
+      uri: platform-http:/api/status
+      steps:
+        - log: "Status check requested"
+        - setBody:
+            simple: |
+              {
+                "status": "running",
+                "algorithm": "ML-KEM-512",
+                "symmetricEncryption": "AES",
+                "inputDirectory": "{{input.directory}}",
+                "encryptedDirectory": "{{encrypted.directory}}",
+                "decryptedDirectory": "{{decrypted.directory}}",
+                "message": "Post-Quantum Secure File Transfer System is operational"
+              }
+        - setHeader:
+            name: Content-Type
+            constant: "application/json"
+        - log: "Status: ${body}"
