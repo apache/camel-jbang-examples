@@ -1,0 +1,378 @@
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Document Processing with Docling and AI Analysis with LangChain4j
+# This example demonstrates RAG (Retrieval Augmented Generation) using:
+# - Docling for document conversion (PDF, Word, etc. to Markdown)
+# - LangChain4j with Ollama for AI-powered document analysis
+
+# Bean Definitions
+- beans:
+  # Configure Ollama Chat Model
+  - name: chatModel
+    type: "#class:dev.langchain4j.model.ollama.OllamaChatModel"
+    scriptLanguage: groovy
+    script: |
+      import dev.langchain4j.model.ollama.OllamaChatModel
+      import static java.time.Duration.ofSeconds
+
+      return OllamaChatModel.builder()
+        .baseUrl("{{ollama.base.url}}")
+        .modelName("{{ollama.model.name}}")
+        .temperature(0.3)
+        .timeout(ofSeconds(120))
+        .build()
+
+# Route Definitions
+
+# Route 1: Main RAG workflow - Convert document and analyze with AI
+- route:
+    id: document-analysis-workflow
+    from:
+      uri: file:{{documents.directory}}
+      parameters:
+        include: ".*\\.(pdf|docx|pptx|html|md)"
+        noop: true
+        idempotent: true
+      steps:
+        - log: "Processing document: ${header.CamelFileName}"
+        - setProperty:
+            name: originalFileName
+            simple: "${header.CamelFileName}"
+
+        # Convert GenericFile to file path
+        - setBody:
+            simple: "${body.file.absolutePath}"
+
+        # Step 1: Convert document to Markdown using Docling
+        - log: "Converting document to Markdown with Docling..."
+        - to:
+            uri: docling:CONVERT_TO_MARKDOWN
+            parameters:
+              useDoclingServe: true
+              doclingServeUrl: "{{docling.serve.url}}"
+              contentInBody: true
+        - log: "Document converted to Markdown successfully"
+
+        # Save the file path for cleanup
+        - setProperty:
+            name: sourceFilePath
+            simple: "${exchangeProperty.originalFileName}"
+
+      # Step 2: Store converted content
+        - setProperty:
+            name: convertedMarkdown
+            simple: "${body}"
+
+      # Step 3: Log the converted content (first 500 chars)
+        - script:
+            groovy: |
+              def markdown = exchange.getProperty("convertedMarkdown", String.class)
+              def preview = markdown.length() > 500 ? markdown.substring(0, 500) + "..." : markdown
+              log.info("Converted Markdown preview:\n{}", preview)
+
+      # Step 4: Prepare AI prompt for document analysis
+        - setBody:
+            simple: |
+              You are a helpful document analysis assistant. Please analyze the following document and provide:
+              1. A brief summary (2-3 sentences)
+              2. Key topics and main points
+              3. Any important findings or conclusions
+
+              Document content:
+              ${exchangeProperty.convertedMarkdown}
+
+      # Step 5: Send to LangChain4j Chat for AI analysis
+        - log: "Analyzing document with AI model..."
+        - to:
+            uri: langchain4j-chat:analysis
+            parameters:
+              chatModel: "#chatModel"
+
+      # Step 6: Store AI analysis result
+        - setProperty:
+            name: aiAnalysis
+            simple: "${body}"
+        - log: "AI analysis completed"
+
+      # Step 7: Create combined result (markdown + analysis)
+        - script:
+            groovy: |
+              def fileName = exchange.getProperty("originalFileName")
+              def markdown = exchange.getProperty("convertedMarkdown", String.class)
+              def analysis = exchange.getProperty("aiAnalysis", String.class)
+              def dateStr = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date())
+
+              def result = "# Document Analysis Report\n\n" +
+                "**File:** ${fileName}\n" +
+                "**Date:** ${dateStr}\n\n" +
+                "---\n\n" +
+                "## AI Analysis\n\n" +
+                "${analysis}\n\n" +
+                "---\n\n" +
+                "## Full Document Content (Markdown)\n\n" +
+                "${markdown}"
+
+              exchange.message.setBody(result)
+
+      # Step 8: Save combined result
+        - setHeader:
+            name: CamelFileName
+            simple: "${exchangeProperty.originalFileName}_analysis.md"
+        - to:
+            uri: file:{{output.directory}}
+        - log: "Analysis report saved: ${header.CamelFileName}"
+
+        # Step 9: Clean up - delete the processed file from documents directory
+        - script:
+            groovy: |
+              import java.nio.file.Files
+              import java.nio.file.Paths
+
+              def docDir = camelContext.resolvePropertyPlaceholders("{{documents.directory}}")
+              def fileName = exchange.getProperty("sourceFilePath")
+              def filePath = Paths.get(docDir, fileName)
+
+              if (Files.exists(filePath)) {
+                Files.delete(filePath)
+                log.info("Cleaned up source file: {}", filePath)
+              }
+        - log: "Processing complete for: ${exchangeProperty.originalFileName}"
+
+# Route 2: Interactive Q&A about documents
+- route:
+    id: document-qa-api
+    from:
+      uri: platform-http:/api/ask
+      steps:
+        - log: "Received question: ${body}"
+        - setProperty:
+            name: userQuestion
+            simple: "${body}"
+
+      # Read the most recent document from documents directory
+        - script:
+            groovy: |
+              import java.nio.file.Files
+              import java.nio.file.Paths
+              import java.util.stream.Collectors
+
+              def docDir = camelContext.resolvePropertyPlaceholders("{{documents.directory}}")
+              def docPath = Paths.get(docDir)
+
+              if (Files.exists(docPath)) {
+                def latestFile = Files.list(docPath)
+                  .filter { f -> f.toString().matches(".*\\.(pdf|docx|pptx|html|md)") }
+                  .max { f1, f2 -> Files.getLastModifiedTime(f1).compareTo(Files.getLastModifiedTime(f2)) }
+                  .orElse(null)
+
+                if (latestFile != null) {
+                  exchange.message.setBody(latestFile.toFile())
+                  exchange.setProperty("documentFound", true)
+                } else {
+                  exchange.setProperty("documentFound", false)
+                  exchange.message.setBody("No documents found in directory")
+                }
+              } else {
+                exchange.setProperty("documentFound", false)
+                exchange.message.setBody("Documents directory does not exist")
+              }
+
+      # Convert document to markdown if found
+        - choice:
+            when:
+              - simple: "${exchangeProperty.documentFound} == true"
+                steps:
+                  - log: "Converting document for Q&A..."
+                  - to:
+                      uri: docling:CONVERT_TO_MARKDOWN
+                      parameters:
+                        useDoclingServe: true
+                        doclingServeUrl: "{{docling.serve.url}}"
+                        contentInBody: true
+
+                  - setProperty:
+                      name: documentContent
+                      simple: "${body}"
+
+                  # Prepare RAG prompt
+                  - setBody:
+                      simple: |
+                        You are a helpful assistant answering questions about documents.
+
+                        Document content:
+                        ${exchangeProperty.documentContent}
+
+                        Question: ${exchangeProperty.userQuestion}
+
+                        Please provide a clear and concise answer based on the document content above.
+
+                  - to:
+                      uri: langchain4j-chat:qa
+                      parameters:
+                        chatModel: "#chatModel"
+
+                  - setHeader:
+                      name: Content-Type
+                      constant: "text/plain"
+            otherwise:
+              steps:
+                - setBody:
+                    simple: "Error: ${body}"
+                - setHeader:
+                    name: Content-Type
+                    constant: "text/plain"
+
+# Route 3: Batch document summarization
+- route:
+    id: batch-summarization
+    from:
+      uri: timer:batchSummarize
+      parameters:
+        delay: "{{batch.delay}}"
+        repeatCount: 0
+      steps:
+        - log: "Starting batch document summarization..."
+        - script:
+            groovy: |
+              import java.nio.file.Files
+              import java.nio.file.Paths
+
+              def docDir = camelContext.resolvePropertyPlaceholders("{{documents.directory}}")
+              def docPath = Paths.get(docDir)
+
+              if (Files.exists(docPath)) {
+                def files = Files.list(docPath)
+                  .filter { f -> f.toString().matches(".*\\.(pdf|docx|pptx|html|md)") }
+                  .collect { it.toFile() }
+
+                exchange.message.setBody(files)
+              } else {
+                exchange.message.setBody([])
+              }
+
+        - split:
+            simple: "${body}"
+            steps:
+              - log: "Summarizing: ${body}"
+              - setProperty:
+                  name: currentFile
+                  simple: "${body}"
+
+              # Convert to markdown
+              - to:
+                  uri: docling:CONVERT_TO_MARKDOWN
+                  parameters:
+                    useDoclingServe: true
+                    doclingServeUrl: "{{docling.serve.url}}"
+                    contentInBody: true
+
+              # Generate summary
+              - setBody:
+                  simple: |
+                    Please provide a concise 3-sentence summary of the following document:
+
+                    ${body}
+
+              - to:
+                  uri: langchain4j-chat:summary
+                  parameters:
+                    chatModel: "#chatModel"
+
+              - log: "Summary: ${body}"
+
+# Route 4: Health check endpoint
+- route:
+    id: health-check
+    from:
+      uri: platform-http:/api/health
+      steps:
+        - log: "Health check requested"
+        - script:
+            groovy: |
+              import groovy.json.JsonOutput
+
+              def doclingUrl = camelContext.resolvePropertyPlaceholders("{{docling.serve.url}}")
+              def ollamaUrl = camelContext.resolvePropertyPlaceholders("{{ollama.base.url}}")
+
+              def health = [
+                status: "healthy",
+                components: [
+                  docling: [
+                    url: doclingUrl,
+                    status: "configured"
+                  ],
+                  ollama: [
+                    url: ollamaUrl,
+                    model: camelContext.resolvePropertyPlaceholders("{{ollama.model.name}}"),
+                    status: "configured"
+                  ]
+                ],
+                directories: [
+                  documents: camelContext.resolvePropertyPlaceholders("{{documents.directory}}"),
+                  output: camelContext.resolvePropertyPlaceholders("{{output.directory}}")
+                ]
+              ]
+
+              exchange.message.setBody(JsonOutput.toJson(health))
+        - setHeader:
+            name: Content-Type
+            constant: "application/json"
+
+# Route 5: Extract structured data from documents
+- route:
+    id: extract-structured-data
+    from:
+      uri: platform-http:/api/extract
+      parameters:
+        httpMethodRestrict: "POST"
+      steps:
+        - log: "Extracting structured data from uploaded document"
+        - setProperty:
+            name: uploadedContent
+            simple: "${body}"
+
+      # Extract as JSON with Docling
+        - to:
+            uri: docling:EXTRACT_STRUCTURED_DATA
+            parameters:
+              useDoclingServe: true
+              doclingServeUrl: "{{docling.serve.url}}"
+              outputFormat: "json"
+              contentInBody: true
+
+        - setProperty:
+            name: structuredData
+            simple: "${body}"
+
+      # Ask AI to analyze the structured data
+        - setBody:
+            simple: |
+              Please analyze this structured document data and identify:
+              1. Document type and structure
+              2. Key data fields and their values
+              3. Any tables or structured information
+
+              Structured data:
+              ${exchangeProperty.structuredData}
+
+        - to:
+            uri: langchain4j-chat:extract
+            parameters:
+              chatModel: "#chatModel"
+
+        - setHeader:
+            name: Content-Type
+            constant: "text/plain"

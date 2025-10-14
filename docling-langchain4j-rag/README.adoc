@@ -1,0 +1,651 @@
+= Document Analysis with Docling and LangChain4j RAG
+
+This example demonstrates a complete RAG (Retrieval Augmented Generation) workflow using Apache Camel, combining:
+
+* **Docling** - AI-powered document conversion (PDF, Word, PowerPoint → Markdown/JSON)
+* **LangChain4j** - Integration with Large Language Models
+* **Ollama** - Local LLM inference
+
+== Overview
+
+This application provides intelligent document processing capabilities:
+
+* **Automatic Document Conversion** - Convert various document formats to Markdown using Docling
+* **AI-Powered Analysis** - Analyze documents using LLMs via LangChain4j
+* **Interactive Q&A** - Ask questions about your documents through REST API
+* **Batch Processing** - Summarize multiple documents automatically
+* **Structured Data Extraction** - Extract tables and structured information from documents
+
+== Architecture
+
+=== Components
+
+[source,text]
+----
+Documents → Docling (Convert) → Markdown → LangChain4j → Ollama (LLM) → Analysis
+----
+
+**Docling-Serve**: Python-based document conversion service running in Docker
+
+**Ollama**: Local LLM server running models like Llama 3.2
+
+**Camel Routes**: Orchestrate the workflow between components
+
+=== Features
+
+* **Document Format Support**: PDF, DOCX, PPTX, HTML, Markdown
+* **Multiple Operations**: Analysis, Q&A, Summarization, Data Extraction
+* **Docker-based**: All services run in containers
+* **REST API**: HTTP endpoints for interaction
+* **Automatic Processing**: File watcher for automatic document processing
+
+== Prerequisites
+
+* JBang installed (https://www.jbang.dev)
+* Java 11 or later
+* Docker and Docker Compose
+
+== Project Structure
+
+[source,text]
+----
+docling-langchain4j-rag/
+├── docling-langchain4j-rag.yaml   # Main YAML configuration
+├── application.properties          # Configuration settings
+├── compose.yaml                    # Docker Compose for services
+├── run.sh                          # Convenience run script
+├── sample.md                       # Sample document (copy to documents/ for testing)
+├── README.adoc                     # This file
+├── documents/                      # Input directory (files auto-deleted after processing)
+└── output/                         # Analysis reports output
+----
+
+== Setup
+
+=== Step 1: Start Required Services
+
+You have two options for running the required services:
+
+==== Option A: Using Docker Compose (Recommended)
+
+Start both Docling and Ollama services:
+
+[source,sh]
+----
+$ docker compose up -d
+----
+
+Pull the Ollama model (first time only):
+
+[source,sh]
+----
+$ docker exec -it ollama ollama pull orca-mini
+----
+
+Verify services are running:
+
+[source,sh]
+----
+$ curl http://localhost:5001/   # Docling
+$ curl http://localhost:11434/  # Ollama
+----
+
+==== Option B: Using Camel Infra Commands (If Available)
+
+[source,sh]
+----
+# Start Docling (if camel infra supports it)
+$ jbang -Dcamel.jbang.version=4.16.0-SNAPSHOT camel@apache/camel infra run docling
+
+# Start Ollama (if camel infra supports it)
+$ jbang -Dcamel.jbang.version=4.16.0-SNAPSHOT camel@apache/camel infra run ollama
+----
+
+==== Option C: Manual Docker Commands
+
+[source,sh]
+----
+# Start Docling-Serve
+$ docker run -d -p 5001:5001 --name docling-serve ghcr.io/docling-project/docling-serve:latest
+
+# Start Ollama
+$ docker run -d -p 11434:11434 --name ollama ollama/ollama:latest
+
+# Pull Ollama model
+$ docker exec -it ollama ollama pull orca-mini
+----
+
+=== Step 2: Create Required Directories
+
+The `documents/` and `output/` directories will be created automatically when needed, but you can create them manually:
+
+[source,sh]
+----
+$ mkdir -p documents output
+----
+
+**Note:** Files placed in `documents/` will be automatically processed and then **deleted** after analysis is complete.
+
+=== Step 3: Run the Camel Application
+
+[source,sh]
+----
+$ jbang -Dcamel.jbang.version=4.16.0-SNAPSHOT camel@apache/camel run \
+  --fresh \
+  --dep=camel:docling \
+  --dep=camel:langchain4j-chat \
+  --dep=camel:platform-http \
+  --dep=dev.langchain4j:langchain4j:1.6.0 \
+  --dep=dev.langchain4j:langchain4j-ollama:1.6.0 \
+  --properties=application.properties \
+  docling-langchain4j-rag.yaml
+----
+
+The application will start and listen on port 8080.
+
+== Usage
+
+=== 1. Automatic Document Analysis
+
+Copy a document to the `documents/` directory for processing:
+
+[source,sh]
+----
+# Using the provided sample
+$ cp sample.md documents/
+
+# Or use your own document
+$ cp /path/to/your/document.pdf documents/
+----
+
+The system will:
+
+1. Detect the new file
+2. Convert it to Markdown using Docling
+3. Analyze it with the LLM
+4. Generate a comprehensive analysis report in `output/`
+5. **Automatically delete the source file** from `documents/` after processing
+
+**Example Output** (`output/sample.md_analysis.md`):
+
+[source,markdown]
+----
+# Document Analysis Report
+
+**File:** document.pdf
+**Date:** 2025-10-14 12:30:45
+
+---
+
+## AI Analysis
+
+**Summary:** This document discusses the implementation of RAG systems...
+
+**Key Topics:**
+- Document processing pipelines
+- LLM integration patterns
+- Vector embeddings and similarity search
+
+**Important Findings:**
+- RAG improves LLM accuracy by 40%
+- Hybrid search outperforms pure vector search
+...
+
+---
+
+## Full Document Content (Markdown)
+
+[Full converted markdown content here]
+----
+
+=== 2. Interactive Q&A
+
+Ask questions about your documents via HTTP API:
+
+[source,sh]
+----
+$ curl -X POST http://localhost:8080/api/ask \
+  -H "Content-Type: text/plain" \
+  -d "What are the main topics discussed in the document?"
+----
+
+**Response:**
+
+[source,text]
+----
+The document discusses three main topics:
+1. RAG (Retrieval Augmented Generation) architecture
+2. Document processing with Docling
+3. Integration with LangChain4j for LLM orchestration
+----
+
+=== 3. Structured Data Extraction
+
+Extract tables and structured data:
+
+[source,sh]
+----
+$ curl -X POST http://localhost:8080/api/extract \
+  -H "Content-Type: application/octet-stream" \
+  --data-binary "@documents/report.pdf"
+----
+
+**Response:**
+
+[source,text]
+----
+**Document Type:** Financial Report
+
+**Key Data Fields:**
+- Revenue: $1.2M (Table 1, Row 3)
+- Expenses: $800K (Table 1, Row 5)
+- Net Profit: $400K (calculated)
+
+**Tables Identified:**
+1. Quarterly Financial Summary (5 rows, 4 columns)
+2. Department Breakdown (8 rows, 3 columns)
+...
+----
+
+=== 4. Health Check
+
+Check system status:
+
+[source,sh]
+----
+$ curl http://localhost:8080/api/health
+----
+
+**Response:**
+
+[source,json]
+----
+{
+  "status": "healthy",
+  "components": {
+    "docling": {
+      "url": "http://localhost:5001",
+      "status": "configured"
+    },
+    "ollama": {
+      "url": "http://localhost:11434",
+      "model": "llama3.2",
+      "status": "configured"
+    }
+  },
+  "directories": {
+    "documents": "documents",
+    "output": "output"
+  }
+}
+----
+
+== Configuration
+
+=== application.properties
+
+[source,properties]
+----
+# Directories
+documents.directory=documents
+output.directory=output
+
+# Docling-Serve URL
+docling.serve.url=http://localhost:5001
+
+# Ollama Configuration
+ollama.base.url=http://localhost:11434
+ollama.model.name=llama3.2
+
+# Server Port
+camel.server.port=8080
+----
+
+=== Using Different Ollama Models
+
+Available models:
+
+* **llama3.2** (default) - Latest Llama model, good balance of speed and quality
+* **llama3.2:1b** - Smaller, faster model
+* **mistral** - Alternative high-quality model
+* **phi3** - Microsoft's efficient model
+* **gemma2** - Google's Gemma model
+
+To use a different model:
+
+1. Pull the model:
+
+[source,sh]
+----
+$ docker exec -it ollama ollama pull mistral
+----
+
+2. Update `application.properties`:
+
+[source,properties]
+----
+ollama.model.name=mistral
+----
+
+3. Restart the Camel application
+
+=== Using Remote Ollama Instance
+
+To use Ollama running on a different machine:
+
+[source,properties]
+----
+ollama.base.url=http://remote-server:11434
+----
+
+== Routes Explanation
+
+=== Route 1: document-analysis-workflow
+
+**Trigger:** New file in `documents/` directory
+
+**Flow:**
+
+1. Detect new document
+2. Convert to Markdown via Docling
+3. Send to LLM for analysis
+4. Generate comprehensive report
+5. Save to `output/` directory
+
+**Supported Formats:** PDF, DOCX, PPTX, HTML, MD
+
+=== Route 2: document-qa-api
+
+**Endpoint:** `POST /api/ask`
+
+**Description:** Answer questions about the most recent document
+
+**Input:** Plain text question
+
+**Output:** AI-generated answer based on document content
+
+=== Route 3: batch-summarization
+
+**Trigger:** Timer (configurable)
+
+**Description:** Process all documents in batch and generate summaries
+
+**Configuration:** Set `batch.delay` in application.properties (default: disabled)
+
+=== Route 4: health-check
+
+**Endpoint:** `GET /api/health`
+
+**Description:** System health and configuration status
+
+=== Route 5: extract-structured-data
+
+**Endpoint:** `POST /api/extract`
+
+**Description:** Extract tables and structured data from uploaded documents
+
+**Input:** Binary document data
+
+**Output:** AI analysis of extracted structured data
+
+== Advanced Usage
+
+=== Batch Processing
+
+Enable automatic batch summarization:
+
+[source,properties]
+----
+# Run every 1 hour (3600000 ms)
+batch.delay=3600000
+----
+
+All documents in the `documents/` directory will be summarized periodically.
+
+=== Custom Document Processing
+
+You can extend the routes to add custom processing logic:
+
+[source,yaml]
+----
+- route:
+    id: custom-processing
+    from:
+      uri: file:documents
+      parameters:
+        include: ".*\\.pdf"
+    steps:
+      # Your custom processing here
+      - to: docling:CONVERT_TO_HTML
+      - to: langchain4j-chat:custom
+----
+
+=== Integration with Vector Stores
+
+For production RAG, consider adding vector embeddings:
+
+[source,yaml]
+----
+# Add after document conversion
+- to: langchain4j-embeddings:embed
+- to: your-vector-store
+----
+
+== Troubleshooting
+
+=== Docling Not Responding
+
+**Check Docling service:**
+
+[source,sh]
+----
+$ docker logs docling-serve
+$ curl http://localhost:5001/
+----
+
+**Restart service:**
+
+[source,sh]
+----
+$ docker restart docling-serve
+----
+
+=== Ollama Model Not Found
+
+**Pull the model:**
+
+[source,sh]
+----
+$ docker exec -it ollama ollama pull llama3.2
+----
+
+**Check available models:**
+
+[source,sh]
+----
+$ docker exec -it ollama ollama list
+----
+
+=== Slow Document Processing
+
+**Causes:**
+
+* Large documents (>100 pages)
+* Complex layouts with many images
+* Limited CPU/memory
+
+**Solutions:**
+
+* Increase timeout in `application.properties`:
+
+[source,properties]
+----
+ollama.timeout=300
+----
+
+* Use a smaller/faster model (llama3.2:1b)
+* Process smaller documents first
+
+=== Out of Memory
+
+**Increase Docker memory:**
+
+[source,sh]
+----
+# In Docker Desktop: Settings → Resources → Memory
+# Recommended: 8GB or more for LLMs
+----
+
+== Performance Considerations
+
+=== Document Conversion
+
+* **PDF**: 1-5 seconds per page (depends on complexity)
+* **DOCX**: 0.5-2 seconds per page
+* **OCR-required**: 5-10 seconds per page (scanned PDFs)
+
+=== LLM Inference
+
+* **llama3.2 (3B)**: 5-15 seconds per response
+* **llama3.2:1b**: 2-5 seconds per response
+* **Speed depends on**: Prompt length, context size, hardware
+
+=== Recommended Hardware
+
+* **Minimum**: 8GB RAM, 4 CPU cores
+* **Recommended**: 16GB RAM, 8 CPU cores, GPU (optional)
+
+== Security Considerations
+
+=== Current Implementation
+
+* **Development Setup** - Not production-ready
+* **No Authentication** - Open HTTP endpoints
+* **Local Processing** - Data stays on your machine
+
+=== Production Recommendations
+
+**1. Authentication & Authorization**
+
+[source,yaml]
+----
+# Add to routes
+- setHeader:
+    name: Authorization
+    constant: "Bearer ${env:API_TOKEN}"
+----
+
+**2. Input Validation**
+
+* Validate file sizes
+* Check file types
+* Scan for malware
+
+**3. Rate Limiting**
+
+* Implement request throttling
+* Add queue management
+
+**4. Data Privacy**
+
+* Encrypt sensitive documents
+* Secure API endpoints with TLS
+* Implement access logging
+
+== Production Deployment
+
+=== Using Kubernetes
+
+[source,yaml]
+----
+# See k8s-deployment.yaml (example)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: docling-langchain4j-rag
+spec:
+  replicas: 3
+  ...
+----
+
+=== Scaling Considerations
+
+* **Horizontal**: Multiple Camel instances with load balancer
+* **Vertical**: Increase memory/CPU for Ollama container
+* **Caching**: Cache frequent document conversions
+
+== Cleanup
+
+Stop all services:
+
+[source,sh]
+----
+# Docker Compose
+$ docker compose down
+
+# Or manual cleanup
+$ docker stop docling-serve ollama
+$ docker rm docling-serve ollama
+----
+
+Remove volumes (optional):
+
+[source,sh]
+----
+$ docker volume rm docling-langchain4j-rag_ollama_data
+----
+
+== Alternative Configurations
+
+=== Using OpenAI Instead of Ollama
+
+[source,properties]
+----
+# application.properties
+openai.api.key=sk-your-api-key-here
+----
+
+[source,yaml]
+----
+# Update bean configuration
+- name: chatModel
+  type: dev.langchain4j.model.chat.ChatLanguageModel
+  scriptLanguage: groovy
+  script: |
+    import dev.langchain4j.model.openai.OpenAiChatModel
+
+    return OpenAiChatModel.builder()
+      .apiKey(context.resolvePropertyPlaceholders("{{openai.api.key}}"))
+      .modelName("gpt-4")
+      .temperature(0.3)
+      .build()
+----
+
+=== Using Cloud Docling Service
+
+If you have a cloud-hosted Docling service:
+
+[source,properties]
+----
+docling.serve.url=https://your-docling-service.com
+docling.auth.token=your-auth-token
+----
+
+== References
+
+* **Docling**: https://github.com/DS4SD/docling
+* **LangChain4j**: https://github.com/langchain4j/langchain4j
+* **Ollama**: https://ollama.ai
+* **Apache Camel**: https://camel.apache.org
+* **Camel Docling Component**: /home/oscerd/workspace/apache-camel/camel/components/camel-ai/camel-docling/
+* **Camel LangChain4j Components**: /home/oscerd/workspace/apache-camel/camel/components/camel-ai/
+
+== Help and Contributions
+
+If you hit any problem using Camel or have some feedback, then please
+https://camel.apache.org/community/support/[let us know].
+
+We also love contributors, so
+https://camel.apache.org/community/contributing/[get involved] :-)
+
+The Camel riders!
