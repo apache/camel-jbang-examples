@@ -26,7 +26,7 @@ Traditional key exchange methods (RSA, ECDH) are vulnerable to quantum computer 
 
 1. Watch `input/` directory for new files
 2. Generate a random AES key using ML-KEM encapsulation
-3. Encrypt file content with AES-GCM
+3. Encrypt file content with AES
 4. Combine encapsulation + encrypted content
 5. Save to `encrypted/` directory with `.pqenc` extension
 
@@ -35,7 +35,7 @@ Traditional key exchange methods (RSA, ECDH) are vulnerable to quantum computer 
 1. Watch `encrypted/` directory for `.pqenc` files
 2. Parse encapsulation and encrypted content
 3. Decapsulate to extract AES key using ML-KEM private key
-4. Decrypt file content with AES-GCM
+4. Decrypt file content with AES
 5. Save decrypted file to `decrypted/` directory
 
 == Features
@@ -177,11 +177,11 @@ Encrypted files use a simple binary format:
 ----
 [4 bytes: encapsulation length (big-endian)]
 [N bytes: ML-KEM encapsulation]
-[M bytes: AES-GCM encrypted content]
+[M bytes: AES encrypted content]
 ----
 
 * **Encapsulation** - Contains the encrypted AES key (768 bytes for ML-KEM-512)
-* **Encrypted Content** - File content encrypted with AES-GCM
+* **Encrypted Content** - File content encrypted with AES (128-bit key)
 
 == Implementation Details
 
@@ -259,8 +259,8 @@ Encrypted files use a simple binary format:
 
 - Add digital signatures for authentication (combine with PQC signatures)
 - Implement sender/receiver identity verification
-- Add message authentication codes (MACs)
-- Use authenticated encryption (already using AES-GCM)
+- Add message authentication codes (MACs) for integrity verification
+- Consider upgrading to authenticated encryption modes like AES-GCM
 
 **3. File Handling**
 
@@ -323,10 +323,11 @@ done
 * Decapsulation: ~0.1ms
 * Encapsulation Size: 768 bytes
 
-**AES-GCM Performance:**
+**AES Performance:**
 
-* Encryption: ~100 MB/s (depends on CPU)
-* Decryption: ~100 MB/s (depends on CPU)
+* Encryption: ~100-200 MB/s (depends on CPU and mode)
+* Decryption: ~100-200 MB/s (depends on CPU and mode)
+* Key Size: 128 bits (generated via ML-KEM)
 
 == Comparison with Traditional Encryption
 
