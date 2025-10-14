@@ -1,0 +1,353 @@
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Post-Quantum Cryptography Document Signing with HashiCorp Vault
+# Single YAML file containing beans and routes
+
+# Bean Definitions
+- beans:
+  # Register BouncyCastle providers at startup using Groovy
+  - name: initSecurity
+    type: java.lang.Object
+    scriptLanguage: groovy
+    script: |
+      // Register BouncyCastle providers
+      if (java.security.Security.getProvider("BC") == null) {
+          java.security.Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider())
+      }
+      if (java.security.Security.getProvider("BCPQC") == null) {
+          java.security.Security.addProvider(new org.bouncycastle.pqc.jcajce.provider.BouncyCastlePQCProvider())
+      }
+      return new Object()
+
+  # HashicorpVaultKeyLifecycleManager using Groovy script
+  - name: keyLifecycleManager
+    type: org.apache.camel.component.pqc.lifecycle.HashicorpVaultKeyLifecycleManager
+    scriptLanguage: groovy
+    script: |
+      new org.apache.camel.component.pqc.lifecycle.HashicorpVaultKeyLifecycleManager(
+          '{{vault.host}}',
+          {{vault.port}},
+          '{{vault.scheme}}',
+          '{{vault.token}}',
+          '{{vault.secrets.engine}}',
+          '{{vault.keys.prefix}}'
+      )
+
+# Route Definitions
+- route:
+    id: initialize-signing-key
+    from:
+      uri: timer:init
+      parameters:
+        repeatCount: 1
+      steps:
+        - log: "Initializing PQC signing key in Vault..."
+        - bean:
+            ref: keyLifecycleManager
+            method: "generateKeyPair('DILITHIUM', 'document-signing-key')"
+        - log: "PQC signing key initialized successfully"
+        - script:
+            groovy: |
+              // Register the KeyPair bean
+              def keyManager = camelContext.registry.lookupByNameAndType('keyLifecycleManager',
+                  org.apache.camel.component.pqc.lifecycle.HashicorpVaultKeyLifecycleManager.class)
+              def keyPair = keyManager.getKey('document-signing-key')
+              camelContext.registry.bind('signingKey', keyPair)
+        - to: direct:get-key-metadata
+
+- route:
+    id: sign-document-api
+    from:
+      uri: platform-http:/api/sign
+      steps:
+        - log: "Received document signing request: ${body}"
+        - setHeader:
+            name: originalBody
+            simple: "${body}"
+        - toD: "pqc:sign?operation=sign&signatureAlgorithm=DILITHIUM&keyPair=#signingKey"
+        - script:
+            groovy: |
+              // Convert binary signature to base64
+              def signature = exchange.message.getHeader('CamelPQCSignature', byte[].class)
+              if (signature != null) {
+                  def base64Signature = java.util.Base64.encoder.encodeToString(signature)
+                  exchange.message.setHeader('CamelPQCSignature', base64Signature)
+              }
+        - log: "Document signed with quantum-resistant signature"
+        - to: direct:update-key-usage
+        - to: direct:check-key-expiration
+        - setBody:
+            simple: |
+              {
+                "status": "signed",
+                "document": "${header.originalBody}",
+                "signature": "${header.CamelPQCSignature}",
+                "signatureAlgorithm": "DILITHIUM",
+                "keyId": "document-signing-key",
+                "keyMetadata": ${body}
+              }
+        - setHeader:
+            name: Content-Type
+            constant: "application/json"
+        - log: "Response: ${body}"
+
+- route:
+    id: verify-document-api
+    from:
+      uri: platform-http:/api/verify
+      steps:
+        - log: "Received document verification request: ${body}"
+        - script:
+            groovy: |
+              // Get signature from X-Signature header
+              def base64Signature = exchange.getIn().getHeader('X-Signature', String.class)
+              if (base64Signature == null || base64Signature.isEmpty()) {
+                  throw new IllegalArgumentException('X-Signature header is missing or empty')
+              }
+              def signature = java.util.Base64.decoder.decode(base64Signature)
+              exchange.getIn().setHeader('CamelPQCSignature', signature)
+              exchange.getIn().setHeader('signatureLength', signature.length)
+        - log: "Verifying signature of length: ${header.signatureLength} bytes"
+        - doTry:
+            steps:
+              - toD: "pqc:verify?operation=verify&signatureAlgorithm=DILITHIUM&keyPair=#signingKey"
+              - log: "Verification completed. Result: ${header.CamelPQCVerification}"
+            doCatch:
+              - exception:
+                  - "java.lang.Exception"
+                steps:
+                  - log: "ERROR during verification: ${exception.message}"
+                  - setHeader:
+                      name: CamelPQCVerification
+                      constant: false
+        - choice:
+            when:
+              - simple: "${header.CamelPQCVerification} == true"
+                steps:
+                  - setBody:
+                      simple: |
+                        {
+                          "status": "verified",
+                          "valid": true,
+                          "message": "Document signature is valid",
+                          "signatureAlgorithm": "DILITHIUM"
+                        }
+              - simple: "${header.CamelPQCVerification} == false"
+                steps:
+                  - setBody:
+                      simple: |
+                        {
+                          "status": "verified",
+                          "valid": false,
+                          "message": "Document signature is invalid",
+                          "signatureAlgorithm": "DILITHIUM"
+                        }
+        - setHeader:
+            name: Content-Type
+            constant: "application/json"
+        - log: "Verification result: ${body}"
+
+- route:
+    id: get-key-metadata-api
+    from:
+      uri: platform-http:/api/key/metadata
+      steps:
+        - log: "Fetching key metadata..."
+        - to: direct:get-key-metadata
+
+- route:
+    id: list-keys-api
+    from:
+      uri: platform-http:/api/keys
+      steps:
+        - log: "Listing all PQC keys..."
+        - bean:
+            ref: keyLifecycleManager
+            method: "listKeys"
+        - setBody:
+            simple: |
+              {
+                "keys": ${body}
+              }
+        - setHeader:
+            name: Content-Type
+            constant: "application/json"
+        - log: "Keys listed: ${body}"
+
+- route:
+    id: rotate-key-api
+    from:
+      uri: platform-http:/api/key/rotate
+      steps:
+        - log: "Rotating signing key..."
+        - bean:
+            ref: keyLifecycleManager
+            method: "rotateKey('document-signing-key', 'document-signing-key', 'DILITHIUM')"
+        - log: "Key rotated successfully: old key deprecated, new key active"
+        - setBody:
+            simple: |
+              {
+                "status": "rotated",
+                "oldKey": "document-signing-key",
+                "newKey": "document-signing-key",
+                "message": "Key rotation completed successfully"
+              }
+        - setHeader:
+            name: Content-Type
+            constant: "application/json"
+
+- route:
+    id: check-rotation-schedule
+    from:
+      uri: timer:checkRotation
+      parameters:
+        period: "{{key.rotation.check.period}}"
+      steps:
+        - log: "Checking if key needs rotation..."
+        - bean:
+            ref: keyLifecycleManager
+            method: "needsRotation('document-signing-key', 'P{{key.max.age.days}}D', {{key.max.usage.count}})"
+        - choice:
+            when:
+              - simple: "${body} == true"
+                steps:
+                  - log: "WARNING: Key 'document-signing-key' needs rotation!"
+                  - to: direct:get-key-metadata
+                  - log: "Current key metadata: ${body}"
+            otherwise:
+              steps:
+                - log: "Key rotation not needed yet"
+
+- route:
+    id: update-key-usage
+    from:
+      uri: direct:update-key-usage
+      steps:
+        - bean:
+            ref: keyLifecycleManager
+            method: "getKeyMetadata('document-signing-key')"
+        - setProperty:
+            name: metadata
+            simple: "${body}"
+        - script:
+            groovy: |
+              // Update last used timestamp and increment usage count
+              def metadata = exchange.getProperty('metadata')
+              if (metadata != null) {
+                  metadata.getClass().getMethod('updateLastUsed').invoke(metadata)
+                  exchange.message.setBody(metadata)
+              }
+        - bean:
+            ref: keyLifecycleManager
+            method: "updateKeyMetadata('document-signing-key', ${body})"
+        - log: "Key usage updated. Usage count: ${body.usageCount}"
+
+- route:
+    id: get-key-metadata-helper
+    from:
+      uri: direct:get-key-metadata
+      steps:
+        - bean:
+            ref: keyLifecycleManager
+            method: "getKeyMetadata('document-signing-key')"
+        - setBody:
+            simple: |
+              {
+                "keyId": "${body.keyId}",
+                "algorithm": "${body.algorithm}",
+                "status": "${body.status}",
+                "createdAt": "${body.createdAt}",
+                "lastUsedAt": "${body.lastUsedAt}",
+                "usageCount": ${body.usageCount},
+                "ageInDays": ${body.ageInDays},
+                "expiresAt": "${body.expiresAt}",
+                "nextRotationAt": "${body.nextRotationAt}",
+                "expired": ${body.expired},
+                "needsRotation": ${body.needsRotation}
+              }
+        - setHeader:
+            name: Content-Type
+            constant: "application/json"
+        - log: "Key metadata: ${body}"
+
+- route:
+    id: check-key-expiration
+    from:
+      uri: direct:check-key-expiration
+      steps:
+        - bean:
+            ref: keyLifecycleManager
+            method: "getKeyMetadata('document-signing-key')"
+        - choice:
+            when:
+              - simple: "${body.usageCount} >= {{key.max.usage.count}}"
+                steps:
+                  - log: "WARNING: Key has reached maximum usage count (${body.usageCount} >= {{key.max.usage.count}})"
+                  - setProperty:
+                      name: expirationReason
+                      simple: "usage count (${body.usageCount} uses)"
+                  - to: direct:auto-rotate-key
+              - simple: "${body.ageInDays} >= {{key.max.age.days}}"
+                steps:
+                  - log: "WARNING: Key has reached maximum age (${body.ageInDays} >= {{key.max.age.days}} days)"
+                  - setProperty:
+                      name: expirationReason
+                      simple: "age (${body.ageInDays} days)"
+                  - to: direct:auto-rotate-key
+            otherwise:
+              steps:
+                - setBody:
+                    simple: "Key is valid (usage: ${body.usageCount}/{{key.max.usage.count}}, age: ${body.ageInDays}/{{key.max.age.days}} days)"
+
+- route:
+    id: auto-rotate-key
+    from:
+      uri: direct:auto-rotate-key
+      steps:
+        - log: ">>> AUTOMATIC KEY ROTATION TRIGGERED <<<"
+        - log: "Reason: Key expired due to ${exchangeProperty.expirationReason}"
+        - setProperty:
+            name: timestamp
+            simple: "${date:now:yyyyMMdd-HHmmss}"
+        - setProperty:
+            name: newKeyId
+            simple: "document-signing-key"
+        - log: "Rotating key from 'document-signing-key' to '${exchangeProperty.newKeyId}'"
+        - bean:
+            ref: keyLifecycleManager
+            method: "rotateKey('document-signing-key', '${exchangeProperty.newKeyId}', 'DILITHIUM')"
+        - log: ">>> KEY ROTATION COMPLETED <<<"
+        - log: "Old key 'document-signing-key' status: DEPRECATED"
+        - log: "New key '${exchangeProperty.newKeyId}' status: ACTIVE"
+        - setProperty:
+            name: activeKeyId
+            simple: "${exchangeProperty.newKeyId}"
+        - bean:
+            ref: keyLifecycleManager
+            method: "getKeyMetadata('${exchangeProperty.newKeyId}')"
+        - setBody:
+            simple: |
+              {
+                "rotationTriggered": true,
+                "reason": "${exchangeProperty.expirationReason}",
+                "oldKey": "document-signing-key",
+                "oldKeyStatus": "DEPRECATED",
+                "newKey": "${exchangeProperty.newKeyId}",
+                "newKeyStatus": "ACTIVE",
+                "newKeyCreatedAt": "${body.createdAt}",
+                "message": "Key automatically rotated due to ${exchangeProperty.expirationReason}"
+              }
+        - log: "Rotation details: ${body}"

@@ -48,7 +48,7 @@ The example consists of the following files:
 [source,text]
 ----
 pqc-document-signing/
-├── PQCDocumentSigningRoutes.java  # Main RouteBuilder with 12 routes
+├── pqc-document-signing.yaml      # YAML configuration (beans + routes)
 ├── application.properties          # Configuration file
 └── README.adoc                    # This file
 ----
@@ -59,23 +59,17 @@ After Vault is configured and running, start the Camel application:
 
 [source,sh]
 ----
-$ jbang -Dcamel.jbang.version=4.16.0-SNAPSHOT camel@apache/camel run PQCDocumentSigningRoutes.java
-----
-
-Or using Maven:
-
-[source,sh]
-----
-$ mvn compile exec:java
+$ jbang -Dcamel.jbang.version=4.16.0-SNAPSHOT camel@apache/camel run pqc-document-signing.yaml
 ----
 
 The application will:
 
-1. Connect to HashiCorp Vault
-2. Generate a DILITHIUM Post-Quantum Cryptographic key pair
-3. Store the key securely in Vault at path: `secret/data/pqc/keys/document-signing-key`
-4. Start REST API endpoints on port 8080
-5. Begin monitoring key lifecycle (usage count, age, rotation needs)
+1. Register BouncyCastle security providers (BC, BCPQC)
+2. Connect to HashiCorp Vault
+3. Generate a DILITHIUM Post-Quantum Cryptographic key pair
+4. Store the key securely in Vault at path: `secret/data/pqc/keys/document-signing-key`
+5. Start REST API endpoints on port 8080
+6. Begin monitoring key lifecycle (usage count, age, rotation needs)
 
 == API Endpoints
 
@@ -301,32 +295,71 @@ $ docker stop vault
 $ docker rm vault
 ----
 
-== Architecture
+== Implementation Details
 
-This example demonstrates:
+The `pqc-document-signing.yaml` file contains:
 
-1. **Post-Quantum Cryptography (PQC)** - Quantum-resistant digital signatures using DILITHIUM
-2. **HashiCorp Vault Integration** - Enterprise secret management for PQC keys
-3. **Key Lifecycle Management** - Automated tracking of key usage, rotation, and expiration
-4. **RESTful API** - Multiple endpoints for signing, verification, and key management
-5. **Platform HTTP Component** - Lightweight HTTP server for REST APIs
-6. **Java-based RouteBuilder** - Routes defined using Camel Java DSL
-7. **Bean Configuration** - Vault and key manager beans configured programmatically in Java
-8. **Scheduled Jobs** - Periodic key rotation checks
-9. **Dynamic Routing** - Uses `.toD()` for runtime endpoint creation with autowired KeyPair
-10. **Base64 Encoding** - Binary signatures converted to base64 for JSON transport
+=== Bean Configuration
 
-=== Implementation Details
+**1. Security Initialization Bean** - Registers BouncyCastle providers at startup:
 
-The `PQCDocumentSigningRoutes.java` RouteBuilder:
+[source,yaml]
+----
+- beans:
+  - name: initSecurity
+    type: java.lang.Object
+    scriptLanguage: groovy
+    script: |
+      // Register BouncyCastle providers
+      if (java.security.Security.getProvider("BC") == null) {
+          java.security.Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider())
+      }
+      if (java.security.Security.getProvider("BCPQC") == null) {
+          java.security.Security.addProvider(new org.bouncycastle.pqc.jcajce.provider.BouncyCastlePQCProvider())
+      }
+      return new Object()
+----
 
-- Registers BouncyCastle security providers (BC, BCPQC)
-- Creates and binds Vault-related beans to the registry
-- Defines 11 Camel routes using Java DSL
-- Handles KeyPair registration after key generation
-- Converts binary signatures to/from base64 for JSON transport
-- Uses dynamic routing (`.toD()`) to create PQC endpoints at runtime
-- Implements automatic key rotation based on usage count and age
+**2. HashicorpVaultKeyLifecycleManager** - Created using Groovy script with 6-parameter constructor:
+
+[source,yaml]
+----
+  - name: keyLifecycleManager
+    type: org.apache.camel.component.pqc.lifecycle.HashicorpVaultKeyLifecycleManager
+    scriptLanguage: groovy
+    script: |
+      new org.apache.camel.component.pqc.lifecycle.HashicorpVaultKeyLifecycleManager(
+          '{{vault.host}}',           // Vault server hostname
+          {{vault.port}},             // Vault server port
+          '{{vault.scheme}}',         // Connection scheme (http/https)
+          '{{vault.token}}',          // Vault authentication token
+          '{{vault.secrets.engine}}', // KV secrets engine name
+          '{{vault.keys.prefix}}'     // Prefix for key paths in Vault
+      )
+----
+
+=== Route Definitions
+
+The YAML file defines 12 routes using Camel YAML DSL:
+
+1. **initialize-signing-key** - Generates DILITHIUM key pair and registers it as a bean
+2. **sign-document-api** - POST `/api/sign` - Signs documents with PQC signature
+3. **verify-document-api** - POST `/api/verify` - Verifies document signatures (uses `X-Signature` header)
+4. **get-key-metadata-api** - GET `/api/key/metadata` - Returns key metadata
+5. **list-keys-api** - GET `/api/keys` - Lists all PQC keys in Vault
+6. **rotate-key-api** - POST `/api/key/rotate` - Manual key rotation
+7. **check-rotation-schedule** - Timer-based rotation checks
+8. **update-key-usage** - Helper route for updating key usage metadata
+9. **get-key-metadata-helper** - Helper route for retrieving key metadata
+10. **check-key-expiration** - Helper route checking if key expired
+11. **auto-rotate-key** - Automatic key rotation when key expires
+
+=== Key Features
+
+- **Declarative Configuration** - All beans and routes defined in YAML
+- **Groovy Scripts** - Used for bean instantiation and signature conversion
+- **Property Placeholders** - All configuration values from `application.properties`
+- **No Compilation Required** - Routes can be modified without recompilation
 
 == Security Notice
 
