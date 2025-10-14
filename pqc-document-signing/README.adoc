@@ -21,7 +21,42 @@ This example demonstrates how to build a secure document signing service using A
 
 == Running HashiCorp Vault
 
-Run HashiCorp Vault using Docker:
+You can run HashiCorp Vault using either Camel JBang infrastructure support or Docker.
+
+=== Option 1: Using Camel JBang Infra (Recommended)
+
+Use Camel JBang's built-in infrastructure support to easily run HashiCorp Vault:
+
+[source,sh]
+----
+$ jbang -Dcamel.jbang.version=4.16.0-SNAPSHOT camel@apache/camel infra run hashicorp vault
+----
+
+This will automatically start HashiCorp Vault configured with:
+
+* Root token: `myroot`
+* Port: `8200`
+* Secrets engine: `secret` (KV v2)
+
+Wait a few seconds for Vault to fully start before proceeding.
+
+To stop Vault later:
+
+[source,sh]
+----
+$ jbang -Dcamel.jbang.version=4.16.0-SNAPSHOT camel@apache/camel infra stop hashicorp vault
+----
+
+**Note:** When using Camel infra, update `application.properties` to use port `8200`:
+
+[source,properties]
+----
+vault.port=8200
+----
+
+=== Option 2: Using Docker
+
+Alternatively, run HashiCorp Vault manually with Docker:
 
 [source,sh]
 ----
@@ -59,7 +94,7 @@ After Vault is configured and running, start the Camel application:
 
 [source,sh]
 ----
-$ jbang -Dcamel.jbang.version=4.16.0-SNAPSHOT camel@apache/camel run pqc-document-signing.yaml
+$ jbang -Dcamel.jbang.version=4.16.0-SNAPSHOT camel@apache/camel run --dep=mvn:org.springframework.vault:spring-vault-core:3.2.0 --dep=camel:pqc --properties=application.properties pqc-document-signing.yaml
 ----
 
 The application will:
@@ -252,8 +287,10 @@ Configuration is managed in `application.properties`:
 ----
 # Vault connection
 vault.host=localhost
-vault.port=8201
-vault.token=myroot
+vault.port=8200               # Use 8200 for camel infra, 8201 for Docker
+vault.token=myToken            # Vault authentication token
+vault.secrets.engine=secret
+vault.keys.prefix=pqc/keys
 
 # Key rotation policy
 key.max.usage.count=10        # Max signatures before rotation
@@ -265,13 +302,13 @@ key.rotation.check.period=60000 # Check interval (ms)
 
 === Connection to Vault Failed
 
-* Ensure Vault is running: `docker ps`
-* Verify the port in `application.properties` is set to `8201`
+* Ensure Vault is running: `docker ps` or check Camel infra status
+* Verify the port in `application.properties` matches Vault (8200 for camel infra, 8201 for Docker)
 * Check the Vault token is correct (default: `myroot`)
 
 === Key Not Found in Vault
 
-* Check Vault UI at http://localhost:8201 (token: `myroot`)
+* Check Vault UI at http://localhost:8200 (camel infra) or http://localhost:8201 (Docker) (token: `myroot`)
 * Verify the secrets engine is enabled: `vault secrets list`
 * Check the key path: `secret/data/pqc/keys/document-signing-key`
 
@@ -289,6 +326,13 @@ To stop the Camel application, press `Ctrl+C`.
 
 To stop HashiCorp Vault:
 
+If using Camel JBang infra:
+[source,sh]
+----
+$ jbang -Dcamel.jbang.version=4.16.0-SNAPSHOT camel@apache/camel infra stop hashicorp-vault
+----
+
+If using Docker:
 [source,sh]
 ----
 $ docker stop vault
