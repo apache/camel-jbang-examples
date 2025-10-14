@@ -1,0 +1,540 @@
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Financial Document Analysis with Market Intelligence
+# Combines: Docling (document conversion) + LangChain4j (AI analysis) + Market Data APIs
+# Use Case: Automated analysis of financial documents with real-time market intelligence
+
+# Bean Definitions
+- beans:
+  # Configure Ollama Chat Model for document analysis
+  - name: chatModel
+    type: "#class:dev.langchain4j.model.ollama.OllamaChatModel"
+    scriptLanguage: groovy
+    script: |
+      import dev.langchain4j.model.ollama.OllamaChatModel
+      import static java.time.Duration.ofSeconds
+
+      return OllamaChatModel.builder()
+        .baseUrl("{{ollama.base.url}}")
+        .modelName("{{ollama.model.name}}")
+        .temperature(0.2)
+        .timeout(ofSeconds(600))
+        .build()
+
+# Route Definitions
+
+# Route 1: Financial Document Analysis Pipeline
+- route:
+    id: financial-document-analyzer
+    from:
+      uri: file:{{documents.directory}}
+      parameters:
+        include: ".*\\.(pdf|docx|html|md)"
+        delete: true
+        moveFailed: .error
+        idempotent: true
+        idempotentKey: "${file:name}-${file:modified}"
+      steps:
+        - log: "📄 Processing financial document: ${header.CamelFileName}"
+        - setProperty:
+            name: originalFileName
+            simple: "${header.CamelFileName}"
+
+        # Convert GenericFile to file path
+        - setBody:
+            simple: "${body.file.absolutePath}"
+
+        # Step 1: Convert document to Markdown using Docling (async mode for large PDFs)
+        - log: "🔄 Converting document to Markdown with Docling-Serve (async mode)..."
+        - to:
+            uri: docling:CONVERT_TO_MARKDOWN
+            parameters:
+              useDoclingServe: true
+              doclingServeUrl: "{{docling.serve.url}}"
+              contentInBody: true
+              useAsyncMode: true
+              asyncTimeout: 300000
+              asyncPollInterval: 2000
+        - log: "✅ Document converted to Markdown"
+
+        # Step 2: Store converted markdown
+        - setProperty:
+            name: documentContent
+            simple: "${body}"
+
+        # Step 3: Extract stock symbols using simple regex (faster than AI)
+        - log: "🔍 Extracting stock symbols from document..."
+        - script:
+            groovy: |
+              import java.util.regex.Pattern
+              import java.util.regex.Matcher
+
+              def content = exchange.getProperty("documentContent", String.class)
+
+              // Pattern to match stock symbols (2-5 uppercase letters, possibly followed by stock references)
+              // Looks for patterns like: AAPL, (NASDAQ: GOOGL), Ticker: MSFT, etc.
+              def patterns = [
+                /\b([A-Z]{2,5})\b(?=\s*\(|\s*-|\s*stock|\s*shares|\s*Inc|\s*Corp)/,  // AAPL (company
+                /(?i)(?:NYSE|NASDAQ|ticker|symbol):\s*([A-Z]{2,5})\b/,                // NYSE: AAPL
+                /\(([A-Z]{2,5})\)/,                                                     // (AAPL)
+                /\b([A-Z]{2,5})\b(?=.*(?:stock|shares|trading|market))/               // Context-based
+              ]
+
+              def symbols = new LinkedHashSet()
+
+              patterns.each { patternStr ->
+                def pattern = Pattern.compile(patternStr)
+                def matcher = pattern.matcher(content)
+                while (matcher.find()) {
+                  def symbol = matcher.group(1)
+                  // Filter out common false positives (financial terms, acronyms, etc.)
+                  def falsePositives = ["CEO", "CFO", "USA", "USD", "INC", "LLC", "LTD", "PDF", "HTML", "HTTP",
+                                        "ASP", "EPS", "YOY", "QOQ", "TTM", "EBIT", "ARPU", "BUY", "SELL", "HOLD",
+                                        "TV", "FX", "EU", "EV", "AI", "AWS", "API", "APP", "MAC", "IPAD", "GPU", "CPU", "US", "FSD"]
+                  if (symbol && !falsePositives.contains(symbol)) {
+                    symbols.add(symbol)
+                  }
+                }
+              }
+
+              def result = symbols.isEmpty() ? "NONE" : symbols.join(",")
+              exchange.setProperty("stockSymbols", result)
+              log.info("📊 Extracted symbols: {}", result)
+        - log: "Symbols extracted: ${exchangeProperty.stockSymbols}"
+
+        # Step 4: Fetch market data for extracted symbols from MarketMind API
+        - choice:
+            when:
+              - simple: "${exchangeProperty.stockSymbols} != 'NONE' && ${exchangeProperty.stockSymbols} != null"
+                steps:
+                  - script:
+                      groovy: |
+                        import java.net.URL
+                        import java.net.HttpURLConnection
+
+                        def symbols = exchange.getProperty("stockSymbols", String.class)
+                        def symbolList = symbols.split(",").collect { it.trim().toUpperCase() }.findAll { it }
+                        def marketUrl = camelContext.resolvePropertyPlaceholders("{{marketmind.api.url}}")
+
+                        log.info("Fetching market data for {} symbols from {}", symbolList.size(), marketUrl)
+
+                        def jsonParts = []
+
+                        symbolList.each { symbol ->
+                          try {
+                            log.info("Fetching data for symbol: {}", symbol)
+
+                            // Fetch quote data
+                            def quoteUrl = new URL("http://${marketUrl}/quote/${symbol}")
+                            def quoteConn = quoteUrl.openConnection() as HttpURLConnection
+                            quoteConn.setRequestMethod("GET")
+                            quoteConn.setConnectTimeout(10000)
+                            quoteConn.setReadTimeout(10000)
+
+                            def quoteData = "{}"
+                            if (quoteConn.responseCode == 200) {
+                              quoteData = quoteConn.inputStream.text
+                            } else {
+                              log.warn("Failed to fetch quote for {}: {}", symbol, quoteConn.responseCode)
+                            }
+                            quoteConn.disconnect()
+
+                            // Fetch analyst data
+                            def analystUrl = new URL("http://${marketUrl}/analyst/${symbol}")
+                            def analystConn = analystUrl.openConnection() as HttpURLConnection
+                            analystConn.setRequestMethod("GET")
+                            analystConn.setConnectTimeout(10000)
+                            analystConn.setReadTimeout(10000)
+
+                            def analystData = "{}"
+                            if (analystConn.responseCode == 200) {
+                              analystData = analystConn.inputStream.text
+                            } else {
+                              log.warn("Failed to fetch analyst for {}: {}", symbol, analystConn.responseCode)
+                            }
+                            analystConn.disconnect()
+
+                            // Build JSON part for this symbol
+                            def part = '  "' + symbol + '": {\n'
+                            part += '    "quote": ' + quoteData + ',\n'
+                            part += '    "analyst": ' + analystData + '\n'
+                            part += '  }'
+
+                            jsonParts << part
+                            log.info("Successfully fetched data for {}", symbol)
+
+                          } catch (Exception e) {
+                            log.error("Error fetching data for {}: {}", symbol, e.message)
+                            // Add empty data for failed symbols
+                            def part = '  "' + symbol + '": {\n'
+                            part += '    "quote": {},\n'
+                            part += '    "analyst": {}\n'
+                            part += '  }'
+                            jsonParts << part
+                          }
+                        }
+
+                        def jsonStr = "{\n" + jsonParts.join(",\n") + "\n}"
+                        exchange.setProperty("marketIntelligence", jsonStr)
+                        log.info("Market intelligence data collected for {} symbols", symbolList.size())
+            otherwise:
+              steps:
+                - setProperty:
+                    name: marketIntelligence
+                    constant: "No stock symbols found"
+
+        # Step 5: Perform comprehensive AI analysis with market context
+        - log: "🤖 Performing AI analysis with market intelligence (this may take several minutes for large documents)..."
+        - setBody:
+            simple: |
+              You are a financial analyst AI assistant. Analyze the following financial document and provide:
+
+              1. **Executive Summary** (3-4 sentences)
+              2. **Key Financial Metrics** (revenue, profit, growth rates, etc.)
+              3. **Companies and Stock Symbols Mentioned**
+              4. **Investment Thesis** (bullish/bearish signals based on fundamentals)
+              5. **Risk Factors** identified
+              6. **Market Context** (based on provided market data below)
+              7. **Actionable Insights** for investors
+
+              Stock Symbols Identified: ${exchangeProperty.stockSymbols}
+
+              Document Content:
+              ${exchangeProperty.documentContent}
+
+              Market Intelligence Data (including analyst consensus ratings):
+              ${exchangeProperty.marketIntelligence}
+
+              Provide a comprehensive, professional analysis suitable for investment decision-making.
+        - to:
+            uri: langchain4j-chat:financial-analysis
+            parameters:
+              chatModel: "#chatModel"
+        - setProperty:
+            name: aiAnalysis
+            simple: "${body}"
+        - log: "✅ AI analysis completed"
+
+        # Step 5b: Extract analyst ratings from MarketMind data for report
+        - script:
+            groovy: |
+              import java.util.regex.Pattern
+
+              def marketIntel = exchange.getProperty("marketIntelligence", String.class)
+              def symbols = exchange.getProperty("stockSymbols", String.class)
+
+              def analystRatingsText = ""
+
+              try {
+                def analystSummaries = []
+
+                // Simple string search approach
+                symbols.split(",").each { sym ->
+                  def symbol = sym.trim().toUpperCase()
+
+                  // Extract values using simple patterns
+                  def consensus = null
+                  def targetPrice = null
+                  def currentPrice = null
+                  def change = null
+                  def changePct = null
+
+                  // Look for recommendation
+                  def consensusMatch = (marketIntel =~ /(?s)"${symbol}".*?"recommendation"\s*:\s*"([^"]+)"/)
+                  if (consensusMatch.find()) {
+                    consensus = consensusMatch.group(1)
+                  }
+
+                  // Look for target_mean
+                  def targetMatch = (marketIntel =~ /(?s)"${symbol}".*?"target_mean"\s*:\s*([0-9.]+)/)
+                  if (targetMatch.find()) {
+                    targetPrice = Double.parseDouble(targetMatch.group(1))
+                  }
+
+                  // Look for current_price
+                  def priceMatch = (marketIntel =~ /(?s)"${symbol}".*?"current_price"\s*:\s*([0-9.]+)/)
+                  if (priceMatch.find()) {
+                    currentPrice = Double.parseDouble(priceMatch.group(1))
+                  }
+
+                  // Look for change
+                  def changeMatch = (marketIntel =~ /(?s)"${symbol}".*?"change"\s*:\s*([+-]?[0-9.]+)/)
+                  if (changeMatch.find()) {
+                    change = Double.parseDouble(changeMatch.group(1))
+                  }
+
+                  // Look for change_percent
+                  def changePctMatch = (marketIntel =~ /(?s)"${symbol}".*?"change_percent"\s*:\s*([+-]?[0-9.]+)/)
+                  if (changePctMatch.find()) {
+                    changePct = Double.parseDouble(changePctMatch.group(1))
+                  }
+
+                  // Build narrative if we have minimum data
+                  if (consensus && currentPrice != null) {
+                    def narrative = "${symbol} is currently trading at \$${String.format('%.2f', currentPrice)}"
+
+                    if (change != null && changePct != null) {
+                      narrative += " (${String.format('%+.2f', change)}, ${String.format('%+.2f%%', changePct)})"
+                    }
+
+                    narrative += ". Analysts have a consensus rating of '${consensus}'"
+
+                    if (targetPrice != null) {
+                      narrative += " with a target price of \$${String.format('%.2f', targetPrice)}"
+                      def upside = ((targetPrice - currentPrice) / currentPrice) * 100
+                      narrative += ", indicating ${String.format('%+.1f%%', upside)} potential from current levels"
+                    }
+
+                    narrative += "."
+
+                    analystSummaries << [symbol: symbol, consensus: consensus, narrative: narrative]
+                  }
+                }
+
+                // Build analyst ratings section for report
+                if (!analystSummaries.isEmpty()) {
+                  analystRatingsText = "## Analyst Ratings Summary\n\n"
+                  analystSummaries.each { summary ->
+                    analystRatingsText += "**${summary.symbol}** (${summary.consensus.toUpperCase()})\n\n"
+                    analystRatingsText += "${summary.narrative}\n\n"
+                  }
+                }
+
+                // Store for logging later
+                exchange.setProperty("analystSummaries", analystSummaries)
+                exchange.setProperty("analystRatingsText", analystRatingsText)
+
+              } catch (Exception e) {
+                log.error("Error extracting analyst ratings: ${e.message}")
+              }
+
+        # Step 6: Generate comprehensive investment report
+        - script:
+            groovy: |
+              import java.text.SimpleDateFormat
+
+              def fileName = exchange.getProperty("originalFileName")
+              def documentContent = exchange.getProperty("documentContent", String.class)
+              def symbols = exchange.getProperty("stockSymbols", String.class)
+              def marketIntel = exchange.getProperty("marketIntelligence", String.class)
+              def analysis = exchange.getProperty("aiAnalysis", String.class)
+              def analystRatings = exchange.getProperty("analystRatingsText", String.class)
+              def dateStr = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date())
+
+              // Build report using string concatenation to avoid backtick issues
+              def report = '# Financial Document Analysis Report\n\n'
+              report += 'Source Document: ' + fileName + '\n\n'
+              report += 'Analysis Date: ' + dateStr + '\n\n'
+              report += 'Stock Symbols Identified: ' + (symbols ?: 'None') + '\n\n\n\n'
+
+              // Add Analyst Ratings Summary (if available)
+              if (analystRatings) {
+                report += '---\n\n'
+                report += analystRatings + '\n'
+                report += '---\n\n'
+              }
+
+              report += '## AI-Powered Financial Analysis\n\n'
+              report += analysis + '\n\n\n\n'
+
+              exchange.message.setBody(report)
+
+        # Step 7: Save the analysis report
+        - setHeader:
+            name: CamelFileName
+            simple: "${exchangeProperty.originalFileName}_analysis_${date:now:yyyyMMdd_HHmmss}.md"
+        - to:
+            uri: file:{{output.directory}}
+        - log: "💾 Analysis report saved: ${header.CamelFileName}"
+
+        # Step 8: Log analyst ratings to console
+        - script:
+            groovy: |
+              def analystSummaries = exchange.getProperty("analystSummaries", List.class)
+
+              if (analystSummaries == null || analystSummaries.isEmpty()) {
+                log.warn("⚠️  No analyst ratings found in MarketMind data")
+              } else {
+                log.info("=" * 80)
+                  log.info("📊 ANALYST RATINGS SUMMARY")
+                  log.info("=" * 80)
+                  log.info("")
+
+                  analystSummaries.each { summary ->
+                    // Emoji based on consensus
+                    def emoji = ""
+                    def rating = summary.consensus.toUpperCase()
+                    switch(rating) {
+                      case ~/.*STRONG.?BUY.*/:
+                        emoji = "🚀"
+                        break
+                      case ~/.*BUY.*/:
+                        emoji = "✅"
+                        break
+                      case ~/.*OUTPERFORM.*/:
+                        emoji = "📈"
+                        break
+                      case ~/.*HOLD.*/:
+                        emoji = "⏸️"
+                        break
+                      case ~/.*UNDERPERFORM.*/:
+                        emoji = "📉"
+                        break
+                      case ~/.*SELL.*/:
+                        emoji = "❌"
+                        break
+                      default:
+                        emoji = "ℹ️"
+                    }
+
+                    log.info("${emoji} ${summary.symbol}")
+                    log.info("   ${summary.narrative}")
+                    log.info("")
+                  }
+                  log.info("=" * 80)
+                }
+
+        - log: "✨ Processing complete for: ${exchangeProperty.originalFileName} (source file will be deleted automatically)"
+
+# Route 2: Market Data API Endpoint (mock)
+- route:
+    id: get-market-data
+    from:
+      uri: platform-http:/api/market-data/{symbol}
+      steps:
+        - log: "Fetching market data for: ${header.symbol}"
+        - toD:
+            uri: "http:{{marketmind.api.url}}/quote/${header.symbol}"
+            parameters:
+              httpMethod: GET
+        - setHeader:
+            name: Content-Type
+            constant: "application/json"
+
+# Route 3: Interactive Document Analysis API
+- route:
+    id: analyze-document-api
+    from:
+      uri: platform-http:/api/analyze
+      parameters:
+        httpMethodRestrict: "POST"
+      steps:
+        - log: "📥 Received document for analysis via API"
+        - setProperty:
+            name: uploadedDocument
+            simple: "${body}"
+
+        # Convert document using Docling
+        - log: "Converting uploaded document..."
+        - to:
+            uri: docling:CONVERT_TO_MARKDOWN
+            parameters:
+              useDoclingServe: true
+              doclingServeUrl: "{{docling.serve.url}}"
+              contentInBody: true
+        - setProperty:
+            name: convertedContent
+            simple: "${body}"
+
+        # Extract symbols
+        - setBody:
+            simple: |
+              Extract stock ticker symbols from this document.
+              Return only a comma-separated list of symbols or "NONE".
+
+              ${exchangeProperty.convertedContent}
+        - to:
+            uri: langchain4j-chat:extract
+            parameters:
+              chatModel: "#chatModel"
+        - setProperty:
+            name: symbols
+            simple: "${body}"
+
+        # Generate analysis
+        - setBody:
+            simple: |
+              Provide a brief investment-focused analysis of this document.
+              Symbols found: ${exchangeProperty.symbols}
+
+              Document:
+              ${exchangeProperty.convertedContent}
+        - to:
+            uri: langchain4j-chat:quick-analysis
+            parameters:
+              chatModel: "#chatModel"
+        - setHeader:
+            name: Content-Type
+            constant: "application/json"
+        - script:
+            groovy: |
+              def symbols = exchange.getProperty("symbols")
+              def analysis = exchange.message.getBody(String.class).replaceAll('"', '\\\\"')
+              def timestamp = new Date().toString()
+
+              def json = '{\n'
+              json += '  "symbols": "' + symbols + '",\n'
+              json += '  "analysis": "' + analysis + '",\n'
+              json += '  "timestamp": "' + timestamp + '"\n'
+              json += '}'
+
+              exchange.message.setBody(json)
+
+# Route 5: Health Check
+- route:
+    id: health-check
+    from:
+      uri: platform-http:/api/health
+      steps:
+        - log: "Health check requested"
+        - script:
+            groovy: |
+              def doclingUrl = camelContext.resolvePropertyPlaceholders("{{docling.serve.url}}")
+              def ollamaUrl = camelContext.resolvePropertyPlaceholders("{{ollama.base.url}}")
+              def ollamaModel = camelContext.resolvePropertyPlaceholders("{{ollama.model.name}}")
+              def docsDir = camelContext.resolvePropertyPlaceholders("{{documents.directory}}")
+              def outDir = camelContext.resolvePropertyPlaceholders("{{output.directory}}")
+              def marketUrl = camelContext.resolvePropertyPlaceholders("{{marketmind.api.url}}")
+
+              def json = '{\n'
+              json += '  "status": "healthy",\n'
+              json += '  "timestamp": "' + new Date().toString() + '",\n'
+              json += '  "components": {\n'
+              json += '    "docling": {\n'
+              json += '      "url": "' + doclingUrl + '",\n'
+              json += '      "status": "configured"\n'
+              json += '    },\n'
+              json += '    "ollama": {\n'
+              json += '      "url": "' + ollamaUrl + '",\n'
+              json += '      "model": "' + ollamaModel + '",\n'
+              json += '      "status": "configured"\n'
+              json += '    },\n'
+              json += '    "marketmind_api": {\n'
+              json += '      "url": "' + marketUrl + '",\n'
+              json += '      "type": "MarketMind REST API",\n'
+              json += '      "status": "configured"\n'
+              json += '    }\n'
+              json += '  },\n'
+              json += '  "directories": {\n'
+              json += '    "documents": "' + docsDir + '",\n'
+              json += '    "output": "' + outDir + '"\n'
+              json += '  }\n'
+              json += '}'
+
+              exchange.message.setBody(json)
+        - setHeader:
+            name: Content-Type
+            constant: "application/json"
