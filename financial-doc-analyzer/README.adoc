@@ -1,0 +1,288 @@
+= Financial Document Analyzer with Market Intelligence
+
+An automated financial document analysis system that combines Apache Camel, Docling document conversion, LangChain4j AI analysis, and MarketMind REST API for real-time market data.
+
+== Overview
+
+This application automatically processes financial documents (earnings reports, SEC filings, analyst reports) and generates comprehensive investment analysis enriched with real-time stock market data.
+
+**Key Features:**
+
+* 📄 Multi-format document processing (PDF, DOCX, HTML, Markdown)
+* 🔄 AI-powered document conversion via Docling (async mode for large PDFs)
+* 🤖 Financial analysis using local LLMs (Ollama)
+* 📊 Real-time market data from MarketMind REST API (Yahoo Finance)
+* 🎯 Automated stock symbol extraction
+* 📈 Analyst ratings and price targets
+* 💾 Markdown analysis reports
+
+== Prerequisites
+
+* **JBang** - https://www.jbang.dev
+* **Java 11+**
+* **Python 3** - For MarketMind API
+* **MarketMind** - Clone from https://github.com/oscerd/MarketMind
+
+== Quick Start
+
+=== 1. Start MarketMind API
+
+[source,bash]
+----
+cd /path/to/MarketMind
+python3 api.py
+----
+
+Verify: `curl http://localhost:8000/health`
+
+=== 2. Start Infrastructure Services
+
+[source,bash]
+----
+# Start Docling-Serve (document conversion)
+camel infra run docling
+
+# Start Ollama (LLM inference)
+camel infra run ollama
+----
+
+=== 3. Run the Application
+
+[source,bash]
+----
+camel run 
+  --dep=camel:docling \
+  --dep=camel:langchain4j-chat \
+  --dep=camel:platform-http \
+  --dep=camel:http \
+  --dep=dev.langchain4j:langchain4j:1.6.0 \
+  --dep=dev.langchain4j:langchain4j-ollama:1.6.0 \
+  financial-doc-analyzer.yaml 
+----
+
+=== 4. Process Documents
+
+[source,bash]
+----
+# Copy a sample document to process
+cp examples/tesla-q3-2024.pdf documents/
+
+# Watch the logs for analyst ratings
+# Analysis report will be saved to output/
+----
+
+== How It Works
+
+1. **Document Detection** - File watcher monitors `documents/` directory
+2. **Conversion** - Docling converts PDF/DOCX to Markdown (async mode for large files)
+3. **Symbol Extraction** - Regex patterns identify stock symbols (AAPL, TSLA, etc.)
+4. **Market Data** - Fetches real-time quotes and analyst ratings from MarketMind API
+5. **AI Analysis** - LLM analyzes document with market context
+6. **Report Generation** - Saves comprehensive analysis to `output/` directory
+7. **Cleanup** - Successfully processed files are deleted (failed → `.error/`)
+
+== Analyst Ratings Output
+
+The application logs analyst ratings to console:
+
+[source,text]
+----
+================================================================================
+📊 ANALYST RATINGS SUMMARY
+================================================================================
+
+✅ TSLA
+   TSLA is currently trading at $439.27 (+10.52, +2.45%). Analysts have a
+   consensus rating of 'hold' with a target price of $366.77, indicating
+   -16.5% potential from current levels.
+
+✅ GM
+   GM is currently trading at $58.37 (+1.03, +1.80%). Analysts have a
+   consensus rating of 'buy' with a target price of $64.48, indicating
+   +10.5% potential from current levels.
+
+================================================================================
+----
+
+== Configuration
+
+Edit `application.properties`:
+
+[source,properties]
+----
+# Directories
+documents.directory=documents
+output.directory=output
+
+# Services
+docling.serve.url=http://localhost:5001
+ollama.base.url=http://localhost:11434
+ollama.model.name=granite4:tiny-h
+marketmind.api.url=http://localhost:8000
+
+# HTTP Server
+camel.server.port=8080
+----
+
+=== Available LLM Models
+
+Change `ollama.model.name` to:
+
+* `granite4:tiny-h` - Fast, recommended (default)
+* `llama3.2` - Higher quality, slower
+* `llama3.2:1b` - Fastest, lower quality
+* `mistral` - Alternative high-quality model
+
+Pull new models: `docker exec -it ollama ollama pull <model-name>`
+
+== Example Documents
+
+The `examples/` directory contains sample financial documents:
+
+* `tesla-q3-2024.pdf` - Tesla Q3 earnings (TSLA, GM, F, RIVN, LCID)
+* `semiconductor-sector-analysis.pdf` - Chip stocks (NVDA, AMD, INTC, QCOM, AVGO)
+* `magnificent-seven-update.pdf` - Big tech (AAPL, MSFT, GOOGL, AMZN, NVDA, META, TSLA)
+* `banking-sector-brief.pdf` - Banks (JPM, BAC, WFC, C)
+
+See `examples/DOWNLOAD-REAL-PDFS.md` for instructions on downloading real earnings reports from company investor relations pages.
+
+== API Endpoints
+
+The application exposes REST endpoints:
+
+* `GET /api/health` - Health check
+* `GET /api/market-data/{symbol}` - Market data for specific symbol
+
+[source,bash]
+----
+curl http://localhost:8080/api/health
+curl http://localhost:8080/api/market-data/AAPL
+----
+
+== Troubleshooting
+
+=== No Analyst Ratings Found
+
+Check MarketMind API is running:
+[source,bash]
+----
+curl http://localhost:8000/quote/AAPL
+----
+
+Verify `application.properties` has correct URL:
+[source,properties]
+----
+marketmind.api.url=http://localhost:8000
+----
+
+=== Document Processing Timeout
+
+Large PDFs (>50 pages) may take longer to process. The Docling component uses async mode with a 5-minute timeout (300 seconds) and polls every 2 seconds. Failed files are moved to `documents/.error/`.
+
+**Async Settings:**
+* `useAsyncMode: true` - Asynchronous conversion enabled
+* `asyncTimeout: 300000` - 5 minute max wait time
+* `asyncPollInterval: 2000` - Check status every 2 seconds
+
+**Solutions:**
+* Async mode is already enabled (better for large PDFs)
+* Use smaller documents (earnings press releases instead of full 10-K reports)
+* Increase `asyncTimeout` in the YAML if needed for very large files
+
+=== AI Analysis Timeout
+
+If you see `dev.langchain4j.exception.TimeoutException: request timed out`:
+
+**Current Settings:**
+* LLM timeout: 600 seconds (10 minutes) - configured in `financial-doc-analyzer.yaml:34`
+* This should be sufficient for most documents
+
+**Solutions:**
+* Verify Ollama is running: `docker ps | grep ollama` or `curl http://localhost:11434`
+* Use a faster model: Change `ollama.model.name` to `llama3.2:1b` in `application.properties`
+* Reduce document size: Use press releases instead of full 10-K reports
+* Increase timeout: Edit line 34 in YAML: `.timeout(ofSeconds(900))` for 15 minutes
+
+**Recommended Fast Models:**
+* `llama3.2:1b` - Fastest (1 billion parameters)
+* `granite4:tiny-h` - Very fast (1.5B parameters)
+* `orca-mini` - Good balance
+
+=== Empty Market Intelligence
+
+Check logs for:
+* Symbol extraction: `🔍 Extracting stock symbols`
+* Market data fetching: `Fetching data for symbol: AAPL`
+* API responses: Look for HTTP 200 responses
+
+== Cleanup
+
+[source,bash]
+----
+# Stop Camel application (Ctrl+C)
+
+# Stop infrastructure services
+camel infra stop docling
+camel infra stop ollama
+
+# Stop MarketMind API
+pkill -f "python.*api.py"
+----
+
+== Architecture
+
+[source,text]
+----
+┌─────────────┐
+│  Documents  │ (PDF, DOCX, MD)
+└──────┬──────┘
+       │
+       ▼
+┌─────────────┐
+│   Docling   │ Convert to Markdown
+└──────┬──────┘
+       │
+       ▼
+┌─────────────┐
+│ Symbol      │ Regex extraction (AAPL, TSLA, ...)
+│ Extraction  │
+└──────┬──────┘
+       │
+       ▼
+┌─────────────┐
+│ MarketMind  │ Fetch quotes & analyst ratings
+│  REST API   │
+└──────┬──────┘
+       │
+       ▼
+┌─────────────┐
+│  Ollama LLM │ Financial analysis with context
+└──────┬──────┘
+       │
+       ▼
+┌─────────────┐
+│   Report    │ Markdown with analyst ratings
+└─────────────┘
+----
+
+== Project Files
+
+[source,text]
+----
+financial-doc-analyzer/
+├── financial-doc-analyzer.yaml  # Camel routes (3 routes)
+├── application.properties        # Configuration
+├── README.adoc                   # This file
+├── documents/                    # Drop documents here
+├── documents/.error/             # Failed documents
+├── output/                       # Analysis reports
+└── examples/                     # Sample documents (MD + PDF)
+----
+
+== Contributing
+
+For issues or questions:
+* Apache Camel Community: https://camel.apache.org/community/support/
+* Contribute: https://camel.apache.org/community/contributing/
+
+Happy analyzing! 🐪

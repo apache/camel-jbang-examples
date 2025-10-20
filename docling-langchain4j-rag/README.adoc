@@ -53,7 +53,6 @@ docling-langchain4j-rag/
 ├── docling-langchain4j-rag.yaml   # Main YAML configuration
 ├── application.properties          # Configuration settings
 ├── compose.yaml                    # Docker Compose for services
-├── run.sh                          # Convenience run script
 ├── sample.md                       # Sample document (copy to documents/ for testing)
 ├── README.adoc                     # This file
 ├── documents/                      # Input directory (files auto-deleted after processing)
