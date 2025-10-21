@@ -1,0 +1,691 @@
+= Keycloak Token Introspection REST API
+
+This example demonstrates how to secure REST APIs using Apache Camel with Keycloak OAuth 2.0 Token Introspection (RFC 7662).
+It shows the difference between token introspection and standard JWT validation, highlighting the benefits of real-time token validation.
+
+== Features
+
+* Public endpoint accessible without authentication
+* Protected endpoints with two validation methods:
+  ** Token Introspection (RFC 7662) - Real-time validation via Keycloak
+  ** Standard JWT validation - Local signature verification
+* Integration with Keycloak using OAuth2/OpenID Connect
+* Real-time token revocation detection
+* Configurable introspection caching
+* Role-based access control (RBAC)
+* Comparison endpoint showing configuration details
+
+== What is Token Introspection?
+
+Token introspection is an OAuth 2.0 endpoint (RFC 7662) that allows you to validate tokens in real-time by querying the authorization server (Keycloak).
+
+=== Introspection vs. Local JWT Validation
+
+[cols="1,2,2", options="header"]
+|===
+|Feature
+|Token Introspection
+|Local JWT Validation
+
+|*Validation Speed*
+|Network call required (cached)
+|Very fast (local)
+
+|*Revocation Detection*
+|✅ Real-time detection
+|❌ No detection until expiration
+
+|*Offline Support*
+|❌ Requires Keycloak connectivity
+|✅ Works offline
+
+|*Security*
+|Excellent - always up-to-date
+|Good - trusts JWT signature
+
+|*Best For*
+|Security-critical operations, token revocation scenarios
+|High-throughput, trusted environments
+|===
+
+=== When to Use Introspection
+
+Use token introspection when:
+
+* You need to detect revoked tokens before their expiration
+* Security is critical (e.g., payment processing, admin operations)
+* You want centralized token validation
+* You have compliance requirements for real-time validation
+* You need to immediately invalidate sessions
+
+=== Performance Optimization
+
+This example includes caching to minimize performance impact:
+
+* **Cache Enabled**: Results are cached to reduce API calls
+* **Configurable TTL**: Balance security (lower TTL) and performance (higher TTL)
+* **Default TTL**: 120 seconds (2 minutes)
+
+== Prerequisites
+
+* JBang installed (https://www.jbang.dev)
+* Docker installed for running Keycloak
+* Basic understanding of OAuth2/OpenID Connect
+* Understanding of JWT tokens
+
+== Dependencies
+
+This example requires the `camel-keycloak` component.
+
+== Install JBang
+
+First install JBang according to https://www.jbang.dev
+
+When JBang is installed then you should be able to run from a shell:
+
+[source,sh]
+----
+$ jbang --version
+----
+
+This will output the version of JBang.
+
+To run this example you can either install Camel on JBang via:
+
+[source,sh]
+----
+$ jbang app install camel@apache/camel
+----
+
+Which allows to run Camel JBang with `camel` as shown below.
+
+== Running Keycloak
+
+=== Option 1: Using Camel JBang Infra (Recommended)
+
+Starting from Camel JBang 4.16.0-SNAPSHOT, you can easily run Keycloak using the built-in infrastructure support:
+
+[source,sh]
+----
+$ jbang -Dcamel.jbang.version=4.16.0-SNAPSHOT camel@apache/camel infra run keycloak
+----
+
+This will automatically start Keycloak configured with:
+* Admin username: `admin`
+* Admin password: `admin`
+* Port: `8080`
+
+Wait a few seconds for Keycloak to fully start before proceeding to configuration.
+
+To stop Keycloak later:
+
+[source,sh]
+----
+$ jbang -Dcamel.jbang.version=4.16.0-SNAPSHOT camel@apache/camel infra stop keycloak
+----
+
+=== Option 2: Using Docker Manually
+
+Alternatively, you can run Keycloak manually with Docker:
+
+[source,sh]
+----
+$ docker run -d \
+  --name keycloak \
+  -p 8180:8080 \
+  -e KEYCLOAK_ADMIN=admin \
+  -e KEYCLOAK_ADMIN_PASSWORD=admin \
+  quay.io/keycloak/keycloak:latest \
+  start-dev
+----
+
+Wait a few seconds for Keycloak to fully start before proceeding to configuration.
+
+== Keycloak Configuration
+
+After Keycloak starts, you need to configure it:
+
+=== 1. Access Keycloak Admin Console
+
+Open your browser and navigate to:
+* If using Camel JBang infra: http://localhost:8080
+* If using Docker manually: http://localhost:8180
+
+Login with:
+* Username: `admin`
+* Password: `admin`
+
+=== 2. Create a Realm
+
+1. Click on the dropdown in the top left (says "master")
+2. Click "Create Realm"
+3. Enter realm name: `camel`
+4. Click "Create"
+
+=== 3. Create a Client
+
+Token introspection requires a confidential client with client credentials.
+
+1. In the left menu, click "Clients"
+2. Click "Create client"
+3. Enter Client ID: `camel-client`
+4. Click "Next"
+5. **Enable "Client authentication"** (required for introspection)
+6. Enable "Service accounts roles"
+7. Enable "Direct access grants"
+8. Click "Next"
+9. Add Valid Redirect URIs: `http://localhost:8080/*`
+10. Click "Save"
+11. Go to the "Credentials" tab
+12. Copy the "Client Secret" value
+13. Update the `application.properties` file with this secret:
++
+[source,properties]
+----
+keycloak.client.secret=<your-client-secret>
+----
+
+IMPORTANT: Client authentication must be enabled for token introspection to work. This is because the introspection endpoint requires authentication with client credentials.
+
+=== 4. Create an Admin Role
+
+1. In the left menu, click "Realm roles"
+2. Click "Create role"
+3. Enter role name: `admin`
+4. Click "Save"
+
+=== 5. Create Users
+
+==== Create Regular User (without admin role)
+
+1. In the left menu, click "Users"
+2. Click "Add user"
+3. Enter username: `testuser`
+4. Enter email: `testuser@example.com`
+5. Enter first name: `Test`
+6. Enter last name: `User`
+7. Click "Create"
+8. Go to "Credentials" tab
+9. Click "Set password"
+10. Enter password: `password`
+11. Disable "Temporary" toggle
+12. Click "Save"
+
+==== Create Admin User (with admin role)
+
+1. In the left menu, click "Users"
+2. Click "Add user"
+3. Enter username: `admin-user`
+4. Enter email: `admin@example.com`
+5. Enter first name: `Admin`
+6. Enter last name: `User`
+7. Click "Create"
+8. Go to "Credentials" tab
+9. Click "Set password"
+10. Enter password: `password`
+11. Disable "Temporary" toggle
+12. Click "Save"
+13. Go to "Role mapping" tab
+14. Click "Assign role"
+15. Select the `admin` role
+16. Click "Assign"
+
+== Running the Example
+
+After Keycloak is configured, start the Camel application:
+
+[source,sh]
+----
+$ jbang -Dcamel.jbang.version=4.16.0-SNAPSHOT camel@apache/camel run *
+----
+
+The application will start on port 8081 with the following endpoints:
+
+* `http://localhost:8081/api/public` - Public endpoint (no auth required)
+* `http://localhost:8081/api/info` - Info endpoint showing configuration
+* `http://localhost:8081/api/protected-introspection` - Protected with token introspection
+* `http://localhost:8081/api/protected-standard` - Protected with local JWT validation
+
+== Testing the Endpoints
+
+=== Test Info Endpoint
+
+View the configuration and available endpoints:
+
+[source,sh]
+----
+$ curl http://localhost:8081/api/info | jq
+----
+
+Expected response:
+[source,json]
+----
+{
+  "example": "Keycloak Token Introspection REST API",
+  "endpoints": {
+    "public": {
+      "path": "/api/public",
+      "security": "none",
+      "description": "Public endpoint, no authentication required"
+    },
+    "protected_introspection": {
+      "path": "/api/protected-introspection",
+      "security": "token_introspection",
+      "role": "admin",
+      "description": "Real-time token validation via Keycloak introspection endpoint (RFC 7662)",
+      "features": [
+        "Detects revoked tokens",
+        "Centralized validation",
+        "Caching enabled"
+      ]
+    },
+    "protected_standard": {
+      "path": "/api/protected-standard",
+      "security": "local_jwt",
+      "role": "admin",
+      "description": "Local JWT signature verification without introspection",
+      "features": [
+        "Fast offline validation",
+        "No network overhead",
+        "Cannot detect token revocation"
+      ]
+    }
+  },
+  "introspection_config": {
+    "enabled": "true",
+    "cache_enabled": "true",
+    "cache_ttl_seconds": "120"
+  }
+}
+----
+
+=== Test Public Endpoint (No Authentication)
+
+[source,sh]
+----
+$ curl http://localhost:8081/api/public | jq
+----
+
+Expected response:
+[source,json]
+----
+{
+  "message": "This is a public endpoint, no authentication required",
+  "timestamp": "2024-10-20T10:30:00",
+  "security": "none"
+}
+----
+
+=== Obtain Access Token
+
+Set the Keycloak port based on your setup:
+
+[source,sh]
+----
+# Use 8080 for camel infra, 8180 for manual Docker
+export KEYCLOAK_PORT=8080
+----
+
+Get an access token for the admin user:
+
+[source,sh]
+----
+export ADMIN_TOKEN=$(curl -X POST http://localhost:${KEYCLOAK_PORT}/realms/camel/protocol/openid-connect/token \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "username=admin-user" \
+  -d "password=password" \
+  -d "grant_type=password" \
+  -d "client_id=camel-client" \
+  -d "client_secret=<your-client-secret>" \
+  | jq -r '.access_token')
+
+echo "Token obtained: ${ADMIN_TOKEN:0:50}..."
+----
+
+=== Test Protected Endpoint with Introspection
+
+[source,sh]
+----
+$ curl -H "Authorization: Bearer $ADMIN_TOKEN" \
+  http://localhost:8081/api/protected-introspection | jq
+----
+
+Expected response:
+[source,json]
+----
+{
+  "message": "This is a protected endpoint using Token Introspection (RFC 7662)",
+  "timestamp": "2024-10-20T10:30:00",
+  "security": "introspection",
+  "role_required": "admin",
+  "validation": "real-time via Keycloak introspection endpoint",
+  "features": [
+    "Detects revoked tokens before expiration",
+    "Centralized validation",
+    "Caching enabled (TTL: 120s)"
+  ]
+}
+----
+
+=== Test Protected Endpoint with Standard JWT
+
+[source,sh]
+----
+$ curl -H "Authorization: Bearer $ADMIN_TOKEN" \
+  http://localhost:8081/api/protected-standard | jq
+----
+
+Expected response:
+[source,json]
+----
+{
+  "message": "This is a protected endpoint using standard JWT validation",
+  "timestamp": "2024-10-20T10:30:00",
+  "security": "local-jwt",
+  "role_required": "admin",
+  "validation": "local JWT signature verification",
+  "features": [
+    "Fast offline validation",
+    "No network calls to Keycloak",
+    "Cannot detect revoked tokens before expiration"
+  ]
+}
+----
+
+=== Test with Regular User (Should Fail)
+
+Try with a user who doesn't have the admin role:
+
+[source,sh]
+----
+export USER_TOKEN=$(curl -X POST http://localhost:${KEYCLOAK_PORT}/realms/camel/protocol/openid-connect/token \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "username=testuser" \
+  -d "password=password" \
+  -d "grant_type=password" \
+  -d "client_id=camel-client" \
+  -d "client_secret=<your-client-secret>" \
+  | jq -r '.access_token')
+
+# This should fail with 403 Forbidden
+$ curl -i -H "Authorization: Bearer $USER_TOKEN" \
+  http://localhost:8081/api/protected-introspection
+----
+
+This will return a **403 Forbidden** error because `testuser` does not have the `admin` role.
+
+Expected error response:
+[source,json]
+----
+{
+  "error": "Forbidden",
+  "message": "Access denied. User does not have required roles: [admin]",
+  "timestamp": "2024-10-20T10:30:00",
+  "status": 403
+}
+----
+
+=== Test with Invalid/Missing Token
+
+[source,sh]
+----
+# Missing token - should return 403
+curl -i http://localhost:8081/api/protected-introspection
+
+# Invalid token - should return 403
+curl -i -H "Authorization: Bearer invalid_token_here" \
+  http://localhost:8081/api/protected-introspection
+----
+
+Both requests will return **403 Forbidden** with an appropriate error message.
+
+== Demonstrating Token Revocation
+
+One of the key benefits of token introspection is the ability to detect revoked tokens in real-time.
+
+=== Scenario: Logout a User and Test Token Validity
+
+1. **Get an access token** for admin-user (as shown above)
+
+2. **Verify the token works** with introspection:
++
+[source,sh]
+----
+# This should succeed
+curl -H "Authorization: Bearer $ADMIN_TOKEN" \
+  http://localhost:8081/api/protected-introspection
+----
+
+3. **Logout the user in Keycloak**:
++
+   * Go to Keycloak Admin Console
+   * Navigate to Users → Find "admin-user"
+   * Click on the user
+   * Go to "Sessions" tab
+   * Click "Sign out" to invalidate all sessions
+
+4. **Test with introspection endpoint** (should fail immediately):
++
+[source,sh]
+----
+# This will return 401/403 because the token is no longer active
+curl -i -H "Authorization: Bearer $ADMIN_TOKEN" \
+  http://localhost:8081/api/protected-introspection
+----
++
+The introspection endpoint will detect that the token has been revoked.
+
+5. **Test with standard JWT endpoint** (may still work until expiration):
++
+[source,sh]
+----
+# This might still succeed because local JWT validation
+# doesn't check with Keycloak about revocation
+curl -i -H "Authorization: Bearer $ADMIN_TOKEN" \
+  http://localhost:8081/api/protected-standard
+----
++
+The standard JWT endpoint may still allow access because it only validates the JWT signature locally without checking if the session is still active in Keycloak.
+
+This demonstrates the key advantage of token introspection: **real-time revocation detection**.
+
+== How It Works
+
+=== Security Policies
+
+The example defines two security policies in `rest-api.camel.yaml`:
+
+1. **Introspection Policy** - Uses Keycloak's introspection endpoint:
+
+[source,yaml]
+----
+- name: keycloakIntrospectionPolicy
+  type: org.apache.camel.component.keycloak.security.KeycloakSecurityPolicy
+  properties:
+    serverUrl: "{{keycloak.server.url}}"
+    realm: "{{keycloak.realm}}"
+    clientId: "{{keycloak.client.id}}"
+    clientSecret: "{{keycloak.client.secret}}"
+    requiredRoles: "admin"
+    useTokenIntrospection: true
+    introspectionCacheEnabled: true
+    introspectionCacheTtl: 120
+----
+
+2. **Standard Policy** - Uses local JWT parsing:
+
+[source,yaml]
+----
+- name: keycloakStandardPolicy
+  type: org.apache.camel.component.keycloak.security.KeycloakSecurityPolicy
+  properties:
+    serverUrl: "{{keycloak.server.url}}"
+    realm: "{{keycloak.realm}}"
+    clientId: "{{keycloak.client.id}}"
+    clientSecret: "{{keycloak.client.secret}}"
+    requiredRoles: "admin"
+    # useTokenIntrospection is false by default
+----
+
+=== Route Protection
+
+Routes are protected by referencing the appropriate policy:
+
+[source,yaml]
+----
+- route:
+    id: protected-introspection-api
+    from:
+      uri: "platform-http:/api/protected-introspection"
+      steps:
+        - policy:
+            ref: keycloakIntrospectionPolicy
+        - setBody:
+            simple: |
+              {
+                "message": "Protected with introspection"
+              }
+----
+
+=== Introspection Flow
+
+When a request arrives at the introspection-protected endpoint:
+
+1. **Extract Token**: Policy extracts the Bearer token from Authorization header
+2. **Check Cache**: If caching is enabled, check if result is cached
+3. **Call Introspection Endpoint**: If not cached, POST to Keycloak's introspection endpoint
+4. **Validate Response**: Check if token is active and has required roles
+5. **Cache Result**: Store result with TTL for subsequent requests
+6. **Allow/Deny**: Proceed with route or return 403 Forbidden
+
+== Monitoring Introspection Calls
+
+To see introspection in action, enable debug logging:
+
+Add to `application.properties`:
+
+[source,properties]
+----
+# Enable debug logging for Keycloak component
+logging.level.org.apache.camel.component.keycloak=DEBUG
+----
+
+You'll see logs like:
+
+[source]
+----
+[INFO] Introspecting token at: http://localhost:8080/realms/camel/protocol/openid-connect/token/introspect
+[DEBUG] Returning cached introspection result for token
+[DEBUG] Token is active: true, username: admin-user, scope: email profile
+----
+
+== Stopping
+
+To stop the Camel application, press `Ctrl+C`.
+
+To stop Keycloak:
+
+If you used Camel JBang infra:
+[source,sh]
+----
+$ jbang -Dcamel.jbang.version=4.16.0-SNAPSHOT camel@apache/camel infra stop keycloak
+----
+
+If you used Docker manually:
+[source,sh]
+----
+$ docker stop keycloak
+$ docker rm keycloak
+----
+
+== Troubleshooting
+
+=== 401 Unauthorized
+
+* Verify the access token is valid and not expired
+* Check that the Authorization header is properly formatted: `Bearer <token>`
+* Ensure the client secret in `application.properties` matches Keycloak
+* Verify client authentication is enabled in Keycloak (required for introspection)
+
+=== 403 Forbidden
+
+* Verify the user has the required role (admin role)
+* Check role assignments in Keycloak Admin Console
+* Ensure the token was obtained with the correct user credentials
+
+=== Connection Refused / Network Errors
+
+* Ensure Keycloak is running on the correct port (8080 for camel infra, 8180 for Docker)
+* Verify the Keycloak server URL in `application.properties` matches your setup
+* Check network connectivity between Camel app and Keycloak
+
+=== Invalid Client Credentials
+
+* Check that the client ID and secret in `application.properties` match the Keycloak client configuration
+* Verify the realm name is correct
+* Ensure "Client authentication" is enabled in the Keycloak client settings
+
+=== Introspection Not Working
+
+* Verify `keycloak.introspection.enabled=true` in application.properties
+* Check that client is configured as confidential (client authentication enabled)
+* Ensure client has proper permissions for introspection
+* Review Keycloak logs for errors
+
+=== Slow Performance
+
+* Enable caching: `keycloak.introspection.cache.enabled=true`
+* Increase cache TTL: `keycloak.introspection.cache.ttl=300` (5 minutes)
+* Check network latency to Keycloak
+* Consider using standard JWT for non-critical endpoints
+
+== Architecture
+
+This example demonstrates:
+
+1. **Platform HTTP Component**: Provides HTTP server capabilities
+2. **Keycloak Security Policy**: Validates OAuth2 JWT tokens
+3. **Token Introspection (RFC 7662)**: Real-time token validation
+4. **Introspection Caching**: Reduces load on Keycloak
+5. **Role-Based Access Control**: Restricts endpoints based on user roles
+6. **RESTful API Design**: Multiple endpoints with different security levels
+
+== Best Practices
+
+1. **Use Introspection Selectively**: Apply introspection to security-critical endpoints, use JWT for high-throughput APIs
+2. **Enable Caching**: Always enable caching in production to reduce Keycloak load
+3. **Tune Cache TTL**: Balance security requirements with performance needs
+4. **Monitor Performance**: Track introspection call latency and adjust caching
+5. **Use HTTPS in Production**: Protect token transmission and introspection calls
+6. **Secure Client Secrets**: Use environment variables or secret management systems
+7. **Handle Failures Gracefully**: Implement error handling for network failures
+8. **Consider Circuit Breakers**: Protect against Keycloak downtime
+
+== Next Steps
+
+* Add refresh token handling
+* Implement multiple security levels for different endpoints
+* Add API documentation with OpenAPI/Swagger
+* Implement request/response logging
+* Add metrics and monitoring
+* Implement rate limiting
+* Add CORS configuration for web applications
+* Test token revocation scenarios
+* Implement session management
+
+== Learn More
+
+* https://tools.ietf.org/html/rfc7662[OAuth 2.0 Token Introspection (RFC 7662)]
+* https://camel.apache.org/components/latest/keycloak-component.html[Camel Keycloak Component Documentation]
+* https://www.keycloak.org/docs/latest/securing_apps/[Keycloak Securing Applications]
+* https://www.keycloak.org/docs/latest/authorization_services/[Keycloak Authorization Services]
+
+== Help and Contributions
+
+If you hit any problem using Camel or have some feedback, then please
+https://camel.apache.org/community/support/[let us know].
+
+We also love contributors, so
+https://camel.apache.org/community/contributing/[get involved] :-)
+
+The Camel riders!

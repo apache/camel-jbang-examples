@@ -1,0 +1,207 @@
+## ---------------------------------------------------------------------------
+## Licensed to the Apache Software Foundation (ASF) under one or more
+## contributor license agreements.  See the NOTICE file distributed with
+## this work for additional information regarding copyright ownership.
+## The ASF licenses this file to You under the Apache License, Version 2.0
+## (the "License"); you may not use this file except in compliance with
+## the License.  You may obtain a copy of the License at
+##
+##      http://www.apache.org/licenses/LICENSE-2.0
+##
+## Unless required by applicable law or agreed to in writing, software
+## distributed under the License is distributed on an "AS IS" BASIS,
+## WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+## See the License for the specific language governing permissions and
+## limitations under the License.
+## ---------------------------------------------------------------------------
+
+# camel-k: dependency=camel:keycloak
+
+# Global exception handler for authorization failures
+# Handles CamelAuthorizationException to return proper HTTP status codes
+- onException:
+    exception:
+      - "org.apache.camel.CamelAuthorizationException"
+    handled:
+      constant: true
+    steps:
+      - setHeader:
+          name: CamelHttpResponseCode
+          constant: 403
+      - setHeader:
+          name: Content-Type
+          constant: application/json
+      - setBody:
+          simple: |
+            {
+              "error": "Forbidden",
+              "message": "Access denied. ${exception.message}",
+              "timestamp": "${date:now:yyyy-MM-dd'T'HH:mm:ss}",
+              "status": 403
+            }
+      - log:
+          message: "Authorization failed: ${exception.message}"
+
+# Bean definition for Keycloak security policy with Token Introspection enabled
+# This policy validates tokens in real-time via Keycloak's introspection endpoint (RFC 7662)
+# Introspection allows detection of revoked tokens before their expiration time
+- beans:
+  - name: keycloakIntrospectionPolicy
+    type: org.apache.camel.component.keycloak.security.KeycloakSecurityPolicy
+    properties:
+      serverUrl: "{{keycloak.server.url}}"
+      realm: "{{keycloak.realm}}"
+      clientId: "{{keycloak.client.id}}"
+      clientSecret: "{{keycloak.client.secret}}"
+      requiredRoles: "admin"
+      # Enable OAuth 2.0 Token Introspection (RFC 7662)
+      useTokenIntrospection: "{{keycloak.introspection.enabled}}"
+      # Enable caching to reduce Keycloak API calls
+      introspectionCacheEnabled: "{{keycloak.introspection.cache.enabled}}"
+      # Cache TTL in seconds
+      introspectionCacheTtl: "{{keycloak.introspection.cache.ttl}}"
+
+  # Standard policy without introspection for comparison
+  - name: keycloakStandardPolicy
+    type: org.apache.camel.component.keycloak.security.KeycloakSecurityPolicy
+    properties:
+      serverUrl: "{{keycloak.server.url}}"
+      realm: "{{keycloak.realm}}"
+      clientId: "{{keycloak.client.id}}"
+      clientSecret: "{{keycloak.client.secret}}"
+      requiredRoles: "admin"
+      # Uses local JWT parsing (default, no introspection)
+
+# Public endpoint - no authentication required
+- route:
+    id: public-api
+    from:
+      uri: "platform-http:/api/public"
+      steps:
+        - setBody:
+            simple: |
+              {
+                "message": "This is a public endpoint, no authentication required",
+                "timestamp": "${date:now:yyyy-MM-dd'T'HH:mm:ss}",
+                "security": "none"
+              }
+        - setHeader:
+            name: Content-Type
+            constant: application/json
+        - log:
+            message: "Public API called"
+
+# Protected endpoint with Token Introspection - requires admin role
+# Tokens are validated in real-time via Keycloak's introspection endpoint
+# This allows detection of revoked tokens before their expiration
+- route:
+    id: protected-introspection-api
+    from:
+      uri: "platform-http:/api/protected-introspection"
+      steps:
+        - policy:
+            ref: keycloakIntrospectionPolicy
+        - setBody:
+            simple: |
+              {
+                "message": "This is a protected endpoint using Token Introspection (RFC 7662)",
+                "timestamp": "${date:now:yyyy-MM-dd'T'HH:mm:ss}",
+                "security": "introspection",
+                "role_required": "admin",
+                "validation": "real-time via Keycloak introspection endpoint",
+                "features": [
+                  "Detects revoked tokens before expiration",
+                  "Centralized validation",
+                  "Caching enabled (TTL: {{keycloak.introspection.cache.ttl}}s)"
+                ]
+              }
+        - setHeader:
+            name: Content-Type
+            constant: application/json
+        - log:
+            message: "Protected API with Introspection called successfully"
+
+# Protected endpoint with standard JWT validation (for comparison)
+# Uses local JWT parsing without contacting Keycloak
+- route:
+    id: protected-standard-api
+    from:
+      uri: "platform-http:/api/protected-standard"
+      steps:
+        - policy:
+            ref: keycloakStandardPolicy
+        - setBody:
+            simple: |
+              {
+                "message": "This is a protected endpoint using standard JWT validation",
+                "timestamp": "${date:now:yyyy-MM-dd'T'HH:mm:ss}",
+                "security": "local-jwt",
+                "role_required": "admin",
+                "validation": "local JWT signature verification",
+                "features": [
+                  "Fast offline validation",
+                  "No network calls to Keycloak",
+                  "Cannot detect revoked tokens before expiration"
+                ]
+              }
+        - setHeader:
+            name: Content-Type
+            constant: application/json
+        - log:
+            message: "Protected API with standard JWT called successfully"
+
+# Info endpoint - shows the difference between introspection and standard validation
+- route:
+    id: info-api
+    from:
+      uri: "platform-http:/api/info"
+      steps:
+        - setBody:
+            simple: |
+              {
+                "example": "Keycloak Token Introspection REST API",
+                "endpoints": {
+                  "public": {
+                    "path": "/api/public",
+                    "security": "none",
+                    "description": "Public endpoint, no authentication required"
+                  },
+                  "protected_introspection": {
+                    "path": "/api/protected-introspection",
+                    "security": "token_introspection",
+                    "role": "admin",
+                    "description": "Real-time token validation via Keycloak introspection endpoint (RFC 7662)",
+                    "features": [
+                      "Detects revoked tokens",
+                      "Centralized validation",
+                      "Caching enabled"
+                    ]
+                  },
+                  "protected_standard": {
+                    "path": "/api/protected-standard",
+                    "security": "local_jwt",
+                    "role": "admin",
+                    "description": "Local JWT signature verification without introspection",
+                    "features": [
+                      "Fast offline validation",
+                      "No network overhead",
+                      "Cannot detect token revocation"
+                    ]
+                  }
+                },
+                "introspection_config": {
+                  "enabled": "{{keycloak.introspection.enabled}}",
+                  "cache_enabled": "{{keycloak.introspection.cache.enabled}}",
+                  "cache_ttl_seconds": "{{keycloak.introspection.cache.ttl}}"
+                },
+                "keycloak_config": {
+                  "server_url": "{{keycloak.server.url}}",
+                  "realm": "{{keycloak.realm}}",
+                  "client_id": "{{keycloak.client.id}}"
+                }
+              }
+        - setHeader:
+            name: Content-Type
+            constant: application/json
+        - log:
+            message: "Info API called"
