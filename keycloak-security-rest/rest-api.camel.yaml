@@ -17,6 +17,31 @@
 
 # camel-k: dependency=camel:keycloak
 
+# Global exception handler for authorization failures
+# Handles CamelAuthorizationException to return proper HTTP status codes
+- onException:
+    exception:
+      - "org.apache.camel.CamelAuthorizationException"
+    handled:
+      constant: true
+    steps:
+      - setHeader:
+          name: CamelHttpResponseCode
+          constant: 403
+      - setHeader:
+          name: Content-Type
+          constant: application/json
+      - setBody:
+          simple: |
+            {
+              "error": "Forbidden",
+              "message": "Access denied. ${exception.message}",
+              "timestamp": "${date:now:yyyy-MM-dd'T'HH:mm:ss}",
+              "status": 403
+            }
+      - log:
+          message: "Authorization failed: ${exception.message}"
+
 # Bean definition for Keycloak security policy
 - beans:
   - name: keycloakPolicy
