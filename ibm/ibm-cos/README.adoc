@@ -1,0 +1,270 @@
+= IBM Cloud Object Storage Examples
+
+This directory contains examples demonstrating the IBM COS Kamelets for Apache Camel.
+
+== Available Examples
+
+=== 1. Kafka to IBM COS Sink (kafka-to-ibm-cos.camel.yaml)
+
+This example uses the IBM COS Sink Kamelet to upload data to IBM Cloud Object Storage.
+
+Messages consumed from a Kafka topic are uploaded to an IBM COS bucket.
+
+=== 2. IBM COS Source to Log (ibm-cos-to-log.camel.yaml)
+
+This example uses the IBM COS Source Kamelet to consume data from IBM Cloud Object Storage.
+
+The example polls an IBM COS bucket for new objects and logs their content and metadata.
+
+== Prerequisites
+
+You must have:
+- A valid IBM Cloud account and an IBM Cloud Object Storage service instance
+- A running Kafka broker (for the Kafka to IBM COS sink example)
+
+== Setup Kafka (for Kafka to IBM COS example)
+
+You need a running Kafka broker. The easiest way is to use Camel JBang's built-in infrastructure support.
+
+=== Start Kafka with JBang
+
+Start a local Kafka broker using Camel JBang:
+
+[source,shell]
+----
+$ camel infra run kafka
+----
+
+This command will start a local Kafka broker on port 9092 using Docker Compose in the background.
+
+The Kafka broker will automatically create topics on first use, so you don't need to manually create the `ibm-cos-topic` topic.
+
+== Setup IBM Cloud Object Storage
+
+=== Create an IBM Cloud Object Storage Instance
+
+1. Log in to the https://cloud.ibm.com/[IBM Cloud Console]
+2. Navigate to the https://cloud.ibm.com/catalog/services/cloud-object-storage[IBM Cloud Object Storage] service in the catalog
+3. Create a new instance with a name of your choice
+4. Once created, note the **Service Instance ID (CRN)**
+
+=== Create a Bucket
+
+1. In your COS instance, go to "Buckets" and click "Create bucket"
+2. Choose a bucket name (e.g., `my-camel-bucket`)
+3. Select a resiliency (Regional, Cross-region, or Single Data Center)
+4. Select a location (e.g., `us-south`)
+5. Click "Create bucket"
+
+=== Upload Test Files (for IBM COS Source example)
+
+If you want to test the IBM COS Source to Log example, upload some test files to your bucket:
+
+1. Navigate to your bucket in the IBM Cloud console
+2. Click "Upload" and select one or more files
+3. Alternatively, use the IBM Cloud CLI:
+
+[source,shell]
+----
+ibmcloud cos upload --bucket my-camel-bucket --key test-file.txt --file /path/to/local/file.txt
+----
+
+=== Create API Credentials
+
+1. In your COS instance, navigate to "Service credentials"
+2. Click "New credential"
+3. Provide a name for the credential
+4. Ensure the role includes at least "Writer" permissions
+5. Click "Add"
+6. View the created credentials and note the **apikey** value
+
+=== Get the Endpoint URL
+
+IBM COS provides different endpoint URLs based on the bucket's location and access type (public, private, or direct).
+
+For example:
+- Public endpoint (US South): `https://s3.us-south.cloud-object-storage.appdomain.cloud`
+- Public endpoint (EU GB): `https://s3.eu-gb.cloud-object-storage.appdomain.cloud`
+
+For a complete list of endpoints, see the https://cloud.ibm.com/docs/cloud-object-storage?topic=cloud-object-storage-endpoints[IBM COS Endpoints documentation].
+
+== Configuration
+
+Update the `application.properties` file with your Kafka and IBM Cloud Object Storage credentials:
+
+[source,properties]
+----
+# Kafka Configuration
+kafka.topic=ibm-cos-topic
+kafka.bootstrapServers=localhost:9092
+kafka.consumerGroup=kafka-ibm-cos-group
+kafka.autoOffsetReset=earliest
+
+# IBM Cloud Object Storage Configuration
+ibm.bucketName=my-camel-bucket
+ibm.apiKey=<your-ibm-cloud-api-key>
+ibm.serviceInstanceId=<your-service-instance-id>
+ibm.endpointUrl=https://s3.us-south.cloud-object-storage.appdomain.cloud
+ibm.location=us-south
+ibm.autoCreateBucket=false
+----
+
+Replace:
+- `<your-ibm-cloud-api-key>` with your IBM Cloud API key
+- `<your-service-instance-id>` with your COS Service Instance ID (CRN)
+- Update the endpoint URL and location to match your bucket's region
+
+Kafka Configuration:
+- `kafka.topic`: The Kafka topic to consume messages from
+- `kafka.bootstrapServers`: Comma-separated list of Kafka broker URLs
+- `kafka.consumerGroup`: Consumer group ID for the Kafka consumer
+- `kafka.autoOffsetReset`: What to do when there is no initial offset (earliest or latest)
+
+IBM COS Source Configuration (for ibm-cos-to-log.camel.yaml):
+- `ibm.deleteAfterRead`: Delete objects after consuming them (default: true)
+- `ibm.moveAfterRead`: Move objects to another bucket instead of deleting (default: false)
+- `ibm.prefix`: Only consume objects with keys starting with this prefix (optional)
+- `ibm.delay`: Delay in milliseconds between polling (default: 5000)
+- `ibm.maxMessagesPerPoll`: Maximum number of objects to consume per poll (default: 10)
+
+== Quick Start
+
+Here's a quick walkthrough to run the Kafka to IBM COS example:
+
+1. Start Kafka infrastructure:
++
+[source,shell]
+----
+$ camel infra run kafka
+----
+
+2. Run the Camel integration:
++
+[source,shell]
+----
+$ jbang -Dcamel.jbang.version=4.16.0-SNAPSHOT camel@apache/camel run --properties=application.properties kafka-to-ibm-cos.camel.yaml ibm-cos-sink.kamelet.yaml
+----
+
+3. In another terminal, send test messages:
++
+[source,shell]
+----
+$ docker exec -it camel-infra-kafka-kafka-1 /opt/kafka/bin/kafka-console-producer.sh \
+  --topic ibm-cos-topic \
+  --bootstrap-server localhost:9092
+----
++
+Then type your messages and press Enter after each one.
+
+4. When done, stop Kafka:
++
+[source,shell]
+----
+$ camel infra stop kafka
+----
+
+=== Running the IBM COS Source to Log Example
+
+You can run the source example using:
+
+[source,shell]
+----
+$ jbang -Dcamel.jbang.version=4.16.0-SNAPSHOT camel@apache/camel run --properties=application.properties ibm-cos-to-log.camel.yaml ibm-cos-source.kamelet.yaml
+----
+
+=== Running Both Examples
+
+Note: Running both examples simultaneously (using `camel run *`) is not recommended as they will interfere with each other (source consuming what sink produces). Run them separately or configure them to use different buckets.
+
+== Developer Web Console
+
+You can enable the developer console via `--console` flag as shown:
+
+[source,shell]
+----
+$ camel run * --console --deps=camel:kamelet
+----
+
+Then you can browse: http://localhost:8080/q/dev to introspect the running Camel application.
+
+== What happens
+
+=== Kafka to IBM COS Sink Example
+
+The Kafka source consumes messages from the configured Kafka topic.
+
+Each message is uploaded to your IBM COS bucket with a filename like `kafka-20241029-143025-123.txt` (timestamp-based with milliseconds).
+
+You should see output similar to:
+
+[source,shell]
+----
+2024-10-29 14:30:25.123  INFO 12345 --- [kafka-consumer] route1  : Uploading to IBM COS: kafka-20241029-143025-123.txt with body: Message from Kafka
+2024-10-29 14:30:26.456  INFO 12345 --- [kafka-consumer] route1  : Successfully uploaded file to IBM COS bucket
+----
+
+You can verify the uploaded files in the IBM Cloud console by navigating to your bucket.
+
+==== Send Test Messages to Kafka
+
+To test the example, send some messages to the Kafka topic:
+
+[source,shell]
+----
+$ docker exec -it camel-infra-kafka-kafka-1 /opt/kafka/bin/kafka-console-producer.sh \
+  --topic ibm-cos-topic \
+  --bootstrap-server localhost:9092
+----
+
+This will open an interactive console where you can type messages. Each line you type and press Enter will be sent as a message to Kafka:
+
+[source,text]
+----
+> Hello from Kafka!
+> First message
+> Second message
+> Third message
+----
+
+Press Ctrl+C to exit the producer console.
+
+Each message will be consumed by the Camel route and uploaded to IBM COS.
+
+=== IBM COS Source to Log Example
+
+The IBM COS source polls the bucket every 5 seconds (configurable via `delay` parameter) and retrieves up to 10 objects per poll (configurable via `maxMessagesPerPoll`).
+
+For each object found:
+1. The object is downloaded from IBM COS
+2. Metadata headers are set (bucket name, key, content type, ETag)
+3. The object content and headers are logged
+4. By default, the object is deleted from IBM COS (configurable via `deleteAfterRead`)
+
+You should see output similar to:
+
+[source,shell]
+----
+2024-10-29 14:30:25.123  INFO 12345 --- [ibm-cos-source] route1  : Received file from IBM COS - Key: test-file.txt, Bucket: my-camel-bucket, ContentType: text/plain
+2024-10-29 14:30:25.456  INFO 12345 --- [ibm-cos-source] info    : Exchange[ExchangePattern: InOnly, BodyType: org.apache.camel.converter.stream.InputStreamCache, Body: Hello from IBM Cloud Object Storage!]
+----
+
+== Cleanup
+
+When you're done with the example, you can stop the Kafka infrastructure:
+
+[source,shell]
+----
+$ camel infra stop kafka
+----
+
+This will stop and remove the Kafka broker.
+
+== Help and contributions
+
+If you hit any problem using Camel or have some feedback, then please
+https://camel.apache.org/community/support/[let us know].
+
+We also love contributors, so
+https://camel.apache.org/community/contributing/[get involved] :-)
+
+The Camel riders!
