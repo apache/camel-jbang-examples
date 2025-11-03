@@ -1,0 +1,86 @@
+## ---------------------------------------------------------------------------
+## Licensed to the Apache Software Foundation (ASF) under one or more
+## contributor license agreements.  See the NOTICE file distributed with
+## this work for additional information regarding copyright ownership.
+## The ASF licenses this file to You under the Apache License, Version 2.0
+## (the "License"); you may not use this file except in compliance with
+## the License.  You may obtain a copy of the License at
+##
+##      http://www.apache.org/licenses/LICENSE-2.0
+##
+## Unless required by applicable law or agreed to in writing, software
+## distributed under the License is distributed on an "AS IS" BASIS,
+## WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+## See the License for the specific language governing permissions and
+## limitations under the License.
+## ---------------------------------------------------------------------------
+
+- route:
+    id: "analyze-sentiment-api"
+    from:
+      uri: "platform-http:/analyze/sentiment?httpMethodRestrict=POST"
+      steps:
+      - log:
+          message: "Received text for sentiment analysis: ${body}"
+      - to:
+          uri: "ibm-watson-language:api"
+          parameters:
+            apiKey: "RAW({{watson.apiKey}})"
+            serviceUrl: "{{?watson.serviceUrl}}"
+            operation: "analyzeText"
+            analyzeSentiment: "true"
+            analyzeEmotion: "true"
+            analyzeEntities: "false"
+            analyzeKeywords: "false"
+      - setHeader:
+          name: "Content-Type"
+          constant: "application/json"
+      - marshal:
+          json: {}
+
+- route:
+    id: "analyze-entities-api"
+    from:
+      uri: "platform-http:/analyze/entities?httpMethodRestrict=POST"
+      steps:
+      - log:
+          message: "Received text for entity extraction: ${body}"
+      - to:
+          uri: "kamelet:ibm-watson-language-sink"
+          parameters:
+            apiKey: "RAW({{watson.apiKey}})"
+            serviceUrl: "{{?watson.serviceUrl}}"
+            operation: "analyzeText"
+            analyzeSentiment: "false"
+            analyzeEmotion: "false"
+            analyzeEntities: "true"
+            analyzeKeywords: "true"
+      - setHeader:
+          name: "Content-Type"
+          constant: "application/json"
+      - marshal:
+          json: {}
+
+- route:
+    id: "analyze-comprehensive-api"
+    from:
+      uri: "platform-http:/analyze/all?httpMethodRestrict=POST"
+      steps:
+      - log:
+          message: "Received text for comprehensive analysis: ${body}"
+      - to:
+          uri: "ibm-watson-language:api"
+          parameters:
+            apiKey: "RAW({{watson.apiKey}})"
+            serviceUrl: "{{?watson.serviceUrl}}"
+            operation: "analyzeText"
+            analyzeSentiment: "true"
+            analyzeEmotion: "true"
+            analyzeEntities: "true"
+            analyzeKeywords: "true"
+            analyzeConcepts: "true"
+      - setHeader:
+          name: "Content-Type"
+          constant: "application/json"
+      - marshal:
+          json: {}
