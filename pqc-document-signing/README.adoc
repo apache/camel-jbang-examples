@@ -29,7 +29,7 @@ Use Camel JBang's built-in infrastructure support to easily run HashiCorp Vault:
 
 [source,sh]
 ----
-$ jbang -Dcamel.jbang.version=4.16.0-SNAPSHOT camel@apache/camel infra run hashicorp vault
+$ jbang -Dcamel.jbang.version=4.16.0 camel@apache/camel infra run hashicorp vault
 ----
 
 This will automatically start HashiCorp Vault configured with:
@@ -44,7 +44,7 @@ To stop Vault later:
 
 [source,sh]
 ----
-$ jbang -Dcamel.jbang.version=4.16.0-SNAPSHOT camel@apache/camel infra stop hashicorp vault
+$ jbang -Dcamel.jbang.version=4.16.0 camel@apache/camel infra stop hashicorp vault
 ----
 
 **Note:** When using Camel infra, update `application.properties` to use port `8200`:
@@ -94,7 +94,7 @@ After Vault is configured and running, start the Camel application:
 
 [source,sh]
 ----
-$ jbang -Dcamel.jbang.version=4.16.0-SNAPSHOT camel@apache/camel run --dep=mvn:org.springframework.vault:spring-vault-core:3.2.0 --dep=camel:pqc --properties=application.properties pqc-document-signing.yaml
+$ jbang -Dcamel.jbang.version=4.16.0 camel@apache/camel run --dep=mvn:org.springframework.vault:spring-vault-core:3.2.0 --dep=camel:pqc --properties=application.properties pqc-document-signing.yaml
 ----
 
 The application will:
@@ -329,7 +329,7 @@ To stop HashiCorp Vault:
 If using Camel JBang infra:
 [source,sh]
 ----
-$ jbang -Dcamel.jbang.version=4.16.0-SNAPSHOT camel@apache/camel infra stop hashicorp-vault
+$ jbang -Dcamel.jbang.version=4.16.0 camel@apache/camel infra stop hashicorp-vault
 ----
 
 If using Docker:

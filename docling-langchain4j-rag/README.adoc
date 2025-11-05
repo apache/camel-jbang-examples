@@ -94,10 +94,10 @@ $ curl http://localhost:11434/  # Ollama
 [source,sh]
 ----
 # Start Docling (if camel infra supports it)
-$ jbang -Dcamel.jbang.version=4.16.0-SNAPSHOT camel@apache/camel infra run docling
+$ jbang -Dcamel.jbang.version=4.16.0 camel@apache/camel infra run docling
 
 # Start Ollama (if camel infra supports it)
-$ jbang -Dcamel.jbang.version=4.16.0-SNAPSHOT camel@apache/camel infra run ollama
+$ jbang -Dcamel.jbang.version=4.16.0 camel@apache/camel infra run ollama
 ----
 
 ==== Option C: Manual Docker Commands
@@ -129,7 +129,7 @@ $ mkdir -p documents output
 
 [source,sh]
 ----
-$ jbang -Dcamel.jbang.version=4.16.0-SNAPSHOT camel@apache/camel run \
+$ jbang -Dcamel.jbang.version=4.16.0 camel@apache/camel run \
   --fresh \
   --dep=camel:docling \
   --dep=camel:langchain4j-chat \

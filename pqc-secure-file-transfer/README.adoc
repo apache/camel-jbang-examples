@@ -70,7 +70,7 @@ Start the application:
 
 [source,sh]
 ----
-$ jbang -Dcamel.jbang.version=4.16.0-SNAPSHOT camel@apache/camel run \
+$ jbang -Dcamel.jbang.version=4.16.0 camel@apache/camel run \
   --dep=camel:pqc \
   --dep=camel:crypto \
   --dep=org.bouncycastle:bcprov-jdk18on:1.82 \

@@ -47,11 +47,11 @@ Which allows to run Camel JBang with `camel` as shown below.
 
 === Option 1: Using Camel JBang Infra (Recommended)
 
-Starting from Camel JBang 4.16.0-SNAPSHOT, you can easily run Keycloak using the built-in infrastructure support:
+Starting from Camel JBang 4.16.0, you can easily run Keycloak using the built-in infrastructure support:
 
 [source,sh]
 ----
-$ jbang -Dcamel.jbang.version=4.16.0-SNAPSHOT camel@apache/camel infra run keycloak
+$ jbang -Dcamel.jbang.version=4.16.0 camel@apache/camel infra run keycloak
 ----
 
 This will automatically start Keycloak configured with:
@@ -65,7 +65,7 @@ To stop Keycloak later:
 
 [source,sh]
 ----
-$ jbang -Dcamel.jbang.version=4.16.0-SNAPSHOT camel@apache/camel infra stop keycloak
+$ jbang -Dcamel.jbang.version=4.16.0 camel@apache/camel infra stop keycloak
 ----
 
 === Option 2: Using Docker Manually
@@ -339,7 +339,7 @@ To stop Keycloak:
 If you used Camel JBang infra:
 [source,sh]
 ----
-$ jbang -Dcamel.jbang.version=4.16.0-SNAPSHOT camel@apache/camel infra stop keycloak
+$ jbang -Dcamel.jbang.version=4.16.0 camel@apache/camel infra stop keycloak
 ----
 
 If you used Docker manually:
