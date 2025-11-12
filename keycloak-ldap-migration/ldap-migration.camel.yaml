@@ -1,0 +1,235 @@
+## ---------------------------------------------------------------------------
+## Licensed to the Apache Software Foundation (ASF) under one or more
+## contributor license agreements.  See the NOTICE file distributed with
+## this work for additional information regarding copyright ownership.
+## The ASF licenses this file to You under the Apache License, Version 2.0
+## (the "License"); you may not use this file except in compliance with
+## the License.  You may obtain a copy of the License at
+##
+##      http://www.apache.org/licenses/LICENSE-2.0
+##
+## Unless required by applicable law or agreed to in writing, software
+## distributed under the License is distributed on an "AS IS" BASIS,
+## WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+## See the License for the specific language governing permissions and
+## limitations under the License.
+## ---------------------------------------------------------------------------
+
+# camel-k: dependency=camel:keycloak
+# camel-k: dependency=camel:ldap
+
+# Configure Keycloak component
+- beans:
+  - name: keycloak
+    type: org.apache.camel.component.keycloak.KeycloakComponent
+    properties:
+      serverUrl: "{{keycloak.server.url}}"
+      realm: "{{keycloak.realm}}"
+      username: "{{keycloak.username}}"
+      password: "{{keycloak.password}}"
+
+# Startup route to initialize LDAP DirContext
+- route:
+    id: ldap-context-initializer
+    from:
+      uri: "timer:init?repeatCount=1&delay=100"
+      steps:
+        - log:
+            message: "Initializing LDAP context..."
+        - script:
+            groovy: |
+              import javax.naming.*
+              import javax.naming.directory.*
+
+              try {
+                def env = new Hashtable()
+                env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory")
+                env.put(Context.PROVIDER_URL, camelContext.resolvePropertyPlaceholders("{{ldap.server.url}}"))
+                env.put(Context.SECURITY_AUTHENTICATION, camelContext.resolvePropertyPlaceholders("{{ldap.security.authentication}}"))
+
+                // Add credentials if not using anonymous authentication
+                def authType = camelContext.resolvePropertyPlaceholders("{{ldap.security.authentication}}")
+                if (!"none".equals(authType)) {
+                  env.put(Context.SECURITY_PRINCIPAL, camelContext.resolvePropertyPlaceholders("{{ldap.security.principal}}"))
+                  env.put(Context.SECURITY_CREDENTIALS, camelContext.resolvePropertyPlaceholders("{{ldap.security.credentials}}"))
+                }
+
+                log.info("Creating LDAP context with URL: ${env.get(Context.PROVIDER_URL)}")
+                def ldapContext = new InitialDirContext(env)
+
+                // Bind to registry
+                camelContext.registry.bind("ldapserver", ldapContext)
+                log.info("LDAP context successfully bound to registry as 'ldapserver'")
+
+                // Verify it was bound
+                def boundContext = camelContext.registry.lookupByName("ldapserver")
+                if (boundContext != null) {
+                  log.info("Verified: LDAP context is available in registry")
+                } else {
+                  log.error("Error: LDAP context not found in registry after binding!")
+                }
+              } catch (Exception e) {
+                log.error("Failed to initialize LDAP context: ${e.message}", e)
+                throw e
+              }
+
+# Main route for LDAP to Keycloak migration
+- route:
+    id: ldap-to-keycloak-migration
+    from:
+      uri: "timer:migrate?repeatCount=1&delay=2000"
+      steps:
+        - log:
+            message: "Checking if LDAP context is available..."
+        - script:
+            groovy: |
+              def ldapCtx = camelContext.registry.lookupByName("ldapserver")
+              if (ldapCtx == null) {
+                throw new IllegalStateException("LDAP context not initialized. Please check ldap-context-initializer route.")
+              }
+              log.info("LDAP context found in registry, proceeding with migration...")
+        - log:
+            message: "Starting LDAP to Keycloak user migration..."
+        - log:
+            message: "Searching LDAP with filter: {{ldap.search.filter}}, base: {{ldap.search.base}}"
+
+        # Search LDAP for users
+        - setBody:
+            constant: "{{ldap.search.filter}}"
+        - to:
+            uri: "ldap:ldapserver?base={{ldap.search.base}}"
+        - log:
+            message: "Found ${body.size()} users in LDAP"
+
+        # Transform LDAP SearchResults to Keycloak UserRepresentation
+        - script:
+            groovy: |
+              import javax.naming.directory.SearchResult
+              import javax.naming.directory.Attributes
+              import org.keycloak.representations.idm.UserRepresentation
+
+              // Get LDAP search results from exchange body
+              def searchResults = request.body
+              def users = []
+
+              searchResults.each { SearchResult result ->
+                Attributes attrs = result.attributes
+
+                // Create Keycloak user representation
+                def user = new UserRepresentation()
+
+                // Map LDAP attributes to Keycloak user fields
+                // Username (required) - from uid, cn, or sAMAccountName
+                def username = attrs.get("uid")?.get() ?:
+                               attrs.get("cn")?.get() ?:
+                               attrs.get("sAMAccountName")?.get()
+                if (username) {
+                  user.username = username.toString()
+                }
+
+                // Email
+                def mail = attrs.get("mail")?.get()
+                if (mail) {
+                  user.email = mail.toString()
+                }
+
+                // First name - from givenName
+                def givenName = attrs.get("givenName")?.get()
+                if (givenName) {
+                  user.firstName = givenName.toString()
+                }
+
+                // Last name - from sn (surname)
+                def sn = attrs.get("sn")?.get()
+                if (sn) {
+                  user.lastName = sn.toString()
+                }
+
+                // Enable user by default
+                user.enabled = true
+
+                // Add custom attributes if configured
+                def customAttrs = [:]
+
+                // Organizational Unit
+                def ou = attrs.get("ou")?.get()
+                if (ou) {
+                  customAttrs.put("ldap_ou", [ou.toString()])
+                }
+
+                // Distinguished Name (for reference)
+                def dn = result.nameInNamespace
+                if (dn) {
+                  customAttrs.put("ldap_dn", [dn])
+                }
+
+                // Description
+                def description = attrs.get("description")?.get()
+                if (description) {
+                  customAttrs.put("description", [description.toString()])
+                }
+
+                // Telephone number
+                def telephoneNumber = attrs.get("telephoneNumber")?.get()
+                if (telephoneNumber) {
+                  customAttrs.put("phoneNumber", [telephoneNumber.toString()])
+                }
+
+                if (!customAttrs.isEmpty()) {
+                  user.attributes = customAttrs
+                }
+
+                // Add required actions if configured
+                def requirePasswordUpdate = camelContext.resolvePropertyPlaceholders("{{keycloak.user.requirePasswordUpdate}}")
+                if ("true".equals(requirePasswordUpdate)) {
+                  user.requiredActions = ["UPDATE_PASSWORD"]
+                }
+
+                users.add(user)
+              }
+
+              // Set transformed users as message body
+              request.body = users
+
+        # Set headers for bulk user creation
+        - setHeader:
+            name: CamelKeycloakRealmName
+            constant: "{{keycloak.target.realm}}"
+        - setHeader:
+            name: CamelKeycloakContinueOnError
+            constant: true
+
+        # Bulk create users in Keycloak
+        - to:
+            uri: "keycloak:admin?operation=bulkCreateUsers"
+
+        # Log migration results
+        - script:
+            groovy: |
+              def result = request.body
+
+              println ""
+              println "=" * 80
+              println "LDAP to Keycloak Migration Results"
+              println "=" * 80
+              println "Total users processed: ${result.total}"
+              println "Successfully created:  ${result.success}"
+              println "Failed:                ${result.failed}"
+              println "=" * 80
+
+              if (result.results) {
+                println "\nDetailed Results:"
+                println "-" * 80
+                result.results.each { userResult ->
+                  def status = userResult.status == "success" ? "✓" : "✗"
+                  println "${status} ${userResult.username?.padRight(30)} - ${userResult.status}"
+                  if (userResult.error) {
+                    println "  Error: ${userResult.error}"
+                  }
+                }
+                println "-" * 80
+              }
+
+              println ""
+              println "Migration completed!"
+              println ""
