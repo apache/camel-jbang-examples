@@ -1,0 +1,764 @@
+= LDAP to Keycloak User Migration
+
+This example demonstrates how to migrate users from an LDAP directory to Keycloak using Apache Camel.
+It leverages the `camel-ldap` component to read users from LDAP and the `camel-keycloak` component's bulk operations to efficiently import users into Keycloak.
+
+== Features
+
+* Reads users from LDAP using customizable search filters
+* Transforms LDAP user attributes to Keycloak UserRepresentation
+* Uses Keycloak bulk operations for efficient mass user creation
+* Supports LDAP authentication (anonymous, simple, DIGEST-MD5)
+* Maps common LDAP attributes (uid, cn, mail, givenName, sn, ou, telephoneNumber)
+* Preserves LDAP metadata as Keycloak user attributes
+* Configurable password update requirements
+* Detailed migration results with success/failure reporting
+* Error handling with continue-on-error support
+
+== Use Cases
+
+This example is useful for:
+
+* **Initial Migration**: Moving users from legacy LDAP to Keycloak
+* **Consolidation**: Merging users from multiple LDAP directories into Keycloak
+* **Modernization**: Replacing LDAP authentication with Keycloak's modern identity management
+* **Hybrid Environments**: Syncing LDAP users to Keycloak while maintaining LDAP for other systems
+
+== Prerequisites
+
+* JBang installed (https://www.jbang.dev)
+* Access to an LDAP server with users to migrate
+* Keycloak server (can be started with Camel JBang infra)
+* Basic understanding of LDAP and Keycloak concepts
+
+== Dependencies
+
+This example requires:
+
+* `camel-ldap` - For LDAP integration
+* `camel-keycloak` - For Keycloak integration
+
+== Install JBang
+
+First install JBang according to https://www.jbang.dev
+
+When JBang is installed then you should be able to run from a shell:
+
+[source,sh]
+----
+$ jbang --version
+----
+
+This will output the version of JBang.
+
+To run this example you can either install Camel on JBang via:
+
+[source,sh]
+----
+$ jbang app install camel@apache/camel
+----
+
+Which allows to run Camel JBang with `camel` as shown below.
+
+== Setting Up LDAP Server
+
+For this example, we'll use OpenLDAP running in Docker:
+
+[source,sh]
+----
+$ docker run -d \
+  --name openldap \
+  -p 389:389 \
+  -p 636:636 \
+  -e LDAP_ORGANISATION="Example Inc" \
+  -e LDAP_DOMAIN="example.org" \
+  -e LDAP_ADMIN_PASSWORD="admin" \
+  osixia/openldap:latest
+----
+
+This will start OpenLDAP with:
+* Port 389: LDAP
+* Port 636: LDAPS (secure LDAP)
+* Admin DN: `cn=admin,dc=example,dc=org`
+* Admin password: `admin`
+* Base DN: `dc=example,dc=org` (automatically created)
+
+=== Adding Test Users to LDAP
+
+You can use LDAP tools like `ldapadd` or Apache Directory Studio to add test users.
+
+IMPORTANT: Before adding users, you need to create the organizational unit structure in LDAP. The default configuration expects `ou=users,dc=example,dc=org` to exist.
+
+Create a file named `users.ldif` with the following content to set up the structure and add test users:
+
+[source,ldif]
+----
+dn: ou=users,dc=example,dc=org
+objectClass: organizationalUnit
+ou: users
+
+dn: uid=jdoe,ou=users,dc=example,dc=org
+objectClass: inetOrgPerson
+objectClass: organizationalPerson
+objectClass: person
+uid: jdoe
+cn: John Doe
+sn: Doe
+givenName: John
+mail: john.doe@example.com
+telephoneNumber: +1-555-1234
+userPassword: password123
+
+dn: uid=jsmith,ou=users,dc=example,dc=org
+objectClass: inetOrgPerson
+objectClass: organizationalPerson
+objectClass: person
+uid: jsmith
+cn: Jane Smith
+sn: Smith
+givenName: Jane
+mail: jane.smith@example.com
+telephoneNumber: +1-555-5678
+userPassword: password456
+
+dn: uid=admin,ou=users,dc=example,dc=org
+objectClass: inetOrgPerson
+objectClass: organizationalPerson
+objectClass: person
+uid: admin
+cn: Admin User
+sn: User
+givenName: Admin
+mail: admin@example.com
+ou: IT
+description: System Administrator
+userPassword: adminpass
+----
+
+To add the organizational unit and users to your LDAP server:
+
+[source,sh]
+----
+$ ldapadd -x -H ldap://localhost:389 -D "cn=admin,dc=example,dc=org" -w admin -f users.ldif
+----
+
+Expected output:
+[source]
+----
+adding new entry "ou=users,dc=example,dc=org"
+adding new entry "uid=jdoe,ou=users,dc=example,dc=org"
+adding new entry "uid=jsmith,ou=users,dc=example,dc=org"
+adding new entry "uid=admin,ou=users,dc=example,dc=org"
+----
+
+NOTE: If you're using the `osixia/openldap` Docker container, the base DN `dc=example,dc=org` is automatically created. You only need to add the `ou=users` organizational unit and the user entries.
+
+== Setting Up Keycloak
+
+Use Camel JBang Infra to run Keycloak:
+
+[source,sh]
+----
+$ jbang -Dcamel.jbang.version=4.16.0 camel@apache/camel infra run keycloak
+----
+
+This will start Keycloak configured with:
+* Admin username: `admin`
+* Admin password: `admin`
+* Port: `8080`
+
+Wait a few seconds for Keycloak to fully start before proceeding.
+
+To stop Keycloak later:
+
+[source,sh]
+----
+$ jbang -Dcamel.jbang.version=4.16.0 camel@apache/camel infra stop keycloak
+----
+
+== Configuring the Migration
+
+Edit the `application.properties` file to configure your LDAP and Keycloak settings:
+
+=== LDAP Configuration
+
+[source,properties]
+----
+# LDAP server URL
+ldap.server.url=ldap://localhost:389
+
+# Authentication (none, simple, or DIGEST-MD5)
+ldap.security.authentication=simple
+ldap.security.principal=cn=admin,dc=example,dc=org
+ldap.security.credentials=admin
+
+# Search configuration
+ldap.search.base=ou=users,dc=example,dc=org
+ldap.search.filter=(objectClass=person)
+----
+
+=== Keycloak Configuration
+
+[source,properties]
+----
+# Keycloak server URL
+keycloak.server.url=http://localhost:8080
+
+# Authentication
+keycloak.realm=master
+keycloak.username=admin
+keycloak.password=admin
+
+# Target realm for migrated users
+keycloak.target.realm=master
+----
+
+=== Migration Options
+
+[source,properties]
+----
+# Require password update on first login
+keycloak.user.requirePasswordUpdate=true
+----
+
+== Running the Migration
+
+After configuring LDAP and Keycloak, and adding test users to LDAP, run the migration:
+
+[source,sh]
+----
+$ jbang -Dcamel.jbang.version=4.16.0 camel@apache/camel run *
+----
+
+IMPORTANT: Make sure you have created the LDAP organizational unit structure and added test users (see "Adding Test Users to LDAP" section above). If you see an error like `NameNotFoundException: No Such Object`, it means the LDAP base DN doesn't exist yet.
+
+The migration will:
+
+1. Initialize LDAP connection
+2. Connect to the LDAP server
+3. Search for users based on the configured filter
+4. Transform LDAP attributes to Keycloak user format
+5. Bulk create users in Keycloak
+6. Display detailed migration results
+
+== Expected Output
+
+[source]
+----
+[INFO] Starting LDAP to Keycloak user migration...
+[INFO] Found 3 users in LDAP
+
+================================================================================
+LDAP to Keycloak Migration Results
+================================================================================
+Total users processed: 3
+Successfully created:  3
+Failed:                0
+================================================================================
+
+Detailed Results:
+--------------------------------------------------------------------------------
+✓ jdoe                           - success
+✓ jsmith                         - success
+✓ admin                          - success
+--------------------------------------------------------------------------------
+
+Migration completed!
+----
+
+== LDAP Attribute Mapping
+
+The migration maps LDAP attributes to Keycloak user fields:
+
+[cols="1,1,3",options="header"]
+|===
+|LDAP Attribute
+|Keycloak Field
+|Notes
+
+|`uid`, `cn`, `sAMAccountName`
+|`username`
+|First available attribute is used (required)
+
+|`mail`
+|`email`
+|User's email address
+
+|`givenName`
+|`firstName`
+|User's first name
+
+|`sn`
+|`lastName`
+|User's surname/last name
+
+|`ou`
+|`attributes.ldap_ou`
+|Organizational unit (custom attribute)
+
+|`dn`
+|`attributes.ldap_dn`
+|Distinguished name (custom attribute, for reference)
+
+|`description`
+|`attributes.description`
+|User description (custom attribute)
+
+|`telephoneNumber`
+|`attributes.phoneNumber`
+|Phone number (custom attribute)
+|===
+
+NOTE: All users are enabled by default (`enabled: true`).
+
+== Advanced Configuration
+
+=== Custom LDAP Search Filters
+
+You can customize the LDAP search filter to target specific users:
+
+[source,properties]
+----
+# Search only for active persons with email
+ldap.search.filter=(&(objectClass=person)(mail=*)(!(userAccountControl:1.2.840.113556.1.4.803:=2)))
+
+# Search for users in specific organizational unit
+ldap.search.filter=(&(objectClass=inetOrgPerson)(ou=Engineering))
+
+# Search for users created after a specific date (if supported)
+ldap.search.filter=(&(objectClass=person)(createTimestamp>=20240101000000Z))
+----
+
+=== Anonymous LDAP Authentication
+
+If your LDAP server allows anonymous access:
+
+[source,properties]
+----
+ldap.security.authentication=none
+# No need to specify principal and credentials
+----
+
+=== Multiple LDAP Servers
+
+To migrate from multiple LDAP servers, you can:
+
+1. Run the migration multiple times with different configurations
+2. Modify the route to iterate over multiple LDAP servers
+3. Create separate routes for each LDAP server
+
+=== Migrating to Different Realms
+
+To migrate users to a specific realm (not master):
+
+1. Create the realm in Keycloak first:
+   - Go to Keycloak Admin Console
+   - Click "Create Realm"
+   - Enter realm name (e.g., "company")
+   - Click "Create"
+
+2. Update `application.properties`:
++
+[source,properties]
+----
+keycloak.target.realm=company
+----
+
+=== Handling Large User Bases
+
+For large LDAP directories (thousands of users):
+
+1. **Batch Processing**: Modify the route to process users in batches
+2. **Pagination**: Use LDAP pagination for very large result sets
+3. **Scheduling**: Run the migration during off-peak hours
+4. **Incremental Sync**: Add logic to skip already migrated users
+
+Example for batch processing:
+
+[source,yaml]
+----
+- split:
+    simple: "${body}"
+    streaming: true
+    parallelProcessing: true
+    steps:
+      - aggregate:
+          simple: "batch"
+          completionSize: 100
+          steps:
+            - to: "keycloak:admin?operation=bulkCreateUsers"
+----
+
+== Error Handling
+
+The migration is configured with `continueOnError: true`, which means:
+
+* If a user fails to create, the migration continues with the next user
+* All errors are captured in the results
+* The final report shows which users succeeded and which failed
+
+Common errors and solutions:
+
+[cols="1,2",options="header"]
+|===
+|Error
+|Solution
+
+|"User already exists"
+|User with same username already in Keycloak. Either delete existing user or modify LDAP filter to exclude already migrated users.
+
+|"Invalid email format"
+|LDAP `mail` attribute contains invalid email. Clean up LDAP data or add email validation in the transformer.
+
+|"Missing required field"
+|Username is required but not found in LDAP attributes. Ensure users have `uid`, `cn`, or `sAMAccountName` attribute.
+
+|"Connection refused"
+|Cannot connect to LDAP or Keycloak. Verify server URLs and network connectivity.
+
+|"Authentication failed"
+|LDAP credentials are incorrect. Verify `ldap.security.principal` and `ldap.security.credentials`.
+|===
+
+== Security Considerations
+
+IMPORTANT: This migration does NOT copy user passwords from LDAP to Keycloak.
+
+=== Password Handling
+
+LDAP passwords are typically hashed and cannot be directly transferred. Options:
+
+1. **Require Password Update** (Default):
+   - Set `keycloak.user.requirePasswordUpdate=true`
+   - Users must set a new password on first login
+   - Most secure option
+
+2. **Set Temporary Passwords**:
+   - Modify the transformer to set a temporary password for each user
+   - Send password reset emails to users
+   - Example code:
++
+[source,groovy]
+----
+user.credentials = [[
+  type: "password",
+  value: UUID.randomUUID().toString(),
+  temporary: true
+]]
+----
+
+3. **LDAP Federation in Keycloak**:
+   - Instead of migration, configure LDAP as a user federation in Keycloak
+   - Passwords remain in LDAP
+   - Keycloak authenticates against LDAP
+   - See: https://www.keycloak.org/docs/latest/server_admin/#_ldap[Keycloak LDAP Documentation]
+
+=== Sensitive Data
+
+* Store LDAP credentials securely (use environment variables or secrets management)
+* Use LDAPS (LDAP over SSL/TLS) for production environments
+* Review custom attributes to ensure no sensitive data is migrated inappropriately
+* Consider GDPR and data protection requirements
+
+== Customizing the Migration
+
+=== Adding Custom Attributes
+
+To map additional LDAP attributes, modify the transformer bean in `ldap-migration.camel.yaml`:
+
+[source,groovy]
+----
+// Employee ID
+def employeeId = attrs.get("employeeNumber")?.get()
+if (employeeId) {
+  customAttrs.put("employeeId", [employeeId.toString()])
+}
+
+// Department
+def department = attrs.get("departmentNumber")?.get()
+if (department) {
+  customAttrs.put("department", [department.toString()])
+}
+----
+
+=== Assigning Roles During Migration
+
+To assign default roles to migrated users, add after user creation:
+
+[source,yaml]
+----
+# After bulk create users
+- split:
+    simple: "${body.results}"
+    steps:
+      - filter:
+          simple: "${body.status} == 'success'"
+      - setHeader:
+          name: CamelKeycloakRealmName
+          constant: "{{keycloak.target.realm}}"
+      - setHeader:
+          name: CamelKeycloakUsername
+          simple: "${body.username}"
+      - setHeader:
+          name: CamelKeycloakRoleName
+          constant: "default-user-role"
+      - to:
+          uri: "keycloak:admin?operation=assignRoleToUser"
+----
+
+=== Group Assignment
+
+To add users to groups based on LDAP organizational unit:
+
+[source,groovy]
+----
+// In the transformer
+def ou = attrs.get("ou")?.get()
+if (ou) {
+  // Store OU for later group assignment
+  user.groups = [ou.toString()]
+}
+----
+
+Then add a separate route to handle group assignment.
+
+== Validating the Migration
+
+After migration, verify users in Keycloak:
+
+1. **Via Keycloak Admin Console**:
+   - Navigate to http://localhost:8080
+   - Login with admin/admin
+   - Go to Users
+   - Verify migrated users appear
+
+2. **Via REST API**:
++
+[source,sh]
+----
+# Get admin access token
+TOKEN=$(curl -X POST http://localhost:8080/realms/master/protocol/openid-connect/token \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "username=admin" \
+  -d "password=admin" \
+  -d "grant_type=password" \
+  -d "client_id=admin-cli" \
+  | jq -r '.access_token')
+
+# List all users
+curl http://localhost:8080/admin/realms/master/users \
+  -H "Authorization: Bearer $TOKEN" | jq
+----
+
+3. **Test User Login**:
++
+Users should be able to login to Keycloak with their credentials (after setting password if required).
+
+== Troubleshooting
+
+=== LDAP Connection Issues
+
+[source,sh]
+----
+# Test LDAP connectivity
+ldapsearch -x -H ldap://localhost:389 \
+  -D "cn=admin,dc=example,dc=org" \
+  -w admin \
+  -b "ou=users,dc=example,dc=org" \
+  "(objectClass=person)"
+----
+
+=== Enable Debug Logging
+
+Uncomment in `application.properties`:
+
+[source,properties]
+----
+logging.level.org.apache.camel=DEBUG
+logging.level.org.apache.camel.component.keycloak=DEBUG
+logging.level.org.apache.camel.component.ldap=DEBUG
+----
+
+=== Common Issues
+
+**"No users found in LDAP"** or **"NameNotFoundException: No Such Object"**:
+- This error means the LDAP base DN doesn't exist in your LDAP server
+- Verify `ldap.search.base` points to correct organizational unit
+- Create the organizational unit structure (see "Adding Test Users to LDAP" section)
+- Use `ldapsearch` to verify the base DN exists:
++
+[source,sh]
+----
+ldapsearch -x -H ldap://localhost:389 -D "cn=admin,dc=example,dc=org" -w admin -b "dc=example,dc=org" "(objectClass=*)"
+----
+- Check `ldap.search.filter` matches your LDAP schema
+- Ensure LDAP connection is successful
+
+**"LDAP authentication failed"**:
+- Verify bind DN in `ldap.security.principal`
+- Check password in `ldap.security.credentials`
+- Try with `ldap.security.authentication=none` if server allows
+
+**"Keycloak bulk operation failed"**:
+- Verify Keycloak is running and accessible
+- Check admin credentials
+- Ensure target realm exists
+
+**"Groovy script errors"**:
+- Ensure JBang can access Groovy runtime
+- Check for syntax errors in transformer script
+- Review logs for detailed error messages
+
+== Developer Console
+
+You can enable the developer console via `--console` flag:
+
+[source,sh]
+----
+$ camel run * --console
+----
+
+Then browse: http://localhost:8080/q/dev to introspect the running Camel application.
+
+== Stopping
+
+To stop the Camel application, press `Ctrl+C`.
+
+To stop Keycloak:
+
+[source,sh]
+----
+$ jbang -Dcamel.jbang.version=4.16.0 camel@apache/camel infra stop keycloak
+----
+
+To stop OpenLDAP:
+
+[source,sh]
+----
+$ docker stop openldap
+$ docker rm openldap
+----
+
+== Architecture
+
+This example demonstrates:
+
+1. **LDAP Integration**: Using `camel-ldap` to query LDAP directories
+2. **Dynamic Bean Creation**: LDAP DirContext is created at runtime with resolved properties
+3. **Keycloak Bulk Operations**: Using `bulkCreateUsers` for efficient mass user creation
+4. **Data Transformation**: Converting LDAP SearchResults to Keycloak UserRepresentation
+5. **Error Handling**: Continue-on-error pattern for resilient migration
+6. **Result Reporting**: Detailed success/failure tracking
+
+== How It Works
+
+The migration process works in two phases:
+
+=== Phase 1: LDAP Context Initialization
+
+A startup route (`ldap-context-initializer`) runs immediately and:
+1. Resolves the LDAP configuration properties
+2. Creates a JNDI `InitialDirContext` with the LDAP server connection
+3. Binds the context to the Camel registry as `ldapserver`
+
+This ensures the LDAP connection is established before migration starts.
+
+=== Phase 2: User Migration
+
+The main migration route (`ldap-to-keycloak-migration`) then:
+1. Waits 1 second to ensure LDAP context is initialized
+2. Searches LDAP using the configured filter and base DN
+3. Transforms each LDAP SearchResult to Keycloak UserRepresentation
+4. Bulk creates all users in Keycloak
+5. Reports detailed results
+
+== Migration Flow
+
+[source]
+----
+        ┌──────────────────────────────────────────┐
+        │ Phase 1: LDAP Context Initialization    │
+        └──────────────────┬───────────────────────┘
+                           │
+                           ▼
+                  ┌─────────────────┐
+                  │ Resolve Props   │
+                  │ Create Context  │
+                  │ Bind to Registry│
+                  └────────┬────────┘
+                           │
+        ┌──────────────────┴───────────────────────┐
+        │ Phase 2: User Migration                  │
+        └──────────────────┬───────────────────────┘
+                           │
+                           ▼
+                  ┌─────────────┐
+                  │ LDAP Server │
+                  └──────┬──────┘
+                         │ 1. Search Users
+                         │ (ldap:ldapserver)
+                         ▼
+                  ┌──────────────────────┐
+                  │ Camel Route          │
+                  │ - Search LDAP        │
+                  │ - Transform Users    │
+                  │ - Bulk Create        │
+                  └──────┬───────────────┘
+                         │ 2. Bulk Create
+                         │ (keycloak:admin?operation=bulkCreateUsers)
+                         ▼
+                  ┌─────────────────┐
+                  │ Keycloak Server │
+                  └─────────────────┘
+                         │
+                         │ 3. Migration Results
+                         ▼
+                  ┌──────────────────┐
+                  │ Console Output   │
+                  │ - Success Count  │
+                  │ - Failure Count  │
+                  │ - User Details   │
+                  └──────────────────┘
+----
+
+== Next Steps
+
+After successful migration:
+
+* Configure user federation for ongoing LDAP synchronization
+* Set up identity brokering for social logins
+* Configure multi-factor authentication (MFA)
+* Implement role-based access control (RBAC)
+* Set up client applications to use Keycloak
+* Configure email server for password reset notifications
+* Implement custom themes for login pages
+* Set up backup and disaster recovery
+
+== Best Practices
+
+1. **Test First**: Run migration on a test Keycloak instance before production
+2. **Backup**: Backup both LDAP and Keycloak before migration
+3. **Dry Run**: Create a "dry run" mode that doesn't create users, just logs what would happen
+4. **Incremental**: For large directories, migrate in batches or phases
+5. **Validation**: Verify a sample of users after migration
+6. **Communication**: Notify users about the migration and password reset requirements
+7. **Documentation**: Document custom attribute mappings for future reference
+8. **Monitoring**: Monitor Keycloak performance during and after migration
+
+== Learn More
+
+* https://camel.apache.org/components/latest/ldap-component.html[Camel LDAP Component]
+* https://camel.apache.org/components/latest/keycloak-component.html[Camel Keycloak Component]
+* https://www.keycloak.org/docs/latest/server_admin/[Keycloak Server Administration Guide]
+* https://ldap.com/[LDAP.com - LDAP Reference]
+* https://directory.apache.org/[Apache Directory Project]
+
+== Help and Contributions
+
+If you hit any problem using Camel or have some feedback, then please
+https://camel.apache.org/community/support/[let us know].
+
+We also love contributors, so
+https://camel.apache.org/community/contributing/[get involved] :-)
+
+The Camel riders!

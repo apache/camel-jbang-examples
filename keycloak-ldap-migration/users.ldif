@@ -1,0 +1,63 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+
+# Create organizational unit for users
+dn: ou=users,dc=example,dc=org
+objectClass: top
+objectClass: organizationalUnit
+ou: users
+
+# User 1: John Doe
+dn: uid=jdoe,ou=users,dc=example,dc=org
+objectClass: inetOrgPerson
+objectClass: organizationalPerson
+objectClass: person
+uid: jdoe
+cn: John Doe
+sn: Doe
+givenName: John
+mail: john.doe@example.com
+telephoneNumber: +1-555-1234
+userPassword: password123
+
+# User 2: Jane Smith
+dn: uid=jsmith,ou=users,dc=example,dc=org
+objectClass: inetOrgPerson
+objectClass: organizationalPerson
+objectClass: person
+uid: jsmith
+cn: Jane Smith
+sn: Smith
+givenName: Jane
+mail: jane.smith@example.com
+telephoneNumber: +1-555-5678
+userPassword: password456
+
+# User 3: Admin User
+dn: uid=admin,ou=users,dc=example,dc=org
+objectClass: inetOrgPerson
+objectClass: organizationalPerson
+objectClass: person
+uid: admin
+cn: Admin User
+sn: User
+givenName: Admin
+mail: admin@example.com
+ou: IT
+description: System Administrator
+telephoneNumber: +1-555-9999
+userPassword: adminpass
