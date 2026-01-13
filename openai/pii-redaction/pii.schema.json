@@ -1,0 +1,54 @@
+{
+    "type": "object",
+    "properties": {
+        "detectedPII": {
+            "type": "array",
+            "description": "A list of all PII entities detected and redacted.",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "span": {
+                        "type": "string",
+                        "description": "The original text value that was detected."
+                    },
+                    "type": {
+                        "type": "string",
+                        "enum": [
+                            "PERSON",
+                            "EMAIL",
+                            "PHONE",
+                            "CREDIT_CARD",
+                            "NATIONAL_ID",
+                            "ADDRESS",
+                            "OTHER"
+                        ],
+                        "description": "The category of the detected PII"
+                    },
+                    "action": {
+                        "type": "string",
+                        "enum": [
+                            "MASKED",
+                            "REDACTED"
+                        ],
+                        "description": "The action taken on the data"
+                    }
+                },
+                "required": [
+                    "span",
+                    "type",
+                    "action"
+                ],
+                "additionalProperties": false
+            }
+        },
+        "sanitizedText": {
+            "type": "string",
+            "description": "The input text with all PII replaced by placeholders"
+        }
+    },
+    "required": [
+        "detectedPII",
+        "sanitizedText"
+    ],
+    "additionalProperties": false
+}

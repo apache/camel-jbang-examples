@@ -1,0 +1,77 @@
+= OpenAI Personal Identifiable Information Redaction
+
+This example demonstrates how to use OpenAI-compatible LLM providers with Apache Camel to redact personal identifiable information from text.
+
+== Prerequisites
+
+* Java 17/21
+* A running LLM service with exposed OpenAI-compatible API (for chat completions)
+
+== Install Camel JBang
+
+include::../install.adoc[see installation]
+
+== Configure OpenAI properties
+
+Edit the `application.properties` file or set the following environment properties:
+
+[source,properties]
+----
+export OPENAI_API_KEY=<your-openai-api-key>
+export OPENAI_BASE_URL=http://localhost:8181/v1
+export OPENAI_MODEL=unsloth/Ministral-3-8B-Instruct-2512-GGUF
+----
+
+**Important**: Replace `<your-openai-api-key>` with your actual OpenAI API key.
+
+== Example: Personal Identifiable Information Redaction
+
+This integration identifies personal identifiable information based on the provided schema details and redacts it.
+
+=== How to run
+
+[source,shell]
+----
+echo 'Customer John Doe (email: john.doe@example.com) requested a refund for order #998877.' | camel run *
+----
+
+=== What it does
+
+The integration:
+1. Reads the input from the console's standard input
+2. Analyzes analyze the user input and redacts all PII
+4. Returns the results to standard output in the specified JSON format
+
+=== Expected Output
+
+[source,json]
+----
+{
+  "detectedPII": [
+    {
+      "span": "John Doe",
+      "type": "PERSON",
+      "action": "REDACTED"
+    },
+    {
+      "span": "john.doe@example.com",
+      "type": "EMAIL",
+      "action": "REDACTED"
+    }
+  ],
+  "sanitizedText": "Customer [REDACTED] ([REDACTED]) requested a refund for order #998877."
+}
+Analyzing text: I love this product! It's absolutely amazing...
+Sentiment: positive (Score: 0.95)
+Detected Language: en
+----
+
+== Help and contributions
+
+If you hit any problem using Camel or have some feedback, then please
+https://camel.apache.org/community/support/[let us know].
+
+We also love contributors, so
+https://camel.apache.org/community/contributing/[get involved] :-)
+
+The Camel riders!
