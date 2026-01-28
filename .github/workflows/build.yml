@@ -88,6 +88,10 @@ jobs:
           pushd edi-x12-as2/test
           jbang citrus@citrusframework/citrus run edi-x12-as2.camel.it.yaml
           popd
+
+          pushd smart-log-analyzer/first-iteration/test
+          jbang citrus@citrusframework/citrus run first-iteration.camel.it.yaml
+          popd
       - uses: actions/upload-artifact@50769540e7f4bd5e21e526ee35c689e35e0d6874 # v4.4.0
         if: always()
         with:
