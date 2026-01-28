@@ -30,7 +30,7 @@
     }
   ],
   "paths": {
-    "/pet": {
+    "/petstore/pet": {
       "put": {
         "requestBody": {
           "description": "Pet object that needs to be added to the store",
@@ -102,7 +102,7 @@
         "description": ""
       }
     },
-    "/pet/{petId}": {
+    "/petstore/pet/{petId}": {
       "get": {
         "tags": [
           "pet"

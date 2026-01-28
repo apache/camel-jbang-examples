@@ -18,12 +18,12 @@ actions:
           resources:
             - "petstore-api.json"
   - openapi:
-      specification: "../petstore-api.json"
+      specification: "petstore-api.json"
       server: "petstoreServer"
       receiveRequest:
         operation: addPet
   - openapi:
-      specification: "../petstore-api.json"
+      specification: "petstore-api.json"
       server: "petstoreServer"
       sendResponse:
         operation: addPet
