@@ -1,0 +1,46 @@
+name: first-iteration-test
+description: Integration test for the first-iteration log analyzer prototype
+variables:
+  - name: kafka.broker
+    value: localhost:9092
+  - name: kafka.topic
+    value: log-events
+actions:
+  - camel:
+      infra:
+        run:
+          service: kafka
+  - camel:
+      jbang:
+        run:
+          stub:
+            - "openai:*"
+          integration:
+            name: "log-analyzer"
+            file: "../analyzer.camel.yaml"
+            systemProperties:
+              file: "../application.properties"
+  - send:
+      endpoint: |
+        camel:kafka:${kafka.topic}?brokers=${kafka.broker}
+      message:
+        body:
+          resource:
+            file: "payload-info.json"
+  - send:
+      endpoint: |
+        camel:kafka:${kafka.topic}?brokers=${kafka.broker}
+      message:
+        body:
+          resource:
+            file: "payload-error.json"
+  - camel:
+      jbang:
+        verify:
+          integration: "log-analyzer"
+          logMessage: "Aggregation completed for traceId"
+  - camel:
+      jbang:
+        verify:
+          integration: "log-analyzer"
+          logMessage: "LLM Analysis for traceId test-12345"

@@ -1,0 +1,14 @@
+{
+  "events-to-process": {
+    "distributed-cache": {
+      "mode": "SYNC",
+      "statistics": true,
+      "encoding": {
+        "media-type": "text/plain"
+      },
+      "expiration": {
+        "lifespan": "20000ms"
+      }
+    }
+  }
+}

@@ -1,0 +1,227 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://opentelemetry.io/schemas/logs/1.24.0",
+  "title": "OpenTelemetry Log Data",
+  "description": "JSON Schema for OpenTelemetry Protocol (OTLP) log data",
+  "type": "object",
+  "required": ["resourceLogs"],
+  "properties": {
+    "resourceLogs": {
+      "type": "array",
+      "description": "Array of ResourceLogs messages",
+      "items": {
+        "$ref": "#/$defs/ResourceLogs"
+      }
+    }
+  },
+  "$defs": {
+    "ResourceLogs": {
+      "type": "object",
+      "description": "A collection of ScopeLogs from a Resource",
+      "properties": {
+        "resource": {
+          "$ref": "#/$defs/Resource"
+        },
+        "scopeLogs": {
+          "type": "array",
+          "description": "A list of ScopeLogs that originate from a resource",
+          "items": {
+            "$ref": "#/$defs/ScopeLogs"
+          }
+        },
+        "schemaUrl": {
+          "type": "string",
+          "format": "uri",
+          "description": "Schema URL for the resource"
+        }
+      }
+    },
+    "Resource": {
+      "type": "object",
+      "description": "Resource information",
+      "properties": {
+        "attributes": {
+          "type": "array",
+          "description": "Set of attributes that describe the resource",
+          "items": {
+            "$ref": "#/$defs/KeyValue"
+          }
+        }
+      }
+    },
+    "ScopeLogs": {
+      "type": "object",
+      "description": "A collection of log records from an instrumentation scope",
+      "properties": {
+        "scope": {
+          "$ref": "#/$defs/InstrumentationScope"
+        },
+        "logRecords": {
+          "type": "array",
+          "description": "A list of log records",
+          "items": {
+            "$ref": "#/$defs/LogRecord"
+          }
+        },
+        "schemaUrl": {
+          "type": "string",
+          "format": "uri",
+          "description": "Schema URL for the scope"
+        }
+      }
+    },
+    "InstrumentationScope": {
+      "type": "object",
+      "description": "Instrumentation scope information",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Name of the instrumentation scope"
+        },
+        "version": {
+          "type": "string",
+          "description": "Version of the instrumentation scope"
+        },
+        "attributes": {
+          "type": "array",
+          "description": "Attributes of the instrumentation scope",
+          "items": {
+            "$ref": "#/$defs/KeyValue"
+          }
+        }
+      }
+    },
+    "LogRecord": {
+      "type": "object",
+      "description": "A log record",
+      "properties": {
+        "timeUnixNano": {
+          "type": "string",
+          "pattern": "^[0-9]+$",
+          "description": "Time when the event occurred (nanoseconds since Unix epoch)"
+        },
+        "observedTimeUnixNano": {
+          "type": "string",
+          "pattern": "^[0-9]+$",
+          "description": "Time when the event was observed (nanoseconds since Unix epoch)"
+        },
+        "severityNumber": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 24,
+          "description": "Numerical severity value (1-24)"
+        },
+        "severityText": {
+          "type": "string",
+          "description": "Severity text (e.g., TRACE, DEBUG, INFO, WARN, ERROR, FATAL)"
+        },
+        "body": {
+          "$ref": "#/$defs/AnyValue",
+          "description": "The body of the log record"
+        },
+        "attributes": {
+          "type": "array",
+          "description": "Additional attributes for the log record",
+          "items": {
+            "$ref": "#/$defs/KeyValue"
+          }
+        },
+        "droppedAttributesCount": {
+          "type": "integer",
+          "description": "Number of attributes that were dropped due to limits"
+        },
+        "flags": {
+          "type": "integer",
+          "description": "Flags for the log record"
+        },
+        "traceId": {
+          "type": "string",
+          "pattern": "^[a-fA-F0-9]{32}$",
+          "description": "Trace ID (32 hex characters)"
+        },
+        "spanId": {
+          "type": "string",
+          "pattern": "^[a-fA-F0-9]{16}$",
+          "description": "Span ID (16 hex characters)"
+        }
+      }
+    },
+    "KeyValue": {
+      "type": "object",
+      "description": "A key-value pair",
+      "required": ["key", "value"],
+      "properties": {
+        "key": {
+          "type": "string",
+          "description": "The attribute key"
+        },
+        "value": {
+          "$ref": "#/$defs/AnyValue",
+          "description": "The attribute value"
+        }
+      }
+    },
+    "AnyValue": {
+      "type": "object",
+      "description": "A value of any type",
+      "properties": {
+        "stringValue": {
+          "type": "string"
+        },
+        "boolValue": {
+          "type": "boolean"
+        },
+        "intValue": {
+          "type": "string",
+          "pattern": "^-?[0-9]+$"
+        },
+        "doubleValue": {
+          "type": "number"
+        },
+        "arrayValue": {
+          "$ref": "#/$defs/ArrayValue"
+        },
+        "kvlistValue": {
+          "$ref": "#/$defs/KeyValueList"
+        },
+        "bytesValue": {
+          "type": "string",
+          "contentEncoding": "base64"
+        }
+      },
+      "oneOf": [
+        { "required": ["stringValue"] },
+        { "required": ["boolValue"] },
+        { "required": ["intValue"] },
+        { "required": ["doubleValue"] },
+        { "required": ["arrayValue"] },
+        { "required": ["kvlistValue"] },
+        { "required": ["bytesValue"] }
+      ]
+    },
+    "ArrayValue": {
+      "type": "object",
+      "description": "An array of values",
+      "properties": {
+        "values": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/AnyValue"
+          }
+        }
+      }
+    },
+    "KeyValueList": {
+      "type": "object",
+      "description": "A list of key-value pairs",
+      "properties": {
+        "values": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/KeyValue"
+          }
+        }
+      }
+    }
+  }
+}

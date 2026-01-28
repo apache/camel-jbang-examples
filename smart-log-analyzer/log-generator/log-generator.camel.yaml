@@ -1,0 +1,87 @@
+# Simulates order processing with random success/failure outcomes (30% failure rate)
+# to generate realistic log data for testing the error analyzer
+- route:
+    id: order-processor
+    from:
+      uri: timer:orderProcessor
+      parameters:
+        period: "{{timer.order.period:2000}}"
+        fixedRate: true
+      steps:
+
+        # Generate random order ID
+        - setVariable:
+            name: orderId
+            simple: "ORD-${random(10000,99999)}"
+
+        # Log: Order received
+        - log:
+            message: "Received new order ${variable.orderId} from customer ${random(1000,9999)}"
+            loggingLevel: INFO
+            logName: com.example.order.OrderService
+
+        # Log: Validation
+        - log:
+            message: "Validating order ${variable.orderId}: checking inventory and pricing"
+            loggingLevel: INFO
+            logName: com.example.order.ValidationService
+
+        # Simulate random processing outcomes (30% failure rate)
+        - choice:
+            when:
+              - simple: "${random(0,100)} < 30"
+                steps:
+                  # Simulate different error types
+                  - choice:
+                      when:
+                        - simple: "${random(0,100)} < 33"
+                          steps:
+                            - log:
+                                message: "Connecting to database for order ${variable.orderId}"
+                                loggingLevel: INFO
+                                logName: com.example.order.DatabaseService
+                            - throwException:
+                                message: "Database connection failed: Connection refused to postgres:5432 while processing order ${variable.orderId}"
+                                exceptionType: java.lang.RuntimeException
+                        - simple: "${random(0,100)} < 66"
+                          steps:
+                            - log:
+                                message: "Initiating payment for order ${variable.orderId}"
+                                loggingLevel: INFO
+                                logName: com.example.payment.PaymentGateway
+                            - throwException:
+                                message: "Network timeout while connecting to payment gateway api.stripe.com for order ${variable.orderId}"
+                                exceptionType: java.lang.RuntimeException
+                      otherwise:
+                        steps:
+                          - log:
+                              message: "Verifying user authentication for order ${variable.orderId}"
+                              loggingLevel: INFO
+                              logName: com.example.auth.AuthService
+                          - throwException:
+                              message: "Authentication failed: Invalid JWT token signature for order ${variable.orderId}"
+                              exceptionType: java.lang.RuntimeException
+            otherwise:
+              steps:
+                - log:
+                    message: "Payment processed successfully for order ${variable.orderId}"
+                    loggingLevel: INFO
+                    logName: com.example.payment.PaymentGateway
+                - log:
+                    message: "Order ${variable.orderId} completed successfully"
+                    loggingLevel: INFO
+                    logName: com.example.order.OrderService
+
+# Periodic health check logging for system monitoring
+- route:
+    id: health-checker
+    from:
+      uri: timer:healthCheck
+      parameters:
+        period: 5000
+        fixedRate: true
+      steps:
+        - log:
+            message: "Health check: All systems operational"
+            loggingLevel: DEBUG
+            logName: com.example.health.HealthChecker

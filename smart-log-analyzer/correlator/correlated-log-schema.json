@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "correlated-log-entry",
+  "title": "Correlated Log Entry",
+  "description": "Simplified log entry for storage in Infinispan",
+  "type": "object",
+  "required": ["timeUnixNano", "severityText", "message", "traceId", "spanId"],
+  "properties": {
+    "timeUnixNano": {
+      "type": "string",
+      "pattern": "^[0-9]+$",
+      "description": "Time when the event occurred (nanoseconds since Unix epoch)"
+    },
+    "observedTimeUnixNano": {
+      "type": "string",
+      "pattern": "^[0-9]+$",
+      "description": "Time when the event was observed (nanoseconds since Unix epoch)"
+    },
+    "severityText": {
+      "type": "string",
+      "description": "Severity level (TRACE, DEBUG, INFO, WARN, ERROR, FATAL)"
+    },
+    "message": {
+      "type": "string",
+      "description": "Combined message from body and attributes"
+    },
+    "traceId": {
+      "type": "string",
+      "pattern": "^[a-fA-F0-9]{32}$",
+      "description": "Trace ID for correlation"
+    },
+    "spanId": {
+      "type": "string",
+      "pattern": "^[a-fA-F0-9]{16}$",
+      "description": "Span ID"
+    }
+  }
+}

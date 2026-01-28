@@ -1,0 +1,62 @@
+# Consumes log events from Kafka, aggregates by traceId, and sends
+# to LLM for analysis when an ERROR level event is detected
+- route:
+    id: log-event-consumer
+    from:
+      uri: kafka:log-events
+      parameters:
+        autoOffsetReset: earliest
+        brokers: localhost:9092
+        groupId: log-analyzer
+      steps:
+        - log:
+            loggingLevel: DEBUG
+            message: "Received event from Kafka: ${body}"
+        - setVariable:
+            name: traceId
+            jq:
+              expression: .traceId
+              resultType: java.lang.String
+        - setVariable:
+            name: level
+            jq:
+              expression: .level
+              resultType: java.lang.String
+        - aggregate:
+            correlationExpression:
+              simple:
+                expression: ${variable.traceId}
+            aggregationStrategy: "#stringAggregationStrategy"
+            completionPredicate:
+              simple:
+                expression: ${variable.level} == 'ERROR'
+            completionTimeout: 30000
+            steps:
+              - log:
+                  message: "Aggregation completed for traceId: ${variable.traceId} - sending to LLM"
+              - setVariable:
+                  name: eventsJson
+                  simple: ${body}
+              - setBody:
+                  simple: >
+                    Analyze the following log events for traceId ${variable.traceId}.
+
+                    An ERROR was detected. Identify the root cause, explain what
+                    happened in the sequence of events, and suggest possible fixes.
+
+                    Events: ${variable.eventsJson}
+              - to:
+                  uri: openai:chat-completion
+                  parameters:
+                    apiKey: not-needed
+                    baseUrl: http://localhost:11434/v1
+                    model: granite4:3b
+                    systemMessage: >
+                      Analyze log events to identify errors, their root causes, and
+                      provide actionable recommendations. Be concise and focus
+                      on the error chain and sequence of events.
+              - log:
+                  message: "LLM Analysis for traceId ${variable.traceId}: ${body}"
+- beans:
+    - name: stringAggregationStrategy
+      type: org.apache.camel.processor.aggregate.StringAggregationStrategy

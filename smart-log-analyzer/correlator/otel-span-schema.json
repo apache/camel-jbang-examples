@@ -1,0 +1,244 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://opentelemetry.io/schemas/traces/1.24.0/Span",
+  "title": "OpenTelemetry Span",
+  "description": "JSON Schema for a single OpenTelemetry span (after split from OTLP batch)",
+  "type": "object",
+  "properties": {
+    "traceId": {
+      "type": "string",
+      "pattern": "^[a-fA-F0-9]{32}$",
+      "description": "Trace ID (32 hex characters)"
+    },
+    "spanId": {
+      "type": "string",
+      "pattern": "^[a-fA-F0-9]{16}$",
+      "description": "Span ID (16 hex characters)"
+    },
+    "traceState": {
+      "type": "string",
+      "description": "W3C trace state"
+    },
+    "parentSpanId": {
+      "type": "string",
+      "pattern": "^[a-fA-F0-9]{16}$",
+      "description": "Parent span ID (16 hex characters)"
+    },
+    "flags": {
+      "type": "integer",
+      "description": "Trace flags (W3C format)"
+    },
+    "name": {
+      "type": "string",
+      "description": "Name of the span"
+    },
+    "kind": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 5,
+      "description": "Span kind (0=UNSPECIFIED, 1=INTERNAL, 2=SERVER, 3=CLIENT, 4=PRODUCER, 5=CONSUMER)"
+    },
+    "startTimeUnixNano": {
+      "type": "string",
+      "pattern": "^[0-9]+$",
+      "description": "Start time (nanoseconds since Unix epoch)"
+    },
+    "endTimeUnixNano": {
+      "type": "string",
+      "pattern": "^[0-9]+$",
+      "description": "End time (nanoseconds since Unix epoch)"
+    },
+    "attributes": {
+      "type": "array",
+      "description": "Attributes for the span",
+      "items": {
+        "$ref": "#/$defs/KeyValue"
+      }
+    },
+    "droppedAttributesCount": {
+      "type": "integer",
+      "description": "Number of attributes that were dropped due to limits"
+    },
+    "events": {
+      "type": "array",
+      "description": "Timed events within the span",
+      "items": {
+        "$ref": "#/$defs/SpanEvent"
+      }
+    },
+    "droppedEventsCount": {
+      "type": "integer",
+      "description": "Number of events that were dropped due to limits"
+    },
+    "links": {
+      "type": "array",
+      "description": "Links to other spans",
+      "items": {
+        "$ref": "#/$defs/SpanLink"
+      }
+    },
+    "droppedLinksCount": {
+      "type": "integer",
+      "description": "Number of links that were dropped due to limits"
+    },
+    "status": {
+      "$ref": "#/$defs/Status"
+    }
+  },
+  "$defs": {
+    "SpanEvent": {
+      "type": "object",
+      "description": "A timed event within a span",
+      "properties": {
+        "timeUnixNano": {
+          "type": "string",
+          "pattern": "^[0-9]+$",
+          "description": "Time of the event (nanoseconds since Unix epoch)"
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the event"
+        },
+        "attributes": {
+          "type": "array",
+          "description": "Attributes for the event",
+          "items": {
+            "$ref": "#/$defs/KeyValue"
+          }
+        },
+        "droppedAttributesCount": {
+          "type": "integer",
+          "description": "Number of attributes that were dropped due to limits"
+        }
+      }
+    },
+    "SpanLink": {
+      "type": "object",
+      "description": "A link to another span",
+      "properties": {
+        "traceId": {
+          "type": "string",
+          "pattern": "^[a-fA-F0-9]{32}$",
+          "description": "Trace ID of the linked span"
+        },
+        "spanId": {
+          "type": "string",
+          "pattern": "^[a-fA-F0-9]{16}$",
+          "description": "Span ID of the linked span"
+        },
+        "traceState": {
+          "type": "string",
+          "description": "W3C trace state"
+        },
+        "attributes": {
+          "type": "array",
+          "description": "Attributes for the link",
+          "items": {
+            "$ref": "#/$defs/KeyValue"
+          }
+        },
+        "droppedAttributesCount": {
+          "type": "integer",
+          "description": "Number of attributes that were dropped due to limits"
+        },
+        "flags": {
+          "type": "integer",
+          "description": "Trace flags"
+        }
+      }
+    },
+    "Status": {
+      "type": "object",
+      "description": "Status of the span",
+      "properties": {
+        "message": {
+          "type": "string",
+          "description": "Human-readable status message"
+        },
+        "code": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2,
+          "description": "Status code (0=UNSET, 1=OK, 2=ERROR)"
+        }
+      }
+    },
+    "KeyValue": {
+      "type": "object",
+      "description": "A key-value pair",
+      "required": ["key", "value"],
+      "properties": {
+        "key": {
+          "type": "string",
+          "description": "The attribute key"
+        },
+        "value": {
+          "$ref": "#/$defs/AnyValue",
+          "description": "The attribute value"
+        }
+      }
+    },
+    "AnyValue": {
+      "type": "object",
+      "description": "A value of any type",
+      "properties": {
+        "stringValue": {
+          "type": "string"
+        },
+        "boolValue": {
+          "type": "boolean"
+        },
+        "intValue": {
+          "type": "string",
+          "pattern": "^-?[0-9]+$"
+        },
+        "doubleValue": {
+          "type": "number"
+        },
+        "arrayValue": {
+          "$ref": "#/$defs/ArrayValue"
+        },
+        "kvlistValue": {
+          "$ref": "#/$defs/KeyValueList"
+        },
+        "bytesValue": {
+          "type": "string",
+          "contentEncoding": "base64"
+        }
+      },
+      "oneOf": [
+        { "required": ["stringValue"] },
+        { "required": ["boolValue"] },
+        { "required": ["intValue"] },
+        { "required": ["doubleValue"] },
+        { "required": ["arrayValue"] },
+        { "required": ["kvlistValue"] },
+        { "required": ["bytesValue"] }
+      ]
+    },
+    "ArrayValue": {
+      "type": "object",
+      "description": "An array of values",
+      "properties": {
+        "values": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/AnyValue"
+          }
+        }
+      }
+    },
+    "KeyValueList": {
+      "type": "object",
+      "description": "A list of key-value pairs",
+      "properties": {
+        "values": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/KeyValue"
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,32 @@
+exporters:
+  debug:
+    verbosity: detailed
+  kafka:
+    brokers:
+      - kafka:19092
+    logs:
+      encoding: otlp_json
+    traces:
+      encoding: otlp_json
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+service:
+  pipelines:
+    logs:
+      receivers:
+        - otlp
+      exporters:
+        - debug
+        - kafka
+    traces:
+      receivers:
+        - otlp
+      exporters:
+        - debug
+        - kafka

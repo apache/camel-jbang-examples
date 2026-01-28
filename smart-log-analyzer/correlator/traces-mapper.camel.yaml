@@ -1,0 +1,45 @@
+- route:
+    id: trace-consumer
+    from:
+      uri: kafka:{{camel.kafka.topic.spans}}
+      parameters:
+        autoOffsetReset: earliest
+        groupId: correlator
+      steps:
+        - log:
+            loggingLevel: DEBUG
+            message: Received trace from Kafka
+        - split:
+            id: split-spans
+            expression:
+              jsonpath:
+                expression: $.resourceSpans[*].scopeSpans[*].spans[*]
+                writeAsString: true
+            steps:
+              - setHeader:
+                  id: set-traces-header
+                  expression:
+                    simple:
+                      expression: ${body}
+                  name: traces
+              - setBody:
+                  id: set-dummy-xml-1
+                  expression:
+                    constant:
+                      expression: <dummy/>
+              - step:
+                  id: kaoto-datamapper-8f5bb2dd
+                  steps:
+                    - to:
+                        id: kaoto-datamapper-xslt-1526
+                        uri: xslt-saxon:kaoto-datamapper-8f5bb2dd.xsl
+                        parameters:
+                          allowStAX: true
+              - log:
+                  loggingLevel: DEBUG
+                  message: "Mapped output: ${body}"
+              - to:
+                  id: to-22661
+                  uri: direct
+                  parameters:
+                    name: store

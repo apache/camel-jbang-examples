@@ -1,0 +1,48 @@
+- route:
+    id: event-generator
+    from:
+      uri: timer:eventGenerator
+      parameters:
+        period: 5000
+      steps:
+        # Generate a new traceId for each timer event
+        - setVariable:
+            name: traceId
+            simple: "${random(10000,99999)}-${date:now:yyyyMMddHHmmssSSS}"
+
+        # Send first INFO event
+        - setBody:
+            simple: |
+              {"traceId": "${variable.traceId}", "level": "INFO", "message": "Application started processing request", "timestamp": "${date:now:yyyy-MM-dd'T'HH:mm:ss.SSSZ}"}
+        - to:
+            uri: kafka:log-events
+            parameters:
+              brokers: localhost:9092
+
+        # Send second INFO event
+        - setBody:
+            simple: |
+              {"traceId": "${variable.traceId}", "level": "INFO", "message": "Request validation completed successfully", "timestamp": "${date:now:yyyy-MM-dd'T'HH:mm:ss.SSSZ}"}
+        - to:
+            uri: kafka:log-events
+            parameters:
+              brokers: localhost:9092
+
+        # 30% chance of generating an ERROR event
+        - choice:
+            when:
+              - simple: "${random(1,10)} <= 3"
+                steps:
+                  - setBody:
+                      simple: |
+                        {"traceId": "${variable.traceId}", "level": "ERROR", "message": "Unexpected error occurred during processing", "timestamp": "${date:now:yyyy-MM-dd'T'HH:mm:ss.SSSZ}"}
+                  - to:
+                      uri: kafka:log-events
+                      parameters:
+                        brokers: localhost:9092
+                  - log:
+                      message: "ERROR event sent for traceId: ${variable.traceId}"
+            otherwise:
+              steps:
+                - log:
+                    message: "No error generated for traceId: ${variable.traceId}"

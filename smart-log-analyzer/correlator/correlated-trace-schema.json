@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "correlated-trace-entry",
+  "title": "Correlated Trace Entry",
+  "description": "Simplified span entry for storage in Infinispan, designed for LLM error analysis",
+  "type": "object",
+  "required": ["type", "timeUnixNano", "traceId", "spanId", "name", "status"],
+  "properties": {
+    "type": {
+      "type": "string",
+      "const": "span",
+      "description": "Entry type to distinguish from logs in combined timeline"
+    },
+    "timeUnixNano": {
+      "type": "string",
+      "pattern": "^[0-9]+$",
+      "description": "Start time of the span (nanoseconds since Unix epoch), used for ordering with logs"
+    },
+    "durationNano": {
+      "type": "string",
+      "pattern": "^[0-9]+$",
+      "description": "Duration of the span in nanoseconds (endTimeUnixNano - startTimeUnixNano)"
+    },
+    "traceId": {
+      "type": "string",
+      "pattern": "^[a-fA-F0-9]{32}$",
+      "description": "Trace ID for correlation with logs"
+    },
+    "spanId": {
+      "type": "string",
+      "pattern": "^[a-fA-F0-9]{16}$",
+      "description": "Span ID"
+    },
+    "parentSpanId": {
+      "type": "string",
+      "pattern": "^[a-fA-F0-9]{16}$",
+      "description": "Parent span ID for understanding call hierarchy"
+    },
+    "name": {
+      "type": "string",
+      "description": "Operation name (e.g., timer, http.request)"
+    },
+    "kind": {
+      "type": "string",
+      "enum": ["UNSPECIFIED", "INTERNAL", "SERVER", "CLIENT", "PRODUCER", "CONSUMER"],
+      "description": "Span kind indicating the type of operation"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["UNSET", "OK", "ERROR"],
+      "description": "Span status"
+    },
+    "message": {
+      "type": "string",
+      "description": "Combined message from key attributes and error event messages"
+    }
+  }
+}

@@ -1,0 +1,74 @@
+# Analyzes error logs by retrieving OpenTelemetry events from Infinispan
+# and sending them to an LLM for root cause analysis and recommendations
+- route:
+    id: error-log-analyzer
+    from:
+      uri: jms:{{camel.jms.queue.error-logs}}
+      steps:
+        - log:
+            loggingLevel: INFO
+            message: Received ERROR log for analysis
+        - setVariable:
+            name: traceId
+            simple: ${body}
+        - log:
+            loggingLevel: INFO
+            message: "Retrieving all events for traceId: ${variable.traceId}"
+        - setHeader:
+            name: CamelInfinispanKey
+            simple: otel-${variable.traceId}
+        - to:
+            uri: infinispan:events
+            parameters:
+              operation: GET
+        - choice:
+            otherwise:
+              steps:
+                - log:
+                    loggingLevel: WARN
+                    message: "No events found in Infinispan for traceId: ${variable.traceId}"
+            when:
+              - steps:
+                  - setVariable:
+                      name: recordCount
+                      jq:
+                        expression: length
+                        resultType: java.lang.String
+                  - log:
+                      message: Sending ${variable.recordCount} records to LLM for analysis
+                  - setVariable:
+                      name: eventsJson
+                      simple: ${body}
+                  - setBody:
+                      simple: >
+                        Analyze the following OpenTelemetry logs and traces for
+                        traceId ${variable.traceId}.
+
+                        Identify the root cause of the error, explain what
+                        happened, and suggest possible fixes.
+
+
+                        Events (sorted by timestamp):
+
+                        ${variable.eventsJson}
+                  - to:
+                      uri: openai:chat-completion
+                      parameters:
+                        systemMessage: >
+                          You are an expert DevOps engineer and log analyst.
+                          Analyze OpenTelemetry logs and traces to identify
+                          errors, their root causes, and provide actionable
+                          recommendations. Be concise and focus on the error.
+                          You want to build a tree of calls by associating each
+                          span with its parent,  where parentSpanId corresponds
+                          to the parent caller’s spanId.
+                  - log:
+                      message: "LLM Analysis for traceId ${variable.traceId}: ${body}"
+                  - setHeader:
+                      name: traceId
+                      simple: "${variable.traceId}"
+                  - to:
+                      uri: jms:{{camel.jms.queue.analysis-result}}
+                  - log:
+                      message: "Sent analysis result to queue for traceId: ${variable.traceId}"
+                simple: ${body} != null && ${body} != ''

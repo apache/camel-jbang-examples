@@ -1,0 +1,104 @@
+# Stores OpenTelemetry records in Infinispan cache, grouped by traceId
+# and marks ERROR events for deferred processing
+- route:
+    id: route-1200
+    from:
+      id: from-9847
+      uri: direct
+      parameters:
+        name: store
+      steps:
+        - log:
+            id: log-record
+            loggingLevel: DEBUG
+            message: "Processing record: ${body}"
+        - setVariable:
+            jq:
+              expression: .traceId
+              resultType: java.lang.String
+            name: traceId
+        - filter:
+            expression:
+              simple: ${variable.traceId} != null && ${variable.traceId} != ''
+            steps:
+              - claimCheck:
+                  key: currentRecord
+                  operation: Set
+              - setHeader:
+                  name: CamelInfinispanKey
+                  simple: otel-${variable.traceId}
+              - to:
+                  uri: infinispan:events
+                  parameters:
+                    operation: GET
+              - choice:
+                  otherwise:
+                    steps:
+                      - claimCheck:
+                          key: currentRecord
+                          operation: Get
+                      - setBody:
+                          jq:
+                            expression: "[.]"
+                            resultType: java.lang.String
+                  when:
+                    - steps:
+                        - setVariable:
+                            name: existingRecords
+                            simple: ${body}
+                        - claimCheck:
+                            key: currentRecord
+                            operation: Get
+                        - setBody:
+                            jq:
+                              expression: (variable("existingRecords") | fromjson) + [.] |
+                                sort_by(.timeUnixNano)
+                              resultType: java.lang.String
+                      simple: ${body} != null && ${body} != ''
+              - setHeader:
+                  name: CamelInfinispanKey
+                  simple: otel-${variable.traceId}
+              - setHeader:
+                  name: CamelInfinispanValue
+                  simple: ${body}
+              - to:
+                  uri: infinispan:events
+                  parameters:
+                    operation: PUT
+              - claimCheck:
+                  key: currentRecord
+                  operation: GetAndRemove
+              - log:
+                  id: log-stored
+                  message: "Stored record for traceId: ${variable.traceId}"
+              - choice:
+                  when:
+                    - steps:
+                        - log:
+                            message: "Adding ERROR log to events-to-process cache for traceId:
+                              ${variable.traceId}"
+                        - setHeader:
+                            name: CamelInfinispanKey
+                            simple: ${variable.traceId}
+                        - setHeader:
+                            name: CamelInfinispanValue
+                            simple: ${variable.traceId}
+                        - to:
+                            uri: infinispan:events-to-process
+                            parameters:
+                              operation: PUTIFABSENT
+                      jq:
+                        expression: .severityText == "ERROR"
+- route:
+    id: route-expired-events
+    from:
+      uri: infinispan:events-to-process
+      parameters:
+        eventTypes: CLIENT_CACHE_ENTRY_EXPIRED
+      steps:
+        - setBody:
+            simple: ${header.CamelInfinispanKey}
+        - log:
+            message: "Expired cache entry received, sending to JMS queue: ${body}"
+        - to:
+            uri: jms:{{camel.jms.queue.error-logs}}

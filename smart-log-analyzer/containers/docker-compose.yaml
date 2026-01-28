@@ -1,0 +1,98 @@
+services:
+  kafka:
+    image: apache/kafka:latest
+    container_name: kafka
+    hostname: kafka
+    environment:
+      # KRaft mode configuration (no Zookeeper)
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      # Multiple listeners: PLAINTEXT for Docker network, PLAINTEXT_HOST for localhost access
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:19092,PLAINTEXT_HOST://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:19092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_DEFAULT_REPLICATION_FACTOR: 1
+      KAFKA_MIN_INSYNC_REPLICAS: 1
+      # Storage (ephemeral - no persistence)
+      KAFKA_LOG_DIRS: /tmp/kraft-combined-logs
+    ports:
+      - "9092:9092"     # External access from localhost
+    networks:
+      - otel-network
+
+  infinispan:
+    image: quay.io/infinispan/server:16.0.5
+    container_name: infinispan
+    hostname: infinispan
+    environment:
+      USER: admin
+      PASS: password
+    ports:
+      - "11222:11222"
+    networks:
+      - otel-network
+    healthcheck:
+      test: ["CMD", "curl", "-u", "admin:password", "--digest", "http://localhost:11222/rest/v2/caches"]
+      interval: 5s
+      timeout: 3s
+      retries: 8
+
+  infinispan-init:
+    image: curlimages/curl:latest
+    container_name: infinispan-init
+    depends_on:
+      infinispan:
+        condition: service_healthy
+    networks:
+      - otel-network
+    volumes:
+      - ./caches:/etc/caches:ro
+    command: >
+      sh -c "
+        sleep 2 &&
+        echo 'Creating caches...' &&
+        curl -f -u admin:password --digest -X POST 'http://infinispan:11222/rest/v2/caches/events' -H 'Content-Type: application/json' -d @/etc/caches/infinispan-events-config.json &&
+        curl -f -u admin:password --digest -X POST 'http://infinispan:11222/rest/v2/caches/events-to-process' -H 'Content-Type: application/json' -d @/etc/caches/infinispan-events-to-process-config.json &&
+        echo 'Caches created successfully'
+      "
+    deploy:
+      restart_policy:
+        condition: on-failure
+        max_attempts: 5
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:latest
+    container_name: otel-collector
+    command: ["--config=/etc/otel-collector-config.yaml"]
+    volumes:
+      - ./otel-collector-config.yaml:/etc/otel-collector-config.yaml
+    ports:
+      - "4317:4317"   # OTLP gRPC receiver
+      - "4318:4318"   # OTLP HTTP receiver
+    networks:
+      - otel-network
+    depends_on:
+      - kafka
+
+  artemis:
+    image: apache/activemq-artemis:latest
+    container_name: artemis
+    hostname: artemis
+    environment:
+      ARTEMIS_USER: artemis
+      ARTEMIS_PASSWORD: artemis
+    ports:
+      - "8161:8161"   # Web console
+      - "61616:61616" # Core protocol
+    networks:
+      - otel-network
+
+networks:
+  otel-network:
+    driver: bridge
