@@ -44,13 +44,13 @@ include::../install.adoc[see installation]
 
 == Integration testing
 
-The example provides an automated integration test (`edi-x12-as2.camel.it.yaml`) that you can run with the https://citrusframework.org/[Citrus] test framework. Please make sure to have installed Citrus as a JBang application.
+The example provides an automated integration test (`edi-x12-as2.citrus.it.yaml`) that you can run with the https://citrusframework.org/[Citrus] test framework. Please make sure to have installed Citrus as a JBang application.
 
 You can run the test with:
 
 [source,shell]
 ----
-cd test && citrus run edi-x12-as2.camel.it.yaml
+citrus run test/edi-x12-as2.citrus.it.yaml
 ----
 
 The test prepares the complete infrastructure and starts the Camel route automatically via JBang. The test sends some test data to the AS2 endpoint and verifies that the Camel route successfully processed the purchase order.

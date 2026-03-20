@@ -61,37 +61,22 @@ jobs:
 
           echo "Running tests"
 
-          pushd ftp/test
-          jbang citrus@citrusframework/citrus run ftp.camel.it.yaml
-          popd
+          jbang citrus@citrusframework/citrus run ftp/test
 
-          pushd mqtt/test
-          jbang citrus@citrusframework/citrus run mqtt.camel.it.yaml
-          popd
+          jbang citrus@citrusframework/citrus run mqtt/test
 
-          pushd openapi/server/test
-          jbang citrus@citrusframework/citrus run petstore.camel.it.yaml
-          popd
+          jbang citrus@citrusframework/citrus run openapi/server/test
 
-          pushd openapi/client/test
-          jbang citrus@citrusframework/citrus run petstore-client.camel.it.yaml
-          popd
+          jbang citrus@citrusframework/citrus run openapi/client/test
 
-          pushd aws/aws-s3-event-based/test
-          jbang citrus@citrusframework/citrus run aws-s3-cdc-log.camel.it.yaml
-          popd
+          jbang citrus@citrusframework/citrus run aws/aws-s3-event-based/test
 
-          pushd aws/aws-sqs/test
-          jbang citrus@citrusframework/citrus run http-to-aws-sqs.camel.it.yaml
-          popd
+          jbang citrus@citrusframework/citrus run aws/aws-sqs/test
           
-          pushd edi-x12-as2/test
-          jbang citrus@citrusframework/citrus run edi-x12-as2.camel.it.yaml
-          popd
+          jbang citrus@citrusframework/citrus run edi-x12-as2/test
 
-          pushd smart-log-analyzer/first-iteration/test
-          jbang citrus@citrusframework/citrus run first-iteration.camel.it.yaml
-          popd
+          jbang citrus@citrusframework/citrus run smart-log-analyzer/first-iteration/test
+
       - uses: actions/upload-artifact@50769540e7f4bd5e21e526ee35c689e35e0d6874 # v4.4.0
         if: always()
         with:

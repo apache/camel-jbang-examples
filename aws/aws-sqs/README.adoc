@@ -19,7 +19,7 @@ To start an AWS SQS instance, run the following command:
 camel infra run aws sqs
 ----
 
-Add or replace the following information to the `application.properties` file: 
+Add or replace the following information to the `application.properties` file:
 
 [source,properties]
 ----
@@ -86,21 +86,14 @@ You will see the message content being processed and the AWS SQS queue should re
 
 == Integration testing
 
-The example provides an automated integration test (`http-to-aws-sqs.camel.it.yaml`) that you can run with the https://citrusframework.org/[Citrus] test framework.
+The example provides an automated integration test (`http-to-aws-sqs.citrus.it.yaml`) that you can run with the https://citrusframework.org/[Citrus] test framework.
 Please make sure to install Citrus as a JBang application (see link:../../install-citrus.adoc[Citrus installation guide]).
-
-Navigate to the test folder.
-
-[source,shell]
-----
-cd test/
-----
 
 You can run the test with:
 
 [source,shell]
 ----
-citrus run http-to-aws-sqs.camel.it.yaml
+citrus run test/http-to-aws-sqs.citrus.it.yaml
 ----
 
 The test prepares the complete infrastructure and starts the Camel route automatically via JBang.

@@ -74,8 +74,7 @@ Then run the test:
 
 [source,bash]
 ----
-cd first-iteration/test
-citrus run first-iteration.camel.it.yaml
+citrus run first-iteration/test/first-iteration.citrus.it.yaml
 ----
 
 The test starts Kafka via testcontainers, sends log events, and verifies the aggregation triggers correctly.

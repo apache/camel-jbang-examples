@@ -1,7 +1,7 @@
 services:
 
   artemis:
-    image: mirror.gcr.io/apache/activemq-artemis:2.42.0
+    image: mirror.gcr.io/apache/artemis:2.52.0
     ports:
       - "8161:8161"
       - "61616:61616"

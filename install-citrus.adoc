@@ -14,7 +14,7 @@ Now you can run Citrus with the command `citrus` to execute some tests:
 .Run my.camel.it.yaml
 [source,shell]
 ----
-citrus run my.camel.it.yaml
+citrus run my.citrus.it.yaml
 ----
 
 For more information about using Citrus JBang please refer to the https://citrusframework.org/citrus/reference/html/index.html#runtime-jbang-install[Citrus installation guide].

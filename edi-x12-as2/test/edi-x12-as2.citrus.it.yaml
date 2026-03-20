@@ -1,3 +1,6 @@
+# deps: org.apache.activemq:artemis-jakarta-client:2.42.0
+# deps: jakarta.inject:jakarta.inject-api:2.0.1
+# deps: jakarta.enterprise:jakarta.enterprise.cdi-api:4.1.0
 name: edi-x12-as2-camel-test
 description: Verify EDI X12 over AS2 Camel route
 actions:

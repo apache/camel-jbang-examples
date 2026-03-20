@@ -1,3 +1,4 @@
+# deps: org.apache.activemq:artemis-jakarta-client:2.52.0
 name: ftp-camel-test
 description: Test verifying the ActiveMQ to Ftp Camel route
 variables:

@@ -93,15 +93,14 @@ camel stop mqtt
 
 == Integration testing
 
-The example provides an automated integration test (`mqtt.camel.it.yaml`) that you can run with the https://citrusframework.org/[Citrus] test framework.
+The example provides an automated integration test (`mqtt.citrus.it.yaml`) that you can run with the https://citrusframework.org/[Citrus] test framework.
 Please make sure to install Citrus as a JBang application (see link:../../install-citrus.adoc[Citrus installation guide]).
 
 You can run the test with:
 
 [source,shell]
 ----
-cd test
-citrus run mqtt.camel.it.yaml
+citrus run test/mqtt.citrus.it.yaml
 ----
 
 The test prepares the complete infrastructure (e.g. via Docker compose) and starts the Camel route automatically via JBang.
