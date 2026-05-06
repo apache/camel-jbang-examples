@@ -3,6 +3,6 @@
       uri: timer:start
       steps:
         - setBody:
-            simple: ${random(100)}
+            simple: '{"orderId": ${random(1000)}, "item": "widget", "quantity": ${random(10)}}'
         - to:
             uri: jms:numbers
