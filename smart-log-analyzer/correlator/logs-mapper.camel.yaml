@@ -1,27 +1,28 @@
 - route:
     id: log-consumer
     from:
-      uri: kafka:{{camel.kafka.topic.logs}}
+      uri: kafka
       parameters:
+        topic: "{{camel.kafka.topic.logs}}"
         autoOffsetReset: earliest
         groupId: correlator
       steps:
         - log:
+            message: "Received log from Kafka \\n ${body}"
             loggingLevel: DEBUG
-            message: Received log from Kafka \n ${body}
         - split:
             id: split-logs
             expression:
               jsonpath:
-                expression: $.resourceLogs[*].scopeLogs[*].logRecords[*]
-                writeAsString: true
+                writeAsString: "true"
+                expression: "$.resourceLogs[*].scopeLogs[*].logRecords[*]"
             steps:
               - setHeader:
                   id: set-logs-header
+                  name: logs
                   expression:
                     simple:
-                      expression: ${body}
-                  name: logs
+                      expression: "${body}"
               - setBody:
                   id: set-dummy-xml
                   expression:
@@ -32,14 +33,15 @@
                   steps:
                     - to:
                         id: kaoto-datamapper-xslt
-                        uri: xslt-saxon:kaoto-datamapper-4a94acc3.xsl
+                        uri: xslt-saxon
                         parameters:
+                          resourceUri: kaoto-datamapper-4a94acc3.xsl
                           allowStAX: true
               - log:
-                  loggingLevel: DEBUG
                   message: "Mapped output: ${body}"
+                  loggingLevel: DEBUG
               - to:
-                  id: to-2266
                   uri: direct
                   parameters:
                     name: store
+

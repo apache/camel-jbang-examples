@@ -20,216 +20,232 @@
 
 # Configure Keycloak component
 - beans:
-  - name: keycloak
-    type: org.apache.camel.component.keycloak.KeycloakComponent
-    properties:
-      serverUrl: "{{keycloak.server.url}}"
-      realm: "{{keycloak.realm}}"
-      username: "{{keycloak.username}}"
-      password: "{{keycloak.password}}"
-
-# Startup route to initialize LDAP DirContext
+    - name: keycloak
+      type: "org.apache.camel.component.keycloak.KeycloakComponent"
+      properties:
+        password: "{{keycloak.password}}"
+        serverUrl: "{{keycloak.server.url}}"
+        realm: "{{keycloak.realm}}"
+        username: "{{keycloak.username}}"
 - route:
     id: ldap-context-initializer
     from:
-      uri: "timer:init?repeatCount=1&delay=100"
+      uri: timer
+      parameters:
+        timerName: init
+        repeatCount: 1
+        delay: 100
       steps:
         - log:
-            message: "Initializing LDAP context..."
+            message: Initializing LDAP context...
         - script:
-            groovy: |
-              import javax.naming.*
-              import javax.naming.directory.*
+            expression:
+              groovy:
+                expression: |
+                  import javax.naming.*
+                  import javax.naming.directory.*
 
-              try {
-                def env = new Hashtable()
-                env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory")
-                env.put(Context.PROVIDER_URL, camelContext.resolvePropertyPlaceholders("{{ldap.server.url}}"))
-                env.put(Context.SECURITY_AUTHENTICATION, camelContext.resolvePropertyPlaceholders("{{ldap.security.authentication}}"))
+                  try {
+                    def env = new Hashtable()
+                    env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory")
+                    env.put(Context.PROVIDER_URL, camelContext.resolvePropertyPlaceholders("{{ldap.server.url}}"))
+                    env.put(Context.SECURITY_AUTHENTICATION, camelContext.resolvePropertyPlaceholders("{{ldap.security.authentication}}"))
 
-                // Add credentials if not using anonymous authentication
-                def authType = camelContext.resolvePropertyPlaceholders("{{ldap.security.authentication}}")
-                if (!"none".equals(authType)) {
-                  env.put(Context.SECURITY_PRINCIPAL, camelContext.resolvePropertyPlaceholders("{{ldap.security.principal}}"))
-                  env.put(Context.SECURITY_CREDENTIALS, camelContext.resolvePropertyPlaceholders("{{ldap.security.credentials}}"))
-                }
+                    // Add credentials if not using anonymous authentication
+                    def authType = camelContext.resolvePropertyPlaceholders("{{ldap.security.authentication}}")
+                    if (!"none".equals(authType)) {
+                      env.put(Context.SECURITY_PRINCIPAL, camelContext.resolvePropertyPlaceholders("{{ldap.security.principal}}"))
+                      env.put(Context.SECURITY_CREDENTIALS, camelContext.resolvePropertyPlaceholders("{{ldap.security.credentials}}"))
+                    }
 
-                log.info("Creating LDAP context with URL: ${env.get(Context.PROVIDER_URL)}")
-                def ldapContext = new InitialDirContext(env)
+                    log.info("Creating LDAP context with URL: ${env.get(Context.PROVIDER_URL)}")
+                    def ldapContext = new InitialDirContext(env)
 
-                // Bind to registry
-                camelContext.registry.bind("ldapserver", ldapContext)
-                log.info("LDAP context successfully bound to registry as 'ldapserver'")
+                    // Bind to registry
+                    camelContext.registry.bind("ldapserver", ldapContext)
+                    log.info("LDAP context successfully bound to registry as 'ldapserver'")
 
-                // Verify it was bound
-                def boundContext = camelContext.registry.lookupByName("ldapserver")
-                if (boundContext != null) {
-                  log.info("Verified: LDAP context is available in registry")
-                } else {
-                  log.error("Error: LDAP context not found in registry after binding!")
-                }
-              } catch (Exception e) {
-                log.error("Failed to initialize LDAP context: ${e.message}", e)
-                throw e
-              }
-
-# Main route for LDAP to Keycloak migration
+                    // Verify it was bound
+                    def boundContext = camelContext.registry.lookupByName("ldapserver")
+                    if (boundContext != null) {
+                      log.info("Verified: LDAP context is available in registry")
+                    } else {
+                      log.error("Error: LDAP context not found in registry after binding!")
+                    }
+                  } catch (Exception e) {
+                    log.error("Failed to initialize LDAP context: ${e.message}", e)
+                    throw e
+                  }
 - route:
     id: ldap-to-keycloak-migration
     from:
-      uri: "timer:migrate?repeatCount=1&delay=2000"
+      uri: timer
+      parameters:
+        timerName: migrate
+        repeatCount: 1
+        delay: 2000
       steps:
         - log:
-            message: "Checking if LDAP context is available..."
+            message: Checking if LDAP context is available...
         - script:
-            groovy: |
-              def ldapCtx = camelContext.registry.lookupByName("ldapserver")
-              if (ldapCtx == null) {
-                throw new IllegalStateException("LDAP context not initialized. Please check ldap-context-initializer route.")
-              }
-              log.info("LDAP context found in registry, proceeding with migration...")
+            expression:
+              groovy:
+                expression: |
+                  def ldapCtx = camelContext.registry.lookupByName("ldapserver")
+                  if (ldapCtx == null) {
+                    throw new IllegalStateException("LDAP context not initialized. Please check ldap-context-initializer route.")
+                  }
+                  log.info("LDAP context found in registry, proceeding with migration...")
         - log:
-            message: "Starting LDAP to Keycloak user migration..."
+            message: Starting LDAP to Keycloak user migration...
         - log:
-            message: "Searching LDAP with filter: {{ldap.search.filter}}, base: {{ldap.search.base}}"
-
-        # Search LDAP for users
+            message: "Searching LDAP with filter: {{ldap.search.filter}}, base:\
+              \ {{ldap.search.base}}"
         - setBody:
-            constant: "{{ldap.search.filter}}"
+            expression:
+              constant:
+                expression: "{{ldap.search.filter}}"
         - to:
-            uri: "ldap:ldapserver?base={{ldap.search.base}}"
+            uri: ldap
+            parameters:
+              dirContextName: ldapserver
+              base: "{{ldap.search.base}}"
         - log:
             message: "Found ${body.size()} users in LDAP"
-
-        # Transform LDAP SearchResults to Keycloak UserRepresentation
         - script:
-            groovy: |
-              import javax.naming.directory.SearchResult
-              import javax.naming.directory.Attributes
-              import org.keycloak.representations.idm.UserRepresentation
+            expression:
+              groovy:
+                expression: |
+                  import javax.naming.directory.SearchResult
+                  import javax.naming.directory.Attributes
+                  import org.keycloak.representations.idm.UserRepresentation
 
-              // Get LDAP search results from exchange body
-              def searchResults = request.body
-              def users = []
+                  // Get LDAP search results from exchange body
+                  def searchResults = request.body
+                  def users = []
 
-              searchResults.each { SearchResult result ->
-                Attributes attrs = result.attributes
+                  searchResults.each { SearchResult result ->
+                    Attributes attrs = result.attributes
 
-                // Create Keycloak user representation
-                def user = new UserRepresentation()
+                    // Create Keycloak user representation
+                    def user = new UserRepresentation()
 
-                // Map LDAP attributes to Keycloak user fields
-                // Username (required) - from uid, cn, or sAMAccountName
-                def username = attrs.get("uid")?.get() ?:
-                               attrs.get("cn")?.get() ?:
-                               attrs.get("sAMAccountName")?.get()
-                if (username) {
-                  user.username = username.toString()
-                }
+                    // Map LDAP attributes to Keycloak user fields
+                    // Username (required) - from uid, cn, or sAMAccountName
+                    def username = attrs.get("uid")?.get() ?:
+                                   attrs.get("cn")?.get() ?:
+                                   attrs.get("sAMAccountName")?.get()
+                    if (username) {
+                      user.username = username.toString()
+                    }
 
-                // Email
-                def mail = attrs.get("mail")?.get()
-                if (mail) {
-                  user.email = mail.toString()
-                }
+                    // Email
+                    def mail = attrs.get("mail")?.get()
+                    if (mail) {
+                      user.email = mail.toString()
+                    }
 
-                // First name - from givenName
-                def givenName = attrs.get("givenName")?.get()
-                if (givenName) {
-                  user.firstName = givenName.toString()
-                }
+                    // First name - from givenName
+                    def givenName = attrs.get("givenName")?.get()
+                    if (givenName) {
+                      user.firstName = givenName.toString()
+                    }
 
-                // Last name - from sn (surname)
-                def sn = attrs.get("sn")?.get()
-                if (sn) {
-                  user.lastName = sn.toString()
-                }
+                    // Last name - from sn (surname)
+                    def sn = attrs.get("sn")?.get()
+                    if (sn) {
+                      user.lastName = sn.toString()
+                    }
 
-                // Enable user by default
-                user.enabled = true
+                    // Enable user by default
+                    user.enabled = true
 
-                // Add custom attributes if configured
-                def customAttrs = [:]
+                    // Add custom attributes if configured
+                    def customAttrs = [:]
 
-                // Organizational Unit
-                def ou = attrs.get("ou")?.get()
-                if (ou) {
-                  customAttrs.put("ldap_ou", [ou.toString()])
-                }
+                    // Organizational Unit
+                    def ou = attrs.get("ou")?.get()
+                    if (ou) {
+                      customAttrs.put("ldap_ou", [ou.toString()])
+                    }
 
-                // Distinguished Name (for reference)
-                def dn = result.nameInNamespace
-                if (dn) {
-                  customAttrs.put("ldap_dn", [dn])
-                }
+                    // Distinguished Name (for reference)
+                    def dn = result.nameInNamespace
+                    if (dn) {
+                      customAttrs.put("ldap_dn", [dn])
+                    }
 
-                // Description
-                def description = attrs.get("description")?.get()
-                if (description) {
-                  customAttrs.put("description", [description.toString()])
-                }
+                    // Description
+                    def description = attrs.get("description")?.get()
+                    if (description) {
+                      customAttrs.put("description", [description.toString()])
+                    }
 
-                // Telephone number
-                def telephoneNumber = attrs.get("telephoneNumber")?.get()
-                if (telephoneNumber) {
-                  customAttrs.put("phoneNumber", [telephoneNumber.toString()])
-                }
+                    // Telephone number
+                    def telephoneNumber = attrs.get("telephoneNumber")?.get()
+                    if (telephoneNumber) {
+                      customAttrs.put("phoneNumber", [telephoneNumber.toString()])
+                    }
 
-                if (!customAttrs.isEmpty()) {
-                  user.attributes = customAttrs
-                }
+                    if (!customAttrs.isEmpty()) {
+                      user.attributes = customAttrs
+                    }
 
-                // Add required actions if configured
-                def requirePasswordUpdate = camelContext.resolvePropertyPlaceholders("{{keycloak.user.requirePasswordUpdate}}")
-                if ("true".equals(requirePasswordUpdate)) {
-                  user.requiredActions = ["UPDATE_PASSWORD"]
-                }
+                    // Add required actions if configured
+                    def requirePasswordUpdate = camelContext.resolvePropertyPlaceholders("{{keycloak.user.requirePasswordUpdate}}")
+                    if ("true".equals(requirePasswordUpdate)) {
+                      user.requiredActions = ["UPDATE_PASSWORD"]
+                    }
 
-                users.add(user)
-              }
+                    users.add(user)
+                  }
 
-              // Set transformed users as message body
-              request.body = users
-
-        # Set headers for bulk user creation
+                  // Set transformed users as message body
+                  request.body = users
         - setHeader:
             name: CamelKeycloakRealmName
-            constant: "{{keycloak.target.realm}}"
+            expression:
+              constant:
+                expression: "{{keycloak.target.realm}}"
         - setHeader:
             name: CamelKeycloakContinueOnError
-            constant: true
-
-        # Bulk create users in Keycloak
+            expression:
+              constant:
+                expression: "true"
         - to:
-            uri: "keycloak:admin?operation=bulkCreateUsers"
-
-        # Log migration results
+            uri: keycloak
+            parameters:
+              label: admin
+              operation: bulkCreateUsers
         - script:
-            groovy: |
-              def result = request.body
+            expression:
+              groovy:
+                expression: |
+                  def result = request.body
 
-              println ""
-              println "=" * 80
-              println "LDAP to Keycloak Migration Results"
-              println "=" * 80
-              println "Total users processed: ${result.total}"
-              println "Successfully created:  ${result.success}"
-              println "Failed:                ${result.failed}"
-              println "=" * 80
+                  println ""
+                  println "=" * 80
+                  println "LDAP to Keycloak Migration Results"
+                  println "=" * 80
+                  println "Total users processed: ${result.total}"
+                  println "Successfully created:  ${result.success}"
+                  println "Failed:                ${result.failed}"
+                  println "=" * 80
 
-              if (result.results) {
-                println "\nDetailed Results:"
-                println "-" * 80
-                result.results.each { userResult ->
-                  def status = userResult.status == "success" ? "✓" : "✗"
-                  println "${status} ${userResult.username?.padRight(30)} - ${userResult.status}"
-                  if (userResult.error) {
-                    println "  Error: ${userResult.error}"
+                  if (result.results) {
+                    println "\nDetailed Results:"
+                    println "-" * 80
+                    result.results.each { userResult ->
+                      def status = userResult.status == "success" ? "✓" : "✗"
+                      println "${status} ${userResult.username?.padRight(30)} - ${userResult.status}"
+                      if (userResult.error) {
+                        println "  Error: ${userResult.error}"
+                      }
+                    }
+                    println "-" * 80
                   }
-                }
-                println "-" * 80
-              }
 
-              println ""
-              println "Migration completed!"
-              println ""
+                  println ""
+                  println "Migration completed!"
+                  println ""
+

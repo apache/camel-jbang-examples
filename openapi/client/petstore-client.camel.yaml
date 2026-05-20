@@ -1,26 +1,32 @@
 - route:
     from:
-      uri: "file://examples/"
+      uri: file
       parameters:
+        directoryName: examples/
         noop: true
       steps:
         - convertBodyTo:
-            type: "java.lang.String"
-            charset: "UTF8"
+            type: java.lang.String
+            charset: UTF8
         - setHeader:
-            name: "petId"
+            name: petId
             expression:
-              simple: "${file:onlyname.noext}"
+              simple:
+                expression: "${file:onlyname.noext}"
         - setHeader:
-            name: "Content-Type"
+            name: Content-Type
             expression:
-              constant: "application/json"
+              constant:
+                expression: application/json
         - to:
-            uri: "log:info"
+            uri: log
             parameters:
+              loggerName: info
               showHeaders: true
         - to:
-            uri: "kamelet:rest-openapi-sink"
+            uri: kamelet
             parameters:
-              specification: '{{openapi.specification.url}}'
+              templateId: rest-openapi-sink
               operation: addPet
+              specification: "{{openapi.specification.url}}"
+

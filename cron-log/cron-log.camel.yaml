@@ -1,10 +1,15 @@
 - route:
     id: cron-log
     from:
-      uri: timer:cron
+      uri: timer
       parameters:
-        period: "5000"
+        timerName: cron
+        period: 5000
       steps:
         - setBody:
-            simple: "Scheduled task running at ${date:now:HH:mm:ss}"
-        - log: "${body}"
+            expression:
+              simple:
+                expression: "Scheduled task running at ${date:now:HH:mm:ss}"
+        - log:
+            message: "${body}"
+

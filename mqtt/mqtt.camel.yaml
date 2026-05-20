@@ -1,9 +1,10 @@
 - route:
     from:
-      uri: kamelet:mqtt5-source
+      uri: kamelet
       parameters:
-        topic: "{{mqtt.topic}}"
+        templateId: mqtt5-source
         brokerUrl: "{{mqtt.broker.url}}"
+        topic: "{{mqtt.topic}}"
       steps:
         - transform:
             expression:
@@ -13,11 +14,12 @@
             when:
               - expression:
                   simple:
-                    expression: ${body} > 20
+                    expression: "${body} > 20"
                 steps:
                   - log:
-                      message: Warm temperature at ${body}
+                      message: "Warm temperature at ${body}"
             otherwise:
               steps:
                 - log:
-                    message: Cold temperature at ${body}
+                    message: "Cold temperature at ${body}"
+

@@ -1,26 +1,27 @@
 - route:
     from:
-      uri: timer:start
+      uri: timer
+      parameters:
+        timerName: start
+        period: 1000
       steps:
         - setBody:
             expression:
               constant:
                 expression: Hello Camel
         - circuitBreaker:
-            resilience4jConfiguration:
-              minimumNumberOfCalls: 10
-              failureRateThreshold: 50
-              waitDurationInOpenState: 20
             steps:
+              - resilience4jConfiguration:
+                  minimumNumberOfCalls: 10
+                  waitDurationInOpenState: 20
               - filter:
                   expression:
                     simple:
-                      expression: ${random(10)} > 2
+                      expression: "${random(10)} > 2"
                   steps:
                     - throwException:
                         message: Forced error
                         exceptionType: java.lang.IllegalArgumentException
         - log:
             message: "${body} (CircuitBreaker is open: ${exchangeProperty.CamelCircuitBreakerResponseShortCircuited})"
-      parameters:
-        period: 1000
+

@@ -1,14 +1,21 @@
 - route:
     id: jms-to-file-storage
     from:
-      uri: jms:{{camel.jms.queue.analysis-result}}
+      uri: jms
+      parameters:
+        destinationName: "{{camel.jms.queue.analysis-result}}"
       steps:
         - log:
             message: "Received message from JMS queue: ${body}"
         - setHeader:
             name: CamelFileName
-            simple: ${header.traceId}.txt
+            expression:
+              simple:
+                expression: "${header.traceId}.txt"
         - to:
-            uri: file:{{analyzer.storage.root}}
+            uri: file
+            parameters:
+              directoryName: "{{analyzer.storage.root}}"
         - log:
             message: "Saved content for traceId: ${header.traceId}"
+

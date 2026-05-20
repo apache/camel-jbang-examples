@@ -1,62 +1,66 @@
-# Consumes log events from Kafka, aggregates by traceId, and sends
-# to LLM for analysis when an ERROR level event is detected
+- beans:
+    - name: stringAggregationStrategy
+      type: "org.apache.camel.processor.aggregate.StringAggregationStrategy"
 - route:
     id: log-event-consumer
     from:
-      uri: kafka:log-events
+      uri: kafka
       parameters:
+        topic: log-events
         autoOffsetReset: earliest
         brokers: localhost:9092
         groupId: log-analyzer
       steps:
         - log:
-            loggingLevel: DEBUG
             message: "Received event from Kafka: ${body}"
+            loggingLevel: DEBUG
         - setVariable:
             name: traceId
-            jq:
-              expression: .traceId
-              resultType: java.lang.String
+            expression:
+              jq:
+                resultType: java.lang.String
+                expression: .traceId
         - setVariable:
             name: level
-            jq:
-              expression: .level
-              resultType: java.lang.String
+            expression:
+              jq:
+                resultType: java.lang.String
+                expression: .level
         - aggregate:
+            aggregationStrategy: "#stringAggregationStrategy"
+            completionTimeout: 30000
             correlationExpression:
               simple:
-                expression: ${variable.traceId}
-            aggregationStrategy: "#stringAggregationStrategy"
+                expression: "${variable.traceId}"
             completionPredicate:
               simple:
-                expression: ${variable.level} == 'ERROR'
-            completionTimeout: 30000
+                expression: "${variable.level} == 'ERROR'"
             steps:
               - log:
-                  message: "Aggregation completed for traceId: ${variable.traceId} - sending to LLM"
+                  message: "Aggregation completed for traceId: ${variable.traceId}\
+                    \ - sending to LLM"
               - setVariable:
                   name: eventsJson
-                  simple: ${body}
+                  expression:
+                    simple:
+                      expression: "${body}"
               - setBody:
-                  simple: >
-                    Analyze the following log events for traceId ${variable.traceId}.
-
-                    An ERROR was detected. Identify the root cause, explain what
-                    happened in the sequence of events, and suggest possible fixes.
-
-                    Events: ${variable.eventsJson}
+                  expression:
+                    simple:
+                      expression: |
+                        Analyze the following log events for traceId ${variable.traceId}.
+                        An ERROR was detected. Identify the root cause, explain what happened in the sequence of events, and suggest possible fixes.
+                        Events: ${variable.eventsJson}
               - to:
-                  uri: openai:chat-completion
+                  uri: openai
                   parameters:
+                    operation: chat-completion
                     apiKey: not-needed
                     baseUrl: http://localhost:11434/v1
                     model: granite4:3b
-                    systemMessage: >
-                      Analyze log events to identify errors, their root causes, and
-                      provide actionable recommendations. Be concise and focus
-                      on the error chain and sequence of events.
+                    systemMessage: "Analyze log events to identify errors, their\
+                      \ root causes, and provide actionable recommendations. Be\
+                      \ concise and focus on the error chain and sequence of events."
               - log:
                   message: "LLM Analysis for traceId ${variable.traceId}: ${body}"
-- beans:
-    - name: stringAggregationStrategy
-      type: org.apache.camel.processor.aggregate.StringAggregationStrategy
+

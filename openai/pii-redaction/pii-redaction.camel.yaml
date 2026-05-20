@@ -1,14 +1,21 @@
 - route:
     from:
-      uri: "direct:pii-redaction"
+      uri: direct
+      parameters:
+        name: pii-redaction
       steps:
         - to:
-            uri: "openai:chat-completion"
+            uri: openai
             parameters:
+              operation: chat-completion
+              jsonSchema: resource:classpath:pii.schema.json
+              systemMessage: "You are a strict data privacy compliance assistant.\
+                \ Your goal is to analyze the user input, redact all PII, and return\
+                \ the results in the specified JSON format. RULES: 1. ONLY redact\
+                \ specific identifiers, 2. DO NOT redact generic titles, roles,\
+                \ or common nouns unless they are part of a proper noun. 3. Preserve\
+                \ the grammatical structure of the sentence."
               temperature: 0.15
-              jsonSchema: "resource:classpath:pii.schema.json"
-              systemMessage: "You are a strict data privacy compliance assistant. Your goal is to analyze the user input, redact all PII, and return the results in the specified JSON format. RULES: 1. ONLY redact specific identifiers, 2. DO NOT redact generic titles, roles, or common nouns unless they are part of a proper noun. 3. Preserve the grammatical structure of the sentence."
-
 - route:
     from:
       uri: stream
@@ -19,4 +26,8 @@
             uri: direct
             parameters:
               name: pii-redaction
-        - to: "stream:out"
+        - to:
+            uri: stream
+            parameters:
+              kind: out
+

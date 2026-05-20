@@ -1,8 +1,16 @@
 - route:
     from:
-      uri: timer:start
+      uri: timer
+      parameters:
+        timerName: start
       steps:
         - setBody:
-            simple: '{"orderId": ${random(1000)}, "item": "widget", "quantity": ${random(10)}}'
+            expression:
+              simple:
+                expression: '{"orderId": ${random(1000)}, "item": "widget", "quantity":
+                  ${random(10)}}'
         - to:
-            uri: jms:numbers
+            uri: jms
+            parameters:
+              destinationName: numbers
+

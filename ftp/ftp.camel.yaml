@@ -1,9 +1,11 @@
 - route:
-    id: route-1133
     from:
-      uri: jms:cheese
+      uri: jms
+      parameters:
+        destinationName: cheese
       steps:
-        - log: "Incoming: ${body}"
+        - log:
+            message: "Incoming: ${body}"
         - to:
             uri: ftp
             parameters:
@@ -12,3 +14,4 @@
               password: admin
               port: 2221
               username: admin
+
