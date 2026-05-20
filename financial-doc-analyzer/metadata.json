@@ -1,0 +1,12 @@
+{
+    "title": "Financial Document Analyzer",
+    "description": "Automated financial document analysis with Docling, LangChain4j, and market data",
+    "tags": [
+        "ai",
+        "langchain4j",
+        "docling",
+        "finance"
+    ],
+    "bundled": false,
+    "level": "advanced"
+}

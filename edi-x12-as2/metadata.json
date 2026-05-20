@@ -1,0 +1,13 @@
+{
+    "title": "EDI X12 over AS2",
+    "description": "Supply chain EDI X12 transaction flow over AS2 with Smooks",
+    "tags": [
+        "edi",
+        "as2",
+        "smooks",
+        "supply-chain"
+    ],
+    "bundled": false,
+    "level": "advanced",
+    "exclude": true
+}

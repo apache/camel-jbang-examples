@@ -1,0 +1,12 @@
+{
+    "title": "Smart Log Analyzer",
+    "description": "Intelligent observability correlating OpenTelemetry logs and traces with LLM analysis",
+    "tags": [
+        "ai",
+        "observability",
+        "opentelemetry",
+        "logging"
+    ],
+    "bundled": false,
+    "level": "advanced"
+}

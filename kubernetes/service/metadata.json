@@ -1,0 +1,11 @@
+{
+    "title": "Kubernetes Service",
+    "description": "Run a Camel service on Kubernetes",
+    "tags": [
+        "kubernetes",
+        "cloud",
+        "service"
+    ],
+    "bundled": false,
+    "exclude": true
+}

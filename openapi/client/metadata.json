@@ -1,0 +1,11 @@
+{
+    "title": "OpenAPI Client",
+    "description": "REST client generated from an OpenAPI specification",
+    "tags": [
+        "rest",
+        "openapi",
+        "client"
+    ],
+    "bundled": false,
+    "level": "intermediate"
+}

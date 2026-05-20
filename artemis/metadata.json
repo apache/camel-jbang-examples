@@ -1,0 +1,11 @@
+{
+    "title": "Apache ActiveMQ Artemis",
+    "description": "Setup connection factory to a remote Apache ActiveMQ Artemis messaging broker",
+    "tags": [
+        "messaging",
+        "jms",
+        "artemis"
+    ],
+    "bundled": false,
+    "level": "intermediate"
+}

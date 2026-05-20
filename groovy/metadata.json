@@ -1,0 +1,11 @@
+{
+    "title": "Groovy",
+    "description": "Use Groovy with extra dependencies and content-based routing",
+    "tags": [
+        "language",
+        "groovy",
+        "eip"
+    ],
+    "bundled": true,
+    "level": "beginner"
+}

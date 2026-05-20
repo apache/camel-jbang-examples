@@ -1,0 +1,12 @@
+{
+    "title": "AWS SQS Sink",
+    "description": "Push messages to AWS SQS queue via HTTP service",
+    "tags": [
+        "aws",
+        "sqs",
+        "http",
+        "cloud"
+    ],
+    "bundled": false,
+    "level": "advanced"
+}

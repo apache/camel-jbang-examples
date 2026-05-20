@@ -1,0 +1,11 @@
+{
+    "title": "XSLT Transformation",
+    "description": "Basic XML transformation using XSLT style sheets",
+    "tags": [
+        "transformation",
+        "xml",
+        "xslt"
+    ],
+    "bundled": true,
+    "level": "beginner"
+}

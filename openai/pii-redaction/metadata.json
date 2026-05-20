@@ -1,0 +1,12 @@
+{
+    "title": "OpenAI PII Redaction",
+    "description": "Redact personal identifiable information from text using OpenAI-compatible LLMs",
+    "tags": [
+        "ai",
+        "openai",
+        "privacy",
+        "security"
+    ],
+    "bundled": false,
+    "level": "advanced"
+}

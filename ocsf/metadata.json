@@ -1,0 +1,12 @@
+{
+    "title": "OCSF DataFormat",
+    "description": "Open Cybersecurity Schema Framework data format with REST endpoints",
+    "tags": [
+        "security",
+        "ocsf",
+        "dataformat"
+    ],
+    "bundled": false,
+    "level": "intermediate",
+    "exclude": true
+}

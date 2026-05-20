@@ -1,0 +1,10 @@
+{
+    "title": "Circuit Breaker",
+    "description": "Use the circuit breaker EIP for fault tolerance",
+    "tags": [
+        "eip",
+        "resilience"
+    ],
+    "bundled": true,
+    "level": "beginner"
+}

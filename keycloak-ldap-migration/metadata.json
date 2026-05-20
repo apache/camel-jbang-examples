@@ -1,0 +1,13 @@
+{
+    "title": "LDAP to Keycloak User Migration",
+    "description": "Migrate users from LDAP directory to Keycloak using bulk operations",
+    "tags": [
+        "security",
+        "keycloak",
+        "ldap",
+        "migration"
+    ],
+    "bundled": false,
+    "level": "advanced",
+    "exclude": true
+}

@@ -1,0 +1,13 @@
+{
+    "title": "AWS S3 CDC",
+    "description": "Consume S3 events using EventBridge and SQS for change data capture",
+    "tags": [
+        "aws",
+        "s3",
+        "sqs",
+        "eventbridge",
+        "cloud"
+    ],
+    "bundled": false,
+    "level": "advanced"
+}

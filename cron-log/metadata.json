@@ -1,0 +1,12 @@
+{
+    "title": "Cron Log",
+    "description": "Scheduled task that logs every 5 seconds",
+    "tags": [
+        "beginner",
+        "timer",
+        "cron",
+        "log"
+    ],
+    "bundled": true,
+    "level": "beginner"
+}

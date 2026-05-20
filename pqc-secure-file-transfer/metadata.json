@@ -1,0 +1,13 @@
+{
+    "title": "Post-Quantum Secure File Transfer",
+    "description": "Secure file transfer using ML-KEM post-quantum key encapsulation",
+    "tags": [
+        "security",
+        "pqc",
+        "file",
+        "cryptography"
+    ],
+    "bundled": false,
+    "level": "intermediate",
+    "exclude": true
+}

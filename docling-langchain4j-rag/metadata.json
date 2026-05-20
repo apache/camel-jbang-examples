@@ -1,0 +1,12 @@
+{
+    "title": "Document Analysis with Docling and LangChain4j RAG",
+    "description": "RAG workflow combining Docling document conversion with LangChain4j and Ollama",
+    "tags": [
+        "ai",
+        "rag",
+        "langchain4j",
+        "docling"
+    ],
+    "bundled": false,
+    "level": "advanced"
+}

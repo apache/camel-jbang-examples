@@ -1,0 +1,11 @@
+{
+    "title": "SQL Database",
+    "description": "Use a SQL database with Camel and Postgres",
+    "tags": [
+        "database",
+        "sql",
+        "postgres"
+    ],
+    "bundled": false,
+    "level": "intermediate"
+}

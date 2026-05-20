@@ -1,0 +1,13 @@
+{
+    "title": "IBM Watson Natural Language Understanding",
+    "description": "Analyze text with IBM Watson NLU for sentiment, entities, and concepts",
+    "tags": [
+        "ibm",
+        "ai",
+        "watson",
+        "nlp"
+    ],
+    "bundled": false,
+    "level": "advanced",
+    "exclude": true
+}

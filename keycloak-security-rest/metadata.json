@@ -1,0 +1,12 @@
+{
+    "title": "Keycloak Security REST API",
+    "description": "Secure REST APIs with Keycloak authentication and authorization",
+    "tags": [
+        "security",
+        "keycloak",
+        "rest",
+        "oauth"
+    ],
+    "bundled": false,
+    "level": "advanced"
+}

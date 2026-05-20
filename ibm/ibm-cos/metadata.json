@@ -1,0 +1,13 @@
+{
+    "title": "IBM Cloud Object Storage",
+    "description": "IBM COS Kamelets for cloud object storage operations",
+    "tags": [
+        "ibm",
+        "cloud",
+        "storage",
+        "kamelet"
+    ],
+    "bundled": false,
+    "level": "advanced",
+    "exclude": true
+}

@@ -1,0 +1,11 @@
+{
+    "title": "Routes",
+    "description": "Define routes in YAML with Java beans",
+    "tags": [
+        "beginner",
+        "yaml",
+        "bean"
+    ],
+    "bundled": true,
+    "level": "beginner"
+}

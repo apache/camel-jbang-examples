@@ -1,0 +1,11 @@
+{
+    "title": "OpenAPI Server",
+    "description": "REST service implemented from an OpenAPI specification",
+    "tags": [
+        "rest",
+        "openapi",
+        "server"
+    ],
+    "bundled": false,
+    "level": "intermediate"
+}

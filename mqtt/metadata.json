@@ -1,0 +1,11 @@
+{
+    "title": "MQTT",
+    "description": "Receive MQTT events from an external MQTT broker",
+    "tags": [
+        "messaging",
+        "mqtt",
+        "iot"
+    ],
+    "bundled": false,
+    "level": "intermediate"
+}

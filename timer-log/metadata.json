@@ -1,0 +1,11 @@
+{
+    "title": "Timer Log",
+    "description": "Simple timer that logs a hello message every second",
+    "tags": [
+        "beginner",
+        "timer",
+        "log"
+    ],
+    "bundled": true,
+    "level": "beginner"
+}

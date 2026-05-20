@@ -1,0 +1,13 @@
+{
+    "title": "Post-Quantum Document Signing",
+    "description": "Document signing with post-quantum cryptography and HashiCorp Vault",
+    "tags": [
+        "security",
+        "pqc",
+        "vault",
+        "cryptography"
+    ],
+    "bundled": false,
+    "level": "advanced",
+    "exclude": true
+}

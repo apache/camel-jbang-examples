@@ -1,0 +1,11 @@
+{
+    "title": "REST API",
+    "description": "REST API with hello endpoints",
+    "tags": [
+        "beginner",
+        "rest",
+        "http"
+    ],
+    "bundled": true,
+    "level": "beginner"
+}

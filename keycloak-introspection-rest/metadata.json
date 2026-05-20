@@ -1,0 +1,12 @@
+{
+    "title": "Keycloak Token Introspection REST API",
+    "description": "Secure REST APIs with Keycloak OAuth 2.0 token introspection",
+    "tags": [
+        "security",
+        "keycloak",
+        "rest",
+        "oauth"
+    ],
+    "bundled": false,
+    "level": "advanced"
+}

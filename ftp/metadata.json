@@ -1,0 +1,11 @@
+{
+    "title": "ActiveMQ to FTP",
+    "description": "Integrate ActiveMQ messaging with an FTP server",
+    "tags": [
+        "messaging",
+        "ftp",
+        "activemq"
+    ],
+    "bundled": false,
+    "level": "intermediate"
+}
