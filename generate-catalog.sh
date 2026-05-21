@@ -86,6 +86,20 @@ for dirpath, dirnames, filenames in sorted(os.walk(repo_root)):
 
     requires_docker = "compose.yaml" in filenames or "docker-compose.yaml" in filenames
 
+    # detect Citrus integration tests (also in sub-directories without own metadata)
+    has_citrus_tests = False
+    for sub_dirpath2, sub_dirnames2, sub_filenames2 in os.walk(dirpath):
+        sub_dirnames2[:] = [
+            d for d in sub_dirnames2
+            if not d.startswith(".") and d not in {"target", "node_modules"}
+            and not os.path.exists(os.path.join(sub_dirpath2, d, "metadata.json"))
+        ]
+        if os.path.basename(sub_dirpath2) == "test":
+            if any(f.endswith(".citrus.it.yaml") or f.endswith(".citrus.it.xml")
+                   for f in sub_filenames2):
+                has_citrus_tests = True
+                break
+
     entry = {
         "name": name,
         "title": meta["title"],
@@ -94,6 +108,7 @@ for dirpath, dirnames, filenames in sorted(os.walk(repo_root)):
         "tags": meta.get("tags", []),
         "bundled": meta.get("bundled", False),
         "requiresDocker": requires_docker,
+        "hasCitrusTests": has_citrus_tests,
         "files": files,
     }
     catalog.append(entry)
