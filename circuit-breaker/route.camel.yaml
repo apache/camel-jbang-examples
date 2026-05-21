@@ -10,10 +10,10 @@
               constant:
                 expression: Hello Camel
         - circuitBreaker:
+            resilience4jConfiguration:
+              minimumNumberOfCalls: 10
+              waitDurationInOpenState: 20
             steps:
-              - resilience4jConfiguration:
-                  minimumNumberOfCalls: 10
-                  waitDurationInOpenState: 20
               - filter:
                   expression:
                     simple:
@@ -24,4 +24,3 @@
                         exceptionType: java.lang.IllegalArgumentException
         - log:
             message: "${body} (CircuitBreaker is open: ${exchangeProperty.CamelCircuitBreakerResponseShortCircuited})"
-
