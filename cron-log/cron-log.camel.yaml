@@ -4,12 +4,12 @@
       uri: timer
       parameters:
         timerName: cron
-        period: 5000
+        period: "{{cron.period}}"
       steps:
         - setBody:
             expression:
               simple:
-                expression: "Scheduled task running at ${date:now:HH:mm:ss}"
+                expression: "{{cron.message}} ${date:now:HH:mm:ss}"
         - log:
             message: "${body}"
 

@@ -4,12 +4,12 @@
       uri: timer
       parameters:
         timerName: tick
-        period: 1000
+        period: "{{timer.period}}"
       steps:
         - setBody:
             expression:
               simple:
-                expression: "Hello Camel! (message #${exchangeProperty.CamelTimerCounter})"
+                expression: "{{greeting.message}}"
         - log:
             message: "${body}"
 

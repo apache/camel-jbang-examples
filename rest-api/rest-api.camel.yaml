@@ -15,7 +15,7 @@
         - setBody:
             expression:
               constant:
-                expression: Hello from Camel REST API!
+                expression: "{{greeting.message}}"
 - route:
     id: hello-name
     from:
