@@ -1,0 +1,59 @@
+# EDI X12 over AS2
+
+This example is contributed from the [Smooks](https://www.smooks.org/) community. As depicted below, it illustrates a common supply chain transaction flow where (1) a customer transmits an EDI purchase order to a supplier requesting goods or services followed by (2) the supplier acknowledging the transaction. Between receiving the purchase order and acknowledging it, the supplier exchanges bits and pieces of the order with its internal systems.
+
+![EDI X12 over AS2 with Camel & Smooks](edi-x12-as2-camel-smooks.png)
+
+The Camel application (i.e., `camel/edi-x12-as2.camel.yaml`) represents the supplier and the downstream systems are mocked with the help of Camel routes (i.e., `camel/fake.camel.yaml`). The example integrates a flavour of EDI called [X12](https://x12.org/) over [AS2](https://camel.apache.org/components/next/as2-component.html). From the Camel application, the [Smooks component](https://camel.apache.org/components/next/smooks-component.html) is leveraged to parse the EDI purchase order and generate the EDI acknowledgement. Smooks breaks down the EDI purchase order into fragments so that individual EDI segments can be transformed and routed accordingly.
+
+## Install Camel JBang
+
+<!-- see ../install.adoc for installation instructions -->
+
+## How to run
+
+1. Run the Camel integration from the terminal with:
+
+    ```shell
+    cd camel && camel run *
+    ```
+
+2. From another terminal window, send an X12 850 purchase order to the AS2 Camel endpoint, or better yet, dispatch the message from Camel JBang as shown next:
+
+    ```shell
+    camel cmd send --body="$(cat test/payload.edi)" --endpoint="as2:client/send?inBody=ediMessage&targetHostName=localhost&targetPortNumber=8081&ediMessageContentType=application/edi-x12&ediMessageCharset=US-ASCII&as2From=acme&as2To=mycorp&from=alice@example.org&requestUri=/mycorp/orders&subject=Purchase Order&as2MessageStructure=PLAIN"
+    ```
+
+    The above command will send an AS2 message where the body is read from the local file named `payload.edi`. The message is sent to the running Camel integration that will process the AS2 message. The Camel integration will then consume the payload and print to the console:
+
+    ```text
+    Received functional ack:
+    ISA*00*          *00*          *ZZ*MYCORP         *ZZ*ACME           *250108*0821*U*00204*000000264*1*T*>~
+    GS*FA*MYCORP*ACME*20250108*082104*000000001*X*004010~
+    ST*997*0001~
+    AK1*850*000000001~
+    AK9*A~
+    SE*4*0001~
+    GE*1*000000001~
+    IEA*1*000000264~
+    ```
+
+## Integration testing
+
+The example provides an automated integration test (`edi-x12-as2.citrus.it.yaml`) that you can run with the [Citrus](https://citrusframework.org/) test framework. Please make sure to have installed Citrus as a JBang application.
+
+You can run the test with:
+
+```shell
+citrus run test/edi-x12-as2.citrus.it.yaml
+```
+
+The test prepares the complete infrastructure and starts the Camel route automatically via JBang. The test sends some test data to the AS2 endpoint and verifies that the Camel route successfully processed the purchase order.
+
+## Help and contributions
+
+If you hit any problem using Camel or have some feedback, then please [let us know](https://camel.apache.org/community/support/).
+
+We also love contributors, so [get involved](https://camel.apache.org/community/contributing/) :-)
+
+The Camel riders!

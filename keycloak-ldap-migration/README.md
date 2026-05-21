@@ -1,0 +1,304 @@
+# LDAP to Keycloak User Migration
+
+This example demonstrates how to migrate users from an LDAP directory to Keycloak using Apache Camel.
+It leverages the `camel-ldap` component to read users from LDAP and the `camel-keycloak` component's bulk operations to efficiently import users into Keycloak.
+
+## Features
+
+* Reads users from LDAP using customizable search filters
+* Transforms LDAP user attributes to Keycloak UserRepresentation
+* Uses Keycloak bulk operations for efficient mass user creation
+* Supports LDAP authentication (anonymous, simple, DIGEST-MD5)
+* Maps common LDAP attributes (uid, cn, mail, givenName, sn, ou, telephoneNumber)
+* Preserves LDAP metadata as Keycloak user attributes
+* Configurable password update requirements
+* Detailed migration results with success/failure reporting
+* Error handling with continue-on-error support
+
+## Prerequisites
+
+* JBang installed (https://www.jbang.dev)
+* Access to an LDAP server with users to migrate
+* Keycloak server (can be started with Camel JBang infra)
+* Basic understanding of LDAP and Keycloak concepts
+
+## Dependencies
+
+This example requires:
+
+* `camel-ldap` - For LDAP integration
+* `camel-keycloak` - For Keycloak integration
+
+## Install JBang
+
+First install JBang according to https://www.jbang.dev
+
+When JBang is installed then you should be able to run from a shell:
+
+```sh
+$ jbang --version
+```
+
+This will output the version of JBang.
+
+To run this example you can either install Camel on JBang via:
+
+```sh
+$ jbang app install camel@apache/camel
+```
+
+Which allows to run Camel JBang with `camel` as shown below.
+
+## Setting Up LDAP Server
+
+For this example, we'll use OpenLDAP running in Docker:
+
+```sh
+$ docker run -d \
+  --name openldap \
+  -p 389:389 \
+  -p 636:636 \
+  -e LDAP_ORGANISATION="Example Inc" \
+  -e LDAP_DOMAIN="example.org" \
+  -e LDAP_ADMIN_PASSWORD="admin" \
+  osixia/openldap:latest
+```
+
+This will start OpenLDAP with:
+* Port 389: LDAP
+* Port 636: LDAPS (secure LDAP)
+* Admin DN: `cn=admin,dc=example,dc=org`
+* Admin password: `admin`
+* Base DN: `dc=example,dc=org` (automatically created)
+
+### Adding Test Users to LDAP
+
+You can use LDAP tools like `ldapadd` or Apache Directory Studio to add test users.
+
+> **Important:** Before adding users, you need to create the organizational unit structure in LDAP. The default configuration expects `ou=users,dc=example,dc=org` to exist.
+
+Create a file named `users.ldif` with the following content to set up the structure and add test users:
+
+```ldif
+dn: ou=users,dc=example,dc=org
+objectClass: organizationalUnit
+ou: users
+
+dn: uid=jdoe,ou=users,dc=example,dc=org
+objectClass: inetOrgPerson
+objectClass: organizationalPerson
+objectClass: person
+uid: jdoe
+cn: John Doe
+sn: Doe
+givenName: John
+mail: john.doe@example.com
+telephoneNumber: +1-555-1234
+userPassword: password123
+
+dn: uid=jsmith,ou=users,dc=example,dc=org
+objectClass: inetOrgPerson
+objectClass: organizationalPerson
+objectClass: person
+uid: jsmith
+cn: Jane Smith
+sn: Smith
+givenName: Jane
+mail: jane.smith@example.com
+telephoneNumber: +1-555-5678
+userPassword: password456
+
+dn: uid=admin,ou=users,dc=example,dc=org
+objectClass: inetOrgPerson
+objectClass: organizationalPerson
+objectClass: person
+uid: admin
+cn: Admin User
+sn: User
+givenName: Admin
+mail: admin@example.com
+ou: IT
+description: System Administrator
+userPassword: adminpass
+```
+
+To add the organizational unit and users to your LDAP server:
+
+```sh
+$ ldapadd -x -H ldap://localhost:389 -D "cn=admin,dc=example,dc=org" -w admin -f users.ldif
+```
+
+Expected output:
+```
+adding new entry "ou=users,dc=example,dc=org"
+adding new entry "uid=jdoe,ou=users,dc=example,dc=org"
+adding new entry "uid=jsmith,ou=users,dc=example,dc=org"
+adding new entry "uid=admin,ou=users,dc=example,dc=org"
+```
+
+> **Note:** If you're using the `osixia/openldap` Docker container, the base DN `dc=example,dc=org` is automatically created. You only need to add the `ou=users` organizational unit and the user entries.
+
+## Setting Up Keycloak
+
+Use Camel JBang Infra to run Keycloak:
+
+```sh
+$ camel infra run keycloak
+```
+
+This will start Keycloak configured with:
+* Admin username: `admin`
+* Admin password: `admin`
+* Port: `8080`
+
+Wait a few seconds for Keycloak to fully start before proceeding.
+
+To stop Keycloak later:
+
+```sh
+$ camel infra stop keycloak
+```
+
+## Configuring the Migration
+
+Edit the `application.properties` file to configure your LDAP and Keycloak settings:
+
+### LDAP Configuration
+
+```properties
+# LDAP server URL
+ldap.server.url=ldap://localhost:389
+
+# Authentication (none, simple, or DIGEST-MD5)
+ldap.security.authentication=simple
+ldap.security.principal=cn=admin,dc=example,dc=org
+ldap.security.credentials=admin
+
+# Search configuration
+ldap.search.base=ou=users,dc=example,dc=org
+ldap.search.filter=(objectClass=person)
+```
+
+### Keycloak Configuration
+
+```properties
+# Keycloak server URL
+keycloak.server.url=http://localhost:8080
+
+# Authentication
+keycloak.realm=master
+keycloak.username=admin
+keycloak.password=admin
+
+# Target realm for migrated users
+keycloak.target.realm=master
+```
+
+### Migration Options
+
+```properties
+# Require password update on first login
+keycloak.user.requirePasswordUpdate=true
+```
+
+## Running the Migration
+
+After configuring LDAP and Keycloak, and adding test users to LDAP, run the migration:
+
+```sh
+$ camel run *
+```
+
+> **Important:** Make sure you have created the LDAP organizational unit structure and added test users (see "Adding Test Users to LDAP" section above). If you see an error like `NameNotFoundException: No Such Object`, it means the LDAP base DN doesn't exist yet.
+
+The migration will:
+
+1. Initialize LDAP connection
+2. Connect to the LDAP server
+3. Search for users based on the configured filter
+4. Transform LDAP attributes to Keycloak user format
+5. Bulk create users in Keycloak
+6. Display detailed migration results
+
+## Expected Output
+
+```
+[INFO] Starting LDAP to Keycloak user migration...
+[INFO] Found 3 users in LDAP
+
+================================================================================
+LDAP to Keycloak Migration Results
+================================================================================
+Total users processed: 3
+Successfully created:  3
+Failed:                0
+================================================================================
+
+Detailed Results:
+--------------------------------------------------------------------------------
+ jdoe                           - success
+ jsmith                         - success
+ admin                          - success
+--------------------------------------------------------------------------------
+
+Migration completed!
+```
+
+## LDAP Attribute Mapping
+
+The migration maps LDAP attributes to Keycloak user fields:
+
+| LDAP Attribute | Keycloak Field | Notes |
+|----------------|---------------|-------|
+| `uid`, `cn`, `sAMAccountName` | `username` | First available attribute is used (required) |
+| `mail` | `email` | User's email address |
+| `givenName` | `firstName` | User's first name |
+| `sn` | `lastName` | User's surname/last name |
+| `ou` | `attributes.ldap_ou` | Organizational unit (custom attribute) |
+| `dn` | `attributes.ldap_dn` | Distinguished name (custom attribute, for reference) |
+| `description` | `attributes.description` | User description (custom attribute) |
+| `telephoneNumber` | `attributes.phoneNumber` | Phone number (custom attribute) |
+
+> **Note:** All users are enabled by default (`enabled: true`).
+
+## Security Considerations
+
+> **Important:** This migration does NOT copy user passwords from LDAP to Keycloak.
+
+
+## Developer Console
+
+You can enable the developer console via `--console` flag:
+
+```sh
+$ camel run * --console
+```
+
+Then browse: http://localhost:8080/q/dev to introspect the running Camel application.
+
+## Stopping
+
+To stop the Camel application, press `Ctrl+C`.
+
+To stop Keycloak:
+
+```sh
+$ camel infra stop keycloak
+```
+
+To stop OpenLDAP:
+
+```sh
+$ docker stop openldap
+$ docker rm openldap
+```
+
+## Help and Contributions
+
+If you hit any problem using Camel or have some feedback, then please
+[let us know](https://camel.apache.org/community/support/).
+
+We also love contributors, so
+[get involved](https://camel.apache.org/community/contributing/) :-)
+
+The Camel riders!
