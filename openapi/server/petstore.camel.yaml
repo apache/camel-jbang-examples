@@ -1,13 +1,14 @@
-- restConfiguration:
-    clientRequestValidation: true
-    apiContextPath: openapi
 - rest:
-    openApi:
-      specification: petstore-api.json
-
+    steps:
+      - openApi:
+          specification: petstore-api.json
 - route:
     from:
-      uri: "direct:addPet"
+      uri: direct
+      parameters:
+        name: addPet
       steps:
         - to:
-            uri: "log:info"
+            uri: log
+            parameters:
+              loggerName: info

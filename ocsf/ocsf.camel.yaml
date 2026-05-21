@@ -1,140 +1,153 @@
-## ---------------------------------------------------------------------------
-## Licensed to the Apache Software Foundation (ASF) under one or more
-## contributor license agreements.  See the NOTICE file distributed with
-## this work for additional information regarding copyright ownership.
-## The ASF licenses this file to You under the Apache License, Version 2.0
-## (the "License"); you may not use this file except in compliance with
-## the License.  You may obtain a copy of the License at
-##
-##      http://www.apache.org/licenses/LICENSE-2.0
-##
-## Unless required by applicable law or agreed to in writing, software
-## distributed under the License is distributed on an "AS IS" BASIS,
-## WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-## See the License for the specific language governing permissions and
-## limitations under the License.
-## ---------------------------------------------------------------------------
-
-# Bean Definitions for AI-powered analysis
-- beans:
-  # Configure Ollama Chat Model for security finding summarization
-  - name: chatModel
-    type: "#class:dev.langchain4j.model.ollama.OllamaChatModel"
-    scriptLanguage: groovy
-    script: |
-      import dev.langchain4j.model.ollama.OllamaChatModel
-      import static java.time.Duration.ofSeconds
-
-      return OllamaChatModel.builder()
-        .baseUrl("{{ollama.base.url}}")
-        .modelName("{{ollama.model.name}}")
-        .temperature(0.3)
-        .timeout(ofSeconds(120))
-        .build()
-
-# REST endpoint to receive OCSF DetectionFinding events
-# POST JSON payload to http://localhost:8080/api/ocsf/detection-finding
 - route:
     id: ocsf-detection-finding-receiver
     from:
-      uri: "platform-http:/api/ocsf/detection-finding"
+      uri: platform-http
       parameters:
+        path: /api/ocsf/detection-finding
         httpMethodRestrict: POST
       steps:
         - log:
-            message: "Received OCSF DetectionFinding event (raw JSON)"
+            message: Received OCSF DetectionFinding event (raw JSON)
         - unmarshal:
             ocsf:
               unmarshalType: org.apache.camel.dataformat.ocsf.model.DetectionFinding
         - log:
-            message: "Unmarshalled DetectionFinding"
-        # Extract finding info (direct properties)
+            message: Unmarshalled DetectionFinding
         - setHeader:
             name: findingTitle
-            simple: "${body.findingInfo?.title}"
+            expression:
+              simple:
+                expression: "${body.findingInfo?.title}"
         - setHeader:
             name: findingDesc
-            simple: "${body.findingInfo?.desc}"
+            expression:
+              simple:
+                expression: "${body.findingInfo?.desc}"
         - setHeader:
             name: findingUid
-            simple: "${body.findingInfo?.uid}"
+            expression:
+              simple:
+                expression: "${body.findingInfo?.uid}"
         - setHeader:
             name: findingTypes
-            simple: "${body.findingInfo?.types}"
-        # Extract remediation info (direct property)
+            expression:
+              simple:
+                expression: "${body.findingInfo?.types}"
         - setHeader:
             name: remediationDesc
-            simple: "${body.remediation?.desc}"
-        # Extract direct properties on DetectionFinding
+            expression:
+              simple:
+                expression: "${body.remediation?.desc}"
         - setHeader:
             name: riskScore
-            simple: "${body.riskScore}"
+            expression:
+              simple:
+                expression: "${body.riskScore}"
         - setHeader:
             name: riskLevel
-            simple: "${body.riskLevel}"
+            expression:
+              simple:
+                expression: "${body.riskLevel}"
         - setHeader:
             name: confidence
-            simple: "${body.confidence}"
+            expression:
+              simple:
+                expression: "${body.confidence}"
         - setHeader:
             name: isAlert
-            simple: "${body.isAlert}"
-        # Base event fields are in additionalProperties
+            expression:
+              simple:
+                expression: "${body.isAlert}"
         - setHeader:
             name: severity
-            simple: "${body.additionalProperties[severity]}"
+            expression:
+              simple:
+                expression: "${body.additionalProperties[severity]}"
         - setHeader:
             name: severityId
-            simple: "${body.additionalProperties[severity_id]}"
+            expression:
+              simple:
+                expression: "${body.additionalProperties[severity_id]}"
         - setHeader:
             name: status
-            simple: "${body.additionalProperties[status]}"
+            expression:
+              simple:
+                expression: "${body.additionalProperties[status]}"
         - setHeader:
             name: statusId
-            simple: "${body.additionalProperties[status_id]}"
+            expression:
+              simple:
+                expression: "${body.additionalProperties[status_id]}"
         - setHeader:
             name: activityName
-            simple: "${body.additionalProperties[activity_name]}"
+            expression:
+              simple:
+                expression: "${body.additionalProperties[activity_name]}"
         - setHeader:
             name: typeName
-            simple: "${body.additionalProperties[type_name]}"
+            expression:
+              simple:
+                expression: "${body.additionalProperties[type_name]}"
         - setHeader:
             name: className
-            simple: "${body.additionalProperties[class_name]}"
+            expression:
+              simple:
+                expression: "${body.additionalProperties[class_name]}"
         - setHeader:
             name: count
-            simple: "${body.additionalProperties[count]}"
+            expression:
+              simple:
+                expression: "${body.additionalProperties[count]}"
         - setHeader:
             name: timeDt
-            simple: "${body.additionalProperties[time_dt]}"
-        # Extract cloud info from additionalProperties
+            expression:
+              simple:
+                expression: "${body.additionalProperties[time_dt]}"
         - setHeader:
             name: cloudMap
-            simple: "${body.additionalProperties[cloud]}"
+            expression:
+              simple:
+                expression: "${body.additionalProperties[cloud]}"
         - setHeader:
             name: cloudProvider
-            simple: "${header.cloudMap[provider]}"
+            expression:
+              simple:
+                expression: "${header.cloudMap[provider]}"
         - setHeader:
             name: cloudRegion
-            simple: "${header.cloudMap[region]}"
+            expression:
+              simple:
+                expression: "${header.cloudMap[region]}"
         - setHeader:
             name: cloudAccountMap
-            simple: "${header.cloudMap[account]}"
+            expression:
+              simple:
+                expression: "${header.cloudMap[account]}"
         - setHeader:
             name: cloudAccountId
-            simple: "${header.cloudAccountMap[uid]}"
-        # Extract metadata from additionalProperties
+            expression:
+              simple:
+                expression: "${header.cloudAccountMap[uid]}"
         - setHeader:
             name: metadataMap
-            simple: "${body.additionalProperties[metadata]}"
+            expression:
+              simple:
+                expression: "${body.additionalProperties[metadata]}"
         - setHeader:
             name: productMap
-            simple: "${header.metadataMap[product]}"
+            expression:
+              simple:
+                expression: "${header.metadataMap[product]}"
         - setHeader:
             name: productName
-            simple: "${header.productMap[name]}"
+            expression:
+              simple:
+                expression: "${header.productMap[name]}"
         - setHeader:
             name: productVendor
-            simple: "${header.productMap[vendor_name]}"
+            expression:
+              simple:
+                expression: "${header.productMap[vendor_name]}"
         - log:
             message: |
               ============================================================
@@ -160,54 +173,67 @@
               Product: ${header.productName} (${header.productVendor})
               Remediation: ${header.remediationDesc}
               ============================================================
-        # Clean up temporary headers
         - removeHeaders:
-            pattern: "cloudMap|cloudAccountMap|metadataMap|productMap"
+            pattern: cloudMap|cloudAccountMap|metadataMap|productMap
         - marshal:
             ocsf: {}
         - log:
             message: "Marshalled back to JSON: ${body}"
         - setHeader:
             name: Content-Type
-            constant: application/json
+            expression:
+              constant:
+                expression: application/json
         - setBody:
-            simple: |
-              {
-                "status": "received",
-                "message": "OCSF DetectionFinding processed successfully",
-                "timestamp": "${date:now:yyyy-MM-dd'T'HH:mm:ss}"
-              }
-
-
+            expression:
+              simple:
+                expression: |
+                  {
+                    "status": "received",
+                    "message": "OCSF DetectionFinding processed successfully",
+                    "timestamp": "${date:now:yyyy-MM-dd'T'HH:mm:ss}"
+                  }
 - route:
     id: ocsf-event-receiver
     from:
-      uri: "platform-http:/api/ocsf/event"
+      uri: platform-http
       parameters:
+        path: /api/ocsf/event
         httpMethodRestrict: POST
       steps:
         - log:
-            message: "Received generic OCSF event (raw JSON)"
+            message: Received generic OCSF event (raw JSON)
         - unmarshal:
             ocsf:
               unmarshalType: org.apache.camel.dataformat.ocsf.model.OcsfEvent
         - log:
-            message: "Unmarshalled OcsfEvent - Class UID: ${body.classUid}, Severity ID: ${body.severityId}, Time: ${body.time}"
+            message: "Unmarshalled OcsfEvent - Class UID: ${body.classUid}, Severity\
+              \ ID: ${body.severityId}, Time: ${body.time}"
         - setHeader:
             name: classUid
-            simple: "${body.classUid}"
+            expression:
+              simple:
+                expression: "${body.classUid}"
         - setHeader:
             name: categoryUid
-            simple: "${body.categoryUid}"
+            expression:
+              simple:
+                expression: "${body.categoryUid}"
         - setHeader:
             name: severityId
-            simple: "${body.severityId}"
+            expression:
+              simple:
+                expression: "${body.severityId}"
         - setHeader:
             name: activityId
-            simple: "${body.activityId}"
+            expression:
+              simple:
+                expression: "${body.activityId}"
         - setHeader:
             name: message
-            simple: "${body.message}"
+            expression:
+              simple:
+                expression: "${body.message}"
         - log:
             message: |
               ========== OCSF Event ==========
@@ -221,246 +247,258 @@
             ocsf: {}
         - setHeader:
             name: Content-Type
-            constant: application/json
+            expression:
+              constant:
+                expression: application/json
         - setBody:
-            simple: |
-              {
-                "status": "received",
-                "message": "OCSF event processed successfully",
-                "class_uid": "${header.classUid}",
-                "timestamp": "${date:now:yyyy-MM-dd'T'HH:mm:ss}"
-              }
-
-# Health check endpoint
+            expression:
+              simple:
+                expression: |
+                  {
+                    "status": "received",
+                    "message": "OCSF event processed successfully",
+                    "class_uid": "${header.classUid}",
+                    "timestamp": "${date:now:yyyy-MM-dd'T'HH:mm:ss}"
+                  }
 - route:
     id: health-check
     from:
-      uri: "platform-http:/health"
+      uri: platform-http
+      parameters:
+        path: /health
       steps:
         - setHeader:
             name: Content-Type
-            constant: application/json
+            expression:
+              constant:
+                expression: application/json
         - setBody:
-            simple: |
-              {
-                "status": "UP",
-                "service": "OCSF Event Receiver",
-                "timestamp": "${date:now:yyyy-MM-dd'T'HH:mm:ss}"
-              }
-
-# AI-powered security finding summarization endpoint
-# Uses Ollama with granite model to analyze and summarize security findings
-# POST JSON payload to http://localhost:8080/api/ocsf/detection-finding/summarize
+            expression:
+              simple:
+                expression: |
+                  {
+                    "status": "UP",
+                    "service": "OCSF Event Receiver",
+                    "timestamp": "${date:now:yyyy-MM-dd'T'HH:mm:ss}"
+                  }
 - route:
     id: ocsf-ai-summarization
     from:
-      uri: "platform-http:/api/ocsf/detection-finding/summarize"
+      uri: platform-http
       parameters:
+        path: /api/ocsf/detection-finding/summarize
         httpMethodRestrict: POST
       steps:
         - log:
-            message: "Received OCSF DetectionFinding for AI summarization"
+            message: Received OCSF DetectionFinding for AI summarization
         - unmarshal:
             ocsf:
               unmarshalType: org.apache.camel.dataformat.ocsf.model.DetectionFinding
         - log:
-            message: "Unmarshalled DetectionFinding for AI analysis"
-        # Store the original finding for later
+            message: Unmarshalled DetectionFinding for AI analysis
         - setProperty:
             name: originalFinding
-            simple: "${body}"
-        # Use Groovy script to extract all relevant fields including nested ones
+            expression:
+              simple:
+                expression: "${body}"
         - script:
-            groovy: |
-              def finding = exchange.getMessage().getBody()
-              def props = finding.additionalProperties ?: [:]
-              def msg = exchange.getMessage()
+            expression:
+              groovy:
+                expression: |
+                  def finding = exchange.getMessage().getBody()
+                  def props = finding.additionalProperties ?: [:]
+                  def msg = exchange.getMessage()
 
-              // Basic finding info
-              msg.setHeader("findingTitle", finding.findingInfo?.title ?: "Unknown")
-              msg.setHeader("findingDesc", finding.findingInfo?.desc ?: "No description")
-              msg.setHeader("findingTypes", finding.findingInfo?.types?.toString() ?: "Unknown")
-              msg.setHeader("riskScore", finding.riskScore?.toString() ?: "N/A")
-              msg.setHeader("riskLevel", finding.riskLevel ?: "Unknown")
-              msg.setHeader("confidence", finding.confidence ?: "Unknown")
-              msg.setHeader("remediationDesc", finding.remediation?.desc ?: "No remediation provided")
+                  // Basic finding info
+                  msg.setHeader("findingTitle", finding.findingInfo?.title ?: "Unknown")
+                  msg.setHeader("findingDesc", finding.findingInfo?.desc ?: "No description")
+                  msg.setHeader("findingTypes", finding.findingInfo?.types?.toString() ?: "Unknown")
+                  msg.setHeader("riskScore", finding.riskScore?.toString() ?: "N/A")
+                  msg.setHeader("riskLevel", finding.riskLevel ?: "Unknown")
+                  msg.setHeader("confidence", finding.confidence ?: "Unknown")
+                  msg.setHeader("remediationDesc", finding.remediation?.desc ?: "No remediation provided")
 
-              // Base event fields from additionalProperties
-              msg.setHeader("severity", props.severity ?: "Unknown")
-              msg.setHeader("severityId", props.severity_id?.toString() ?: "N/A")
-              msg.setHeader("className", props.class_name ?: "Unknown")
-              msg.setHeader("activityName", props.activity_name ?: "Unknown")
-              msg.setHeader("message", props.message ?: finding.message ?: "No message")
+                  // Base event fields from additionalProperties
+                  msg.setHeader("severity", props.severity ?: "Unknown")
+                  msg.setHeader("severityId", props.severity_id?.toString() ?: "N/A")
+                  msg.setHeader("className", props.class_name ?: "Unknown")
+                  msg.setHeader("activityName", props.activity_name ?: "Unknown")
+                  msg.setHeader("message", props.message ?: finding.message ?: "No message")
 
-              // Cloud information
-              def cloud = props.cloud ?: [:]
-              msg.setHeader("cloudProvider", cloud.provider ?: "Unknown")
-              msg.setHeader("cloudRegion", cloud.region ?: "Unknown")
-              msg.setHeader("cloudAccountId", cloud.account?.uid ?: "Unknown")
+                  // Cloud information
+                  def cloud = props.cloud ?: [:]
+                  msg.setHeader("cloudProvider", cloud.provider ?: "Unknown")
+                  msg.setHeader("cloudRegion", cloud.region ?: "Unknown")
+                  msg.setHeader("cloudAccountId", cloud.account?.uid ?: "Unknown")
 
-              // Device information
-              def device = props.device ?: [:]
-              msg.setHeader("deviceHostname", device.hostname ?: "Unknown")
-              msg.setHeader("deviceIp", device.ip ?: "Unknown")
-              msg.setHeader("deviceType", device.type ?: "Unknown")
-              msg.setHeader("deviceInstanceId", device.instance_uid ?: "Unknown")
-              msg.setHeader("deviceOs", device.os?.name ? "${device.os.name} ${device.os.version ?: ''}" : "Unknown")
+                  // Device information
+                  def device = props.device ?: [:]
+                  msg.setHeader("deviceHostname", device.hostname ?: "Unknown")
+                  msg.setHeader("deviceIp", device.ip ?: "Unknown")
+                  msg.setHeader("deviceType", device.type ?: "Unknown")
+                  msg.setHeader("deviceInstanceId", device.instance_uid ?: "Unknown")
+                  msg.setHeader("deviceOs", device.os?.name ? "${device.os.name} ${device.os.version ?: ''}" : "Unknown")
 
-              // Source endpoint info from evidences (attacker info)
-              def evidences = props.evidences ?: []
-              def srcEndpoint = evidences.size() > 0 ? evidences[0].src_endpoint : null
-              if (srcEndpoint) {
-                msg.setHeader("srcIp", srcEndpoint.ip ?: "Unknown")
-                msg.setHeader("srcIsp", srcEndpoint.isp ?: "Unknown")
-                msg.setHeader("srcIspOrg", srcEndpoint.isp_org ?: "Unknown")
-                def srcLocation = srcEndpoint.location ?: [:]
-                msg.setHeader("srcCity", srcLocation.city ?: "Unknown")
-                msg.setHeader("srcCountry", srcLocation.country ?: "Unknown")
-                msg.setHeader("srcLat", srcLocation.lat?.toString() ?: "N/A")
-                msg.setHeader("srcLong", srcLocation.long?.toString() ?: "N/A")
-                def asn = srcEndpoint.autonomous_system ?: [:]
-                msg.setHeader("srcAsn", asn.number?.toString() ?: "N/A")
-                msg.setHeader("srcAsnName", asn.name ?: "Unknown")
-              } else {
-                msg.setHeader("srcIp", "Unknown")
-                msg.setHeader("srcIsp", "Unknown")
-                msg.setHeader("srcIspOrg", "Unknown")
-                msg.setHeader("srcCity", "Unknown")
-                msg.setHeader("srcCountry", "Unknown")
-                msg.setHeader("srcLat", "N/A")
-                msg.setHeader("srcLong", "N/A")
-                msg.setHeader("srcAsn", "N/A")
-                msg.setHeader("srcAsnName", "Unknown")
-              }
+                  // Source endpoint info from evidences (attacker info)
+                  def evidences = props.evidences ?: []
+                  def srcEndpoint = evidences.size() > 0 ? evidences[0].src_endpoint : null
+                  if (srcEndpoint) {
+                    msg.setHeader("srcIp", srcEndpoint.ip ?: "Unknown")
+                    msg.setHeader("srcIsp", srcEndpoint.isp ?: "Unknown")
+                    msg.setHeader("srcIspOrg", srcEndpoint.isp_org ?: "Unknown")
+                    def srcLocation = srcEndpoint.location ?: [:]
+                    msg.setHeader("srcCity", srcLocation.city ?: "Unknown")
+                    msg.setHeader("srcCountry", srcLocation.country ?: "Unknown")
+                    msg.setHeader("srcLat", srcLocation.lat?.toString() ?: "N/A")
+                    msg.setHeader("srcLong", srcLocation.long?.toString() ?: "N/A")
+                    def asn = srcEndpoint.autonomous_system ?: [:]
+                    msg.setHeader("srcAsn", asn.number?.toString() ?: "N/A")
+                    msg.setHeader("srcAsnName", asn.name ?: "Unknown")
+                  } else {
+                    msg.setHeader("srcIp", "Unknown")
+                    msg.setHeader("srcIsp", "Unknown")
+                    msg.setHeader("srcIspOrg", "Unknown")
+                    msg.setHeader("srcCity", "Unknown")
+                    msg.setHeader("srcCountry", "Unknown")
+                    msg.setHeader("srcLat", "N/A")
+                    msg.setHeader("srcLong", "N/A")
+                    msg.setHeader("srcAsn", "N/A")
+                    msg.setHeader("srcAsnName", "Unknown")
+                  }
 
-              // API info from evidences
-              def api = evidences.size() > 0 ? evidences[0].api : null
-              if (api) {
-                msg.setHeader("apiOperation", api.operation ?: "Unknown")
-                msg.setHeader("apiService", api.service?.name ?: "Unknown")
-              } else {
-                msg.setHeader("apiOperation", "Unknown")
-                msg.setHeader("apiService", "Unknown")
-              }
+                  // API info from evidences
+                  def api = evidences.size() > 0 ? evidences[0].api : null
+                  if (api) {
+                    msg.setHeader("apiOperation", api.operation ?: "Unknown")
+                    msg.setHeader("apiService", api.service?.name ?: "Unknown")
+                  } else {
+                    msg.setHeader("apiOperation", "Unknown")
+                    msg.setHeader("apiService", "Unknown")
+                  }
 
-              // Malware info
-              def malwareList = props.malware ?: []
-              if (malwareList.size() > 0) {
-                msg.setHeader("malwareName", malwareList[0].name ?: "None")
-                msg.setHeader("malwareId", malwareList[0].uid ?: "N/A")
-              } else {
-                msg.setHeader("malwareName", "None detected")
-                msg.setHeader("malwareId", "N/A")
-              }
+                  // Malware info
+                  def malwareList = props.malware ?: []
+                  if (malwareList.size() > 0) {
+                    msg.setHeader("malwareName", malwareList[0].name ?: "None")
+                    msg.setHeader("malwareId", malwareList[0].uid ?: "N/A")
+                  } else {
+                    msg.setHeader("malwareName", "None detected")
+                    msg.setHeader("malwareId", "N/A")
+                  }
 
-              // Resources affected
-              def resources = props.resources ?: []
-              if (resources.size() > 0) {
-                msg.setHeader("resourceType", resources[0].type ?: "Unknown")
-                msg.setHeader("resourceUid", resources[0].uid ?: "Unknown")
-              } else {
-                msg.setHeader("resourceType", "Unknown")
-                msg.setHeader("resourceUid", "Unknown")
-              }
-        # Build AI prompt with comprehensive security context
+                  // Resources affected
+                  def resources = props.resources ?: []
+                  if (resources.size() > 0) {
+                    msg.setHeader("resourceType", resources[0].type ?: "Unknown")
+                    msg.setHeader("resourceUid", resources[0].uid ?: "Unknown")
+                  } else {
+                    msg.setHeader("resourceType", "Unknown")
+                    msg.setHeader("resourceUid", "Unknown")
+                  }
         - setBody:
-            simple: |
-              You are a security analyst assistant. Analyze this security detection finding and provide a concise summary.
+            expression:
+              simple:
+                expression: |
+                  You are a security analyst assistant. Analyze this security detection finding and provide a concise summary.
 
-              == SECURITY FINDING DETAILS ==
-              Title: ${header.findingTitle}
-              Description: ${header.findingDesc}
-              Types: ${header.findingTypes}
-              Message: ${header.message}
+                  == SECURITY FINDING DETAILS ==
+                  Title: ${header.findingTitle}
+                  Description: ${header.findingDesc}
+                  Types: ${header.findingTypes}
+                  Message: ${header.message}
 
-              == CLASSIFICATION ==
-              Class: ${header.className}
-              Activity: ${header.activityName}
-              Severity: ${header.severity} (ID: ${header.severityId})
-              Risk Score: ${header.riskScore}
-              Risk Level: ${header.riskLevel}
-              Confidence: ${header.confidence}
+                  == CLASSIFICATION ==
+                  Class: ${header.className}
+                  Activity: ${header.activityName}
+                  Severity: ${header.severity} (ID: ${header.severityId})
+                  Risk Score: ${header.riskScore}
+                  Risk Level: ${header.riskLevel}
+                  Confidence: ${header.confidence}
 
-              == SOURCE/ATTACKER INFORMATION ==
-              Source IP: ${header.srcIp}
-              ISP: ${header.srcIsp} (${header.srcIspOrg})
-              ASN: ${header.srcAsn} (${header.srcAsnName})
-              Location: ${header.srcCity}, ${header.srcCountry}
-              Coordinates: ${header.srcLat}, ${header.srcLong}
+                  == SOURCE/ATTACKER INFORMATION ==
+                  Source IP: ${header.srcIp}
+                  ISP: ${header.srcIsp} (${header.srcIspOrg})
+                  ASN: ${header.srcAsn} (${header.srcAsnName})
+                  Location: ${header.srcCity}, ${header.srcCountry}
+                  Coordinates: ${header.srcLat}, ${header.srcLong}
 
-              == TARGET DEVICE ==
-              Hostname: ${header.deviceHostname}
-              Device IP: ${header.deviceIp}
-              Instance ID: ${header.deviceInstanceId}
-              Device Type: ${header.deviceType}
-              OS: ${header.deviceOs}
+                  == TARGET DEVICE ==
+                  Hostname: ${header.deviceHostname}
+                  Device IP: ${header.deviceIp}
+                  Instance ID: ${header.deviceInstanceId}
+                  Device Type: ${header.deviceType}
+                  OS: ${header.deviceOs}
 
-              == CLOUD CONTEXT ==
-              Provider: ${header.cloudProvider}
-              Region: ${header.cloudRegion}
-              Account ID: ${header.cloudAccountId}
+                  == CLOUD CONTEXT ==
+                  Provider: ${header.cloudProvider}
+                  Region: ${header.cloudRegion}
+                  Account ID: ${header.cloudAccountId}
 
-              == API ACTIVITY ==
-              Operation: ${header.apiOperation}
-              Service: ${header.apiService}
+                  == API ACTIVITY ==
+                  Operation: ${header.apiOperation}
+                  Service: ${header.apiService}
 
-              == AFFECTED RESOURCES ==
-              Resource Type: ${header.resourceType}
-              Resource ID: ${header.resourceUid}
+                  == AFFECTED RESOURCES ==
+                  Resource Type: ${header.resourceType}
+                  Resource ID: ${header.resourceUid}
 
-              == MALWARE INDICATORS ==
-              Malware Name: ${header.malwareName}
-              Malware ID: ${header.malwareId}
+                  == MALWARE INDICATORS ==
+                  Malware Name: ${header.malwareName}
+                  Malware ID: ${header.malwareId}
 
-              == RECOMMENDED REMEDIATION ==
-              ${header.remediationDesc}
+                  == RECOMMENDED REMEDIATION ==
+                  ${header.remediationDesc}
 
-              Please provide:
-              1. A one-sentence summary of the threat
-              2. Impact assessment (what could happen if not addressed)
-              3. Priority level (Critical/High/Medium/Low) with justification
-              4. Recommended immediate actions (3-5 bullet points)
-              5. IOCs (Indicators of Compromise) to block or monitor
+                  Please provide:
+                  1. A one-sentence summary of the threat
+                  2. Impact assessment (what could happen if not addressed)
+                  3. Priority level (Critical/High/Medium/Low) with justification
+                  4. Recommended immediate actions (3-5 bullet points)
+                  5. IOCs (Indicators of Compromise) to block or monitor
         - log:
-            message: "Sending finding to AI model for analysis..."
-        # Send to LangChain4j Chat for AI analysis
+            message: Sending finding to AI model for analysis...
         - to:
-            uri: langchain4j-chat:security-analyst
+            uri: langchain4j-chat
             parameters:
+              chatId: security-analyst
               chatModel: "#chatModel"
-        # Store AI analysis
         - setProperty:
             name: aiSummary
-            simple: "${body}"
+            expression:
+              simple:
+                expression: "${body}"
         - log:
-            message: "AI analysis completed"
-        # Build response
+            message: AI analysis completed
         - setHeader:
             name: Content-Type
-            constant: application/json
+            expression:
+              constant:
+                expression: application/json
         - script:
-            groovy: |
-              def aiSummary = exchange.getProperty("aiSummary", String.class) ?: ""
-              def findingTitle = exchange.getMessage().getHeader("findingTitle", String.class) ?: "Unknown"
-              def severity = exchange.getMessage().getHeader("severity", String.class) ?: "Unknown"
-              def dateStr = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").format(new java.util.Date())
-              def modelName = "granite3:8b"
+            expression:
+              groovy:
+                expression: |
+                  def aiSummary = exchange.getProperty("aiSummary", String.class) ?: ""
+                  def findingTitle = exchange.getMessage().getHeader("findingTitle", String.class) ?: "Unknown"
+                  def severity = exchange.getMessage().getHeader("severity", String.class) ?: "Unknown"
+                  def dateStr = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").format(new java.util.Date())
+                  def modelName = "granite3:8b"
 
-              // Escape quotes in AI summary for JSON
-              def escapedSummary = aiSummary.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r")
+                  // Escape quotes in AI summary for JSON
+                  def escapedSummary = aiSummary.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r")
 
-              // Build JSON response as regular String (not GString)
-              StringBuilder sb = new StringBuilder()
-              sb.append("{")
-              sb.append("\"status\": \"analyzed\",")
-              sb.append("\"finding_title\": \"").append(findingTitle).append("\",")
-              sb.append("\"severity\": \"").append(severity).append("\",")
-              sb.append("\"ai_summary\": \"").append(escapedSummary).append("\",")
-              sb.append("\"model\": \"").append(modelName).append("\",")
-              sb.append("\"timestamp\": \"").append(dateStr).append("\"")
-              sb.append("}")
+                  // Build JSON response as regular String (not GString)
+                  StringBuilder sb = new StringBuilder()
+                  sb.append("{")
+                  sb.append("\"status\": \"analyzed\",")
+                  sb.append("\"finding_title\": \"").append(findingTitle).append("\",")
+                  sb.append("\"severity\": \"").append(severity).append("\",")
+                  sb.append("\"ai_summary\": \"").append(escapedSummary).append("\",")
+                  sb.append("\"model\": \"").append(modelName).append("\",")
+                  sb.append("\"timestamp\": \"").append(dateStr).append("\"")
+                  sb.append("}")
 
-              exchange.getMessage().setBody(sb.toString())
+                  exchange.getMessage().setBody(sb.toString())
         - log:
             message: |
               ============================================================
@@ -468,82 +506,82 @@
               ============================================================
               ${exchangeProperty.aiSummary}
               ============================================================
-
-# Authentication event endpoint
-# POST JSON payload to http://localhost:8080/api/ocsf/authentication
 - route:
     id: ocsf-authentication-receiver
     from:
-      uri: "platform-http:/api/ocsf/authentication"
+      uri: platform-http
       parameters:
+        path: /api/ocsf/authentication
         httpMethodRestrict: POST
       steps:
         - log:
-            message: "Received OCSF Authentication event"
+            message: Received OCSF Authentication event
         - unmarshal:
             ocsf:
               unmarshalType: org.apache.camel.dataformat.ocsf.model.Authentication
         - log:
-            message: "Unmarshalled Authentication event"
+            message: Unmarshalled Authentication event
         - script:
-            groovy: |
-              def auth = exchange.getMessage().getBody()
-              def props = auth.additionalProperties ?: [:]
-              def msg = exchange.getMessage()
+            expression:
+              groovy:
+                expression: |
+                  def auth = exchange.getMessage().getBody()
+                  def props = auth.additionalProperties ?: [:]
+                  def msg = exchange.getMessage()
 
-              // Basic authentication info
-              msg.setHeader("activityName", props.activity_name ?: "Unknown")
-              msg.setHeader("className", props.class_name ?: "Authentication")
-              msg.setHeader("severity", props.severity ?: "Unknown")
-              msg.setHeader("severityId", props.severity_id?.toString() ?: "N/A")
-              msg.setHeader("status", props.status ?: "Unknown")
-              msg.setHeader("statusId", props.status_id?.toString() ?: "N/A")
-              msg.setHeader("message", props.message ?: "No message")
-              msg.setHeader("timeDt", props.time_dt ?: "Unknown")
+                  // Basic authentication info
+                  msg.setHeader("activityName", props.activity_name ?: "Unknown")
+                  msg.setHeader("className", props.class_name ?: "Authentication")
+                  msg.setHeader("severity", props.severity ?: "Unknown")
+                  msg.setHeader("severityId", props.severity_id?.toString() ?: "N/A")
+                  msg.setHeader("status", props.status ?: "Unknown")
+                  msg.setHeader("statusId", props.status_id?.toString() ?: "N/A")
+                  msg.setHeader("message", props.message ?: "No message")
+                  msg.setHeader("timeDt", props.time_dt ?: "Unknown")
 
-              // Authentication details
-              msg.setHeader("authProtocol", props.auth_protocol ?: "Unknown")
-              msg.setHeader("authProtocolId", props.auth_protocol_id?.toString() ?: "N/A")
-              msg.setHeader("isMfaEnabled", auth.isMfa?.toString() ?: "false")
-              msg.setHeader("logonType", props.logon_type ?: "Unknown")
-              msg.setHeader("logonTypeId", props.logon_type_id?.toString() ?: "N/A")
+                  // Authentication details
+                  msg.setHeader("authProtocol", props.auth_protocol ?: "Unknown")
+                  msg.setHeader("authProtocolId", props.auth_protocol_id?.toString() ?: "N/A")
+                  msg.setHeader("isMfaEnabled", auth.isMfa?.toString() ?: "false")
+                  msg.setHeader("logonType", props.logon_type ?: "Unknown")
+                  msg.setHeader("logonTypeId", props.logon_type_id?.toString() ?: "N/A")
 
-              // User info
-              def user = props.user ?: [:]
-              msg.setHeader("userName", user.name ?: "Unknown")
-              msg.setHeader("userUid", user.uid ?: "Unknown")
-              msg.setHeader("userType", user.type ?: "Unknown")
-              msg.setHeader("userDomain", user.domain ?: "Unknown")
+                  // User info
+                  def user = props.user ?: [:]
+                  msg.setHeader("userName", user.name ?: "Unknown")
+                  msg.setHeader("userUid", user.uid ?: "Unknown")
+                  msg.setHeader("userType", user.type ?: "Unknown")
+                  msg.setHeader("userDomain", user.domain ?: "Unknown")
 
-              // Source endpoint
-              def srcEndpoint = props.src_endpoint ?: [:]
-              msg.setHeader("srcIp", srcEndpoint.ip ?: "Unknown")
-              def srcLocation = srcEndpoint.location ?: [:]
-              msg.setHeader("srcCity", srcLocation.city ?: "Unknown")
-              msg.setHeader("srcCountry", srcLocation.country ?: "Unknown")
+                  // Source endpoint
+                  def srcEndpoint = props.src_endpoint ?: [:]
+                  msg.setHeader("srcIp", srcEndpoint.ip ?: "Unknown")
+                  def srcLocation = srcEndpoint.location ?: [:]
+                  msg.setHeader("srcCity", srcLocation.city ?: "Unknown")
+                  msg.setHeader("srcCountry", srcLocation.country ?: "Unknown")
 
-              // Destination endpoint
-              def dstEndpoint = props.dst_endpoint ?: [:]
-              msg.setHeader("dstHostname", dstEndpoint.hostname ?: "Unknown")
-              msg.setHeader("dstIp", dstEndpoint.ip ?: "Unknown")
-              msg.setHeader("dstPort", dstEndpoint.port?.toString() ?: "N/A")
-              msg.setHeader("dstService", dstEndpoint.svc_name ?: "Unknown")
+                  // Destination endpoint
+                  def dstEndpoint = props.dst_endpoint ?: [:]
+                  msg.setHeader("dstHostname", dstEndpoint.hostname ?: "Unknown")
+                  msg.setHeader("dstIp", dstEndpoint.ip ?: "Unknown")
+                  msg.setHeader("dstPort", dstEndpoint.port?.toString() ?: "N/A")
+                  msg.setHeader("dstService", dstEndpoint.svc_name ?: "Unknown")
 
-              // Device info
-              def device = props.device ?: [:]
-              msg.setHeader("deviceHostname", device.hostname ?: "Unknown")
-              msg.setHeader("deviceIp", device.ip ?: "Unknown")
+                  // Device info
+                  def device = props.device ?: [:]
+                  msg.setHeader("deviceHostname", device.hostname ?: "Unknown")
+                  msg.setHeader("deviceIp", device.ip ?: "Unknown")
 
-              // Cloud info
-              def cloud = props.cloud ?: [:]
-              msg.setHeader("cloudProvider", cloud.provider ?: "Unknown")
-              msg.setHeader("cloudRegion", cloud.region ?: "Unknown")
+                  // Cloud info
+                  def cloud = props.cloud ?: [:]
+                  msg.setHeader("cloudProvider", cloud.provider ?: "Unknown")
+                  msg.setHeader("cloudRegion", cloud.region ?: "Unknown")
 
-              // Product info
-              def metadata = props.metadata ?: [:]
-              def product = metadata.product ?: [:]
-              msg.setHeader("productName", product.name ?: "Unknown")
-              msg.setHeader("productVendor", product.vendor_name ?: "Unknown")
+                  // Product info
+                  def metadata = props.metadata ?: [:]
+                  def product = metadata.product ?: [:]
+                  msg.setHeader("productName", product.name ?: "Unknown")
+                  msg.setHeader("productVendor", product.vendor_name ?: "Unknown")
         - log:
             message: |
               ============================================================
@@ -575,158 +613,162 @@
             ocsf: {}
         - setHeader:
             name: Content-Type
-            constant: application/json
+            expression:
+              constant:
+                expression: application/json
         - setBody:
-            simple: |
-              {
-                "status": "received",
-                "message": "OCSF Authentication event processed successfully",
-                "user": "${header.userName}",
-                "auth_status": "${header.status}",
-                "timestamp": "${date:now:yyyy-MM-dd'T'HH:mm:ss}"
-              }
-
-# Vulnerability Finding event endpoint
-# POST JSON payload to http://localhost:8080/api/ocsf/vulnerability-finding
+            expression:
+              simple:
+                expression: |
+                  {
+                    "status": "received",
+                    "message": "OCSF Authentication event processed successfully",
+                    "user": "${header.userName}",
+                    "auth_status": "${header.status}",
+                    "timestamp": "${date:now:yyyy-MM-dd'T'HH:mm:ss}"
+                  }
 - route:
     id: ocsf-vulnerability-finding-receiver
     from:
-      uri: "platform-http:/api/ocsf/vulnerability-finding"
+      uri: platform-http
       parameters:
+        path: /api/ocsf/vulnerability-finding
         httpMethodRestrict: POST
       steps:
         - log:
-            message: "Received OCSF VulnerabilityFinding event"
+            message: Received OCSF VulnerabilityFinding event
         - unmarshal:
             ocsf:
               unmarshalType: org.apache.camel.dataformat.ocsf.model.VulnerabilityFinding
         - log:
-            message: "Unmarshalled VulnerabilityFinding event"
+            message: Unmarshalled VulnerabilityFinding event
         - script:
-            groovy: |
-              def vulnFinding = exchange.getMessage().getBody()
-              def props = vulnFinding.additionalProperties ?: [:]
-              def msg = exchange.getMessage()
+            expression:
+              groovy:
+                expression: |
+                  def vulnFinding = exchange.getMessage().getBody()
+                  def props = vulnFinding.additionalProperties ?: [:]
+                  def msg = exchange.getMessage()
 
-              // Basic finding info from additionalProperties
-              msg.setHeader("activityName", props.activity_name ?: "Unknown")
-              msg.setHeader("className", props.class_name ?: "Vulnerability Finding")
-              msg.setHeader("severity", props.severity ?: "Unknown")
-              msg.setHeader("severityId", props.severity_id?.toString() ?: "N/A")
-              msg.setHeader("status", props.status ?: "Unknown")
-              msg.setHeader("message", props.message ?: "No message")
-              msg.setHeader("timeDt", props.time_dt ?: "Unknown")
+                  // Basic finding info from additionalProperties
+                  msg.setHeader("activityName", props.activity_name ?: "Unknown")
+                  msg.setHeader("className", props.class_name ?: "Vulnerability Finding")
+                  msg.setHeader("severity", props.severity ?: "Unknown")
+                  msg.setHeader("severityId", props.severity_id?.toString() ?: "N/A")
+                  msg.setHeader("status", props.status ?: "Unknown")
+                  msg.setHeader("message", props.message ?: "No message")
+                  msg.setHeader("timeDt", props.time_dt ?: "Unknown")
 
-              // Finding info - use direct property (FindingInfo object)
-              def findingInfo = vulnFinding.findingInfo
-              if (findingInfo) {
-                msg.setHeader("findingTitle", findingInfo.title ?: "Unknown")
-                msg.setHeader("findingDesc", findingInfo.desc ?: "No description")
-                msg.setHeader("findingTypes", findingInfo.types?.toString() ?: "Unknown")
-                msg.setHeader("findingUid", findingInfo.uid ?: "Unknown")
-              } else {
-                def fi = props.finding_info ?: [:]
-                msg.setHeader("findingTitle", fi.title ?: "Unknown")
-                msg.setHeader("findingDesc", fi.desc ?: "No description")
-                msg.setHeader("findingTypes", fi.types?.toString() ?: "Unknown")
-                msg.setHeader("findingUid", fi.uid ?: "Unknown")
-              }
-
-              // Risk info from additionalProperties
-              msg.setHeader("riskLevel", props.risk_level ?: "Unknown")
-              msg.setHeader("riskLevelId", props.risk_level_id?.toString() ?: "N/A")
-              msg.setHeader("riskScore", props.risk_score?.toString() ?: "N/A")
-              msg.setHeader("confidence", vulnFinding.confidence ?: props.confidence ?: "Unknown")
-
-              // Vulnerability details - use direct property (List<Vulnerability>)
-              def vulnerabilities = vulnFinding.vulnerabilities
-              if (vulnerabilities && vulnerabilities.size() > 0) {
-                def firstVuln = vulnerabilities[0]
-                def vulnProps = firstVuln.additionalProperties ?: [:]
-
-                // Cve object has direct properties
-                def cve = firstVuln.cve
-                msg.setHeader("cveId", cve?.uid ?: "N/A")
-
-                // Cvss is on the Cve object, or may be in additionalProperties if placed directly on vulnerability
-                def cvss = cve?.cvss
-                if (cvss && cvss.size() > 0) {
-                  msg.setHeader("cvssScore", cvss[0].baseScore?.toString() ?: "N/A")
-                  msg.setHeader("cvssVector", cvss[0].vectorString ?: "N/A")
-                } else {
-                  // Fallback to additionalProperties if cvss is on vulnerability directly
-                  def cvssProps = vulnProps.cvss
-                  if (cvssProps && cvssProps.size() > 0) {
-                    msg.setHeader("cvssScore", cvssProps[0].base_score?.toString() ?: "N/A")
-                    msg.setHeader("cvssVector", cvssProps[0].vector_string ?: "N/A")
+                  // Finding info - use direct property (FindingInfo object)
+                  def findingInfo = vulnFinding.findingInfo
+                  if (findingInfo) {
+                    msg.setHeader("findingTitle", findingInfo.title ?: "Unknown")
+                    msg.setHeader("findingDesc", findingInfo.desc ?: "No description")
+                    msg.setHeader("findingTypes", findingInfo.types?.toString() ?: "Unknown")
+                    msg.setHeader("findingUid", findingInfo.uid ?: "Unknown")
                   } else {
+                    def fi = props.finding_info ?: [:]
+                    msg.setHeader("findingTitle", fi.title ?: "Unknown")
+                    msg.setHeader("findingDesc", fi.desc ?: "No description")
+                    msg.setHeader("findingTypes", fi.types?.toString() ?: "Unknown")
+                    msg.setHeader("findingUid", fi.uid ?: "Unknown")
+                  }
+
+                  // Risk info from additionalProperties
+                  msg.setHeader("riskLevel", props.risk_level ?: "Unknown")
+                  msg.setHeader("riskLevelId", props.risk_level_id?.toString() ?: "N/A")
+                  msg.setHeader("riskScore", props.risk_score?.toString() ?: "N/A")
+                  msg.setHeader("confidence", vulnFinding.confidence ?: props.confidence ?: "Unknown")
+
+                  // Vulnerability details - use direct property (List<Vulnerability>)
+                  def vulnerabilities = vulnFinding.vulnerabilities
+                  if (vulnerabilities && vulnerabilities.size() > 0) {
+                    def firstVuln = vulnerabilities[0]
+                    def vulnProps = firstVuln.additionalProperties ?: [:]
+
+                    // Cve object has direct properties
+                    def cve = firstVuln.cve
+                    msg.setHeader("cveId", cve?.uid ?: "N/A")
+
+                    // Cvss is on the Cve object, or may be in additionalProperties if placed directly on vulnerability
+                    def cvss = cve?.cvss
+                    if (cvss && cvss.size() > 0) {
+                      msg.setHeader("cvssScore", cvss[0].baseScore?.toString() ?: "N/A")
+                      msg.setHeader("cvssVector", cvss[0].vectorString ?: "N/A")
+                    } else {
+                      // Fallback to additionalProperties if cvss is on vulnerability directly
+                      def cvssProps = vulnProps.cvss
+                      if (cvssProps && cvssProps.size() > 0) {
+                        msg.setHeader("cvssScore", cvssProps[0].base_score?.toString() ?: "N/A")
+                        msg.setHeader("cvssVector", cvssProps[0].vector_string ?: "N/A")
+                      } else {
+                        msg.setHeader("cvssScore", "N/A")
+                        msg.setHeader("cvssVector", "N/A")
+                      }
+                    }
+
+                    // Cwe object has direct properties
+                    def cwe = firstVuln.cwe
+                    msg.setHeader("cweId", cwe?.uid ?: "N/A")
+                    msg.setHeader("cweCaption", cwe?.caption ?: "Unknown")
+
+                    msg.setHeader("vulnDesc", firstVuln.desc ?: "No description")
+                    msg.setHeader("vulnSeverity", firstVuln.severity ?: "Unknown")
+                    msg.setHeader("vulnTitle", firstVuln.title ?: "Unknown")
+                    msg.setHeader("isFixAvailable", firstVuln.isFixAvailable?.toString() ?: "Unknown")
+                    msg.setHeader("isExploitAvailable", firstVuln.isExploitAvailable?.toString() ?: "Unknown")
+
+                    // Packages - try both affectedPackages and packages
+                    def packages = firstVuln.affectedPackages
+                    if (!packages || packages.size() == 0) {
+                      packages = firstVuln.packages
+                    }
+                    if (packages && packages.size() > 0) {
+                      msg.setHeader("packageName", packages[0].name ?: "Unknown")
+                      msg.setHeader("packageVersion", packages[0].version ?: "Unknown")
+                    } else {
+                      msg.setHeader("packageName", "Unknown")
+                      msg.setHeader("packageVersion", "Unknown")
+                    }
+                  } else {
+                    msg.setHeader("cveId", "N/A")
                     msg.setHeader("cvssScore", "N/A")
                     msg.setHeader("cvssVector", "N/A")
+                    msg.setHeader("cweId", "N/A")
+                    msg.setHeader("cweCaption", "Unknown")
+                    msg.setHeader("vulnDesc", "No description")
+                    msg.setHeader("vulnSeverity", "Unknown")
+                    msg.setHeader("vulnTitle", "Unknown")
+                    msg.setHeader("isFixAvailable", "Unknown")
+                    msg.setHeader("isExploitAvailable", "Unknown")
+                    msg.setHeader("packageName", "Unknown")
+                    msg.setHeader("packageVersion", "Unknown")
                   }
-                }
 
-                // Cwe object has direct properties
-                def cwe = firstVuln.cwe
-                msg.setHeader("cweId", cwe?.uid ?: "N/A")
-                msg.setHeader("cweCaption", cwe?.caption ?: "Unknown")
+                  // Resource info - use direct property (ResourceDetails object)
+                  def resource = vulnFinding.resource
+                  if (resource) {
+                    msg.setHeader("resourceType", resource.type ?: "Unknown")
+                    msg.setHeader("resourceUid", resource.uid ?: "Unknown")
+                    msg.setHeader("resourceName", resource.name ?: "Unknown")
+                  } else {
+                    def res = props.resource ?: [:]
+                    msg.setHeader("resourceType", res.type ?: "Unknown")
+                    msg.setHeader("resourceUid", res.uid ?: "Unknown")
+                    msg.setHeader("resourceName", res.name ?: "Unknown")
+                  }
 
-                msg.setHeader("vulnDesc", firstVuln.desc ?: "No description")
-                msg.setHeader("vulnSeverity", firstVuln.severity ?: "Unknown")
-                msg.setHeader("vulnTitle", firstVuln.title ?: "Unknown")
-                msg.setHeader("isFixAvailable", firstVuln.isFixAvailable?.toString() ?: "Unknown")
-                msg.setHeader("isExploitAvailable", firstVuln.isExploitAvailable?.toString() ?: "Unknown")
+                  // Cloud info from additionalProperties
+                  def cloud = props.cloud ?: [:]
+                  msg.setHeader("cloudProvider", cloud.provider ?: "Unknown")
+                  msg.setHeader("cloudRegion", cloud.region ?: "Unknown")
+                  msg.setHeader("cloudAccountId", cloud.account?.uid ?: "Unknown")
 
-                // Packages - try both affectedPackages and packages
-                def packages = firstVuln.affectedPackages
-                if (!packages || packages.size() == 0) {
-                  packages = firstVuln.packages
-                }
-                if (packages && packages.size() > 0) {
-                  msg.setHeader("packageName", packages[0].name ?: "Unknown")
-                  msg.setHeader("packageVersion", packages[0].version ?: "Unknown")
-                } else {
-                  msg.setHeader("packageName", "Unknown")
-                  msg.setHeader("packageVersion", "Unknown")
-                }
-              } else {
-                msg.setHeader("cveId", "N/A")
-                msg.setHeader("cvssScore", "N/A")
-                msg.setHeader("cvssVector", "N/A")
-                msg.setHeader("cweId", "N/A")
-                msg.setHeader("cweCaption", "Unknown")
-                msg.setHeader("vulnDesc", "No description")
-                msg.setHeader("vulnSeverity", "Unknown")
-                msg.setHeader("vulnTitle", "Unknown")
-                msg.setHeader("isFixAvailable", "Unknown")
-                msg.setHeader("isExploitAvailable", "Unknown")
-                msg.setHeader("packageName", "Unknown")
-                msg.setHeader("packageVersion", "Unknown")
-              }
-
-              // Resource info - use direct property (ResourceDetails object)
-              def resource = vulnFinding.resource
-              if (resource) {
-                msg.setHeader("resourceType", resource.type ?: "Unknown")
-                msg.setHeader("resourceUid", resource.uid ?: "Unknown")
-                msg.setHeader("resourceName", resource.name ?: "Unknown")
-              } else {
-                def res = props.resource ?: [:]
-                msg.setHeader("resourceType", res.type ?: "Unknown")
-                msg.setHeader("resourceUid", res.uid ?: "Unknown")
-                msg.setHeader("resourceName", res.name ?: "Unknown")
-              }
-
-              // Cloud info from additionalProperties
-              def cloud = props.cloud ?: [:]
-              msg.setHeader("cloudProvider", cloud.provider ?: "Unknown")
-              msg.setHeader("cloudRegion", cloud.region ?: "Unknown")
-              msg.setHeader("cloudAccountId", cloud.account?.uid ?: "Unknown")
-
-              // Product info from additionalProperties
-              def metadata = props.metadata ?: [:]
-              def product = metadata.product ?: [:]
-              msg.setHeader("productName", product.name ?: "Unknown")
-              msg.setHeader("productVendor", product.vendor_name ?: "Unknown")
+                  // Product info from additionalProperties
+                  def metadata = props.metadata ?: [:]
+                  def product = metadata.product ?: [:]
+                  msg.setHeader("productName", product.name ?: "Unknown")
+                  msg.setHeader("productVendor", product.vendor_name ?: "Unknown")
         - log:
             message: |
               ============================================================
@@ -759,199 +801,203 @@
             ocsf: {}
         - setHeader:
             name: Content-Type
-            constant: application/json
+            expression:
+              constant:
+                expression: application/json
         - setBody:
-            simple: |
-              {
-                "status": "received",
-                "message": "OCSF VulnerabilityFinding processed successfully",
-                "cve": "${header.cveId}",
-                "cvss_score": "${header.cvssScore}",
-                "risk_level": "${header.riskLevel}",
-                "timestamp": "${date:now:yyyy-MM-dd'T'HH:mm:ss}"
-              }
-
-# Network Activity event endpoint
-# POST JSON payload to http://localhost:8080/api/ocsf/network-activity
+            expression:
+              simple:
+                expression: |
+                  {
+                    "status": "received",
+                    "message": "OCSF VulnerabilityFinding processed successfully",
+                    "cve": "${header.cveId}",
+                    "cvss_score": "${header.cvssScore}",
+                    "risk_level": "${header.riskLevel}",
+                    "timestamp": "${date:now:yyyy-MM-dd'T'HH:mm:ss}"
+                  }
 - route:
     id: ocsf-network-activity-receiver
     from:
-      uri: "platform-http:/api/ocsf/network-activity"
+      uri: platform-http
       parameters:
+        path: /api/ocsf/network-activity
         httpMethodRestrict: POST
       steps:
         - log:
-            message: "Received OCSF NetworkActivity event"
+            message: Received OCSF NetworkActivity event
         - unmarshal:
             ocsf:
               unmarshalType: org.apache.camel.dataformat.ocsf.model.NetworkActivity
         - log:
-            message: "Unmarshalled NetworkActivity event"
+            message: Unmarshalled NetworkActivity event
         - script:
-            groovy: |
-              def network = exchange.getMessage().getBody()
-              def props = network.additionalProperties ?: [:]
-              def msg = exchange.getMessage()
+            expression:
+              groovy:
+                expression: |
+                  def network = exchange.getMessage().getBody()
+                  def props = network.additionalProperties ?: [:]
+                  def msg = exchange.getMessage()
 
-              // Basic activity info
-              msg.setHeader("activityName", props.activity_name ?: "Unknown")
-              msg.setHeader("className", props.class_name ?: "Network Activity")
-              msg.setHeader("severity", props.severity ?: "Unknown")
-              msg.setHeader("severityId", props.severity_id?.toString() ?: "N/A")
-              msg.setHeader("status", props.status ?: "Unknown")
-              msg.setHeader("message", props.message ?: "No message")
-              msg.setHeader("timeDt", props.time_dt ?: "Unknown")
+                  // Basic activity info
+                  msg.setHeader("activityName", props.activity_name ?: "Unknown")
+                  msg.setHeader("className", props.class_name ?: "Network Activity")
+                  msg.setHeader("severity", props.severity ?: "Unknown")
+                  msg.setHeader("severityId", props.severity_id?.toString() ?: "N/A")
+                  msg.setHeader("status", props.status ?: "Unknown")
+                  msg.setHeader("message", props.message ?: "No message")
+                  msg.setHeader("timeDt", props.time_dt ?: "Unknown")
 
-              // Action info
-              msg.setHeader("action", props.action ?: "Unknown")
-              msg.setHeader("actionId", props.action_id?.toString() ?: "N/A")
-              msg.setHeader("appName", network.appName ?: props.app_name ?: "Unknown")
+                  // Action info
+                  msg.setHeader("action", props.action ?: "Unknown")
+                  msg.setHeader("actionId", props.action_id?.toString() ?: "N/A")
+                  msg.setHeader("appName", network.appName ?: props.app_name ?: "Unknown")
 
-              // Connection info - use direct property first, fallback to additionalProperties
-              def connInfo = network.connectionInfo
-              if (connInfo) {
-                msg.setHeader("direction", connInfo.additionalProperties?.direction ?: "Unknown")
-                msg.setHeader("directionId", connInfo.additionalProperties?.direction_id?.toString() ?: "N/A")
-                msg.setHeader("boundary", connInfo.additionalProperties?.boundary ?: "Unknown")
-                msg.setHeader("protocolName", connInfo.additionalProperties?.protocol_name ?: "Unknown")
-                msg.setHeader("protocolNum", connInfo.additionalProperties?.protocol_num?.toString() ?: "N/A")
-              } else {
-                def connInfoProps = props.connection_info ?: [:]
-                msg.setHeader("direction", connInfoProps.direction ?: "Unknown")
-                msg.setHeader("directionId", connInfoProps.direction_id?.toString() ?: "N/A")
-                msg.setHeader("boundary", connInfoProps.boundary ?: "Unknown")
-                msg.setHeader("protocolName", connInfoProps.protocol_name ?: "Unknown")
-                msg.setHeader("protocolNum", connInfoProps.protocol_num?.toString() ?: "N/A")
-              }
+                  // Connection info - use direct property first, fallback to additionalProperties
+                  def connInfo = network.connectionInfo
+                  if (connInfo) {
+                    msg.setHeader("direction", connInfo.additionalProperties?.direction ?: "Unknown")
+                    msg.setHeader("directionId", connInfo.additionalProperties?.direction_id?.toString() ?: "N/A")
+                    msg.setHeader("boundary", connInfo.additionalProperties?.boundary ?: "Unknown")
+                    msg.setHeader("protocolName", connInfo.additionalProperties?.protocol_name ?: "Unknown")
+                    msg.setHeader("protocolNum", connInfo.additionalProperties?.protocol_num?.toString() ?: "N/A")
+                  } else {
+                    def connInfoProps = props.connection_info ?: [:]
+                    msg.setHeader("direction", connInfoProps.direction ?: "Unknown")
+                    msg.setHeader("directionId", connInfoProps.direction_id?.toString() ?: "N/A")
+                    msg.setHeader("boundary", connInfoProps.boundary ?: "Unknown")
+                    msg.setHeader("protocolName", connInfoProps.protocol_name ?: "Unknown")
+                    msg.setHeader("protocolNum", connInfoProps.protocol_num?.toString() ?: "N/A")
+                  }
 
-              // Source endpoint - use direct property first (NetworkEndpoint object)
-              def srcEndpoint = network.srcEndpoint
-              if (srcEndpoint) {
-                msg.setHeader("srcIp", srcEndpoint.ip ?: "Unknown")
-                msg.setHeader("srcPort", srcEndpoint.port?.toString() ?: "N/A")
-                msg.setHeader("srcHostname", srcEndpoint.hostname ?: "Unknown")
-                msg.setHeader("srcIsp", srcEndpoint.isp ?: "Unknown")
-                def srcLocation = srcEndpoint.location
-                if (srcLocation) {
-                  msg.setHeader("srcCity", srcLocation.city ?: "Unknown")
-                  msg.setHeader("srcCountry", srcLocation.country ?: "Unknown")
-                  msg.setHeader("srcLat", srcLocation.lat?.toString() ?: "N/A")
-                  msg.setHeader("srcLong", srcLocation.additionalProperties?.long?.toString() ?: "N/A")
-                } else {
-                  msg.setHeader("srcCity", "Unknown")
-                  msg.setHeader("srcCountry", "Unknown")
-                  msg.setHeader("srcLat", "N/A")
-                  msg.setHeader("srcLong", "N/A")
-                }
-                def srcAsn = srcEndpoint.autonomousSystem
-                if (srcAsn) {
-                  // AutonomousSystem only has additionalProperties
-                  msg.setHeader("srcAsn", srcAsn.additionalProperties?.number?.toString() ?: "N/A")
-                  msg.setHeader("srcAsnName", srcAsn.additionalProperties?.name ?: "Unknown")
-                } else {
-                  msg.setHeader("srcAsn", "N/A")
-                  msg.setHeader("srcAsnName", "Unknown")
-                }
-              } else {
-                def srcEp = props.src_endpoint ?: [:]
-                msg.setHeader("srcIp", srcEp.ip ?: "Unknown")
-                msg.setHeader("srcPort", srcEp.port?.toString() ?: "N/A")
-                msg.setHeader("srcHostname", srcEp.hostname ?: "Unknown")
-                msg.setHeader("srcIsp", srcEp.isp ?: "Unknown")
-                def srcLoc = srcEp.location ?: [:]
-                msg.setHeader("srcCity", srcLoc.city ?: "Unknown")
-                msg.setHeader("srcCountry", srcLoc.country ?: "Unknown")
-                msg.setHeader("srcLat", srcLoc.lat?.toString() ?: "N/A")
-                msg.setHeader("srcLong", srcLoc.long?.toString() ?: "N/A")
-                def srcAs = srcEp.autonomous_system ?: [:]
-                msg.setHeader("srcAsn", srcAs.number?.toString() ?: "N/A")
-                msg.setHeader("srcAsnName", srcAs.name ?: "Unknown")
-              }
+                  // Source endpoint - use direct property first (NetworkEndpoint object)
+                  def srcEndpoint = network.srcEndpoint
+                  if (srcEndpoint) {
+                    msg.setHeader("srcIp", srcEndpoint.ip ?: "Unknown")
+                    msg.setHeader("srcPort", srcEndpoint.port?.toString() ?: "N/A")
+                    msg.setHeader("srcHostname", srcEndpoint.hostname ?: "Unknown")
+                    msg.setHeader("srcIsp", srcEndpoint.isp ?: "Unknown")
+                    def srcLocation = srcEndpoint.location
+                    if (srcLocation) {
+                      msg.setHeader("srcCity", srcLocation.city ?: "Unknown")
+                      msg.setHeader("srcCountry", srcLocation.country ?: "Unknown")
+                      msg.setHeader("srcLat", srcLocation.lat?.toString() ?: "N/A")
+                      msg.setHeader("srcLong", srcLocation.additionalProperties?.long?.toString() ?: "N/A")
+                    } else {
+                      msg.setHeader("srcCity", "Unknown")
+                      msg.setHeader("srcCountry", "Unknown")
+                      msg.setHeader("srcLat", "N/A")
+                      msg.setHeader("srcLong", "N/A")
+                    }
+                    def srcAsn = srcEndpoint.autonomousSystem
+                    if (srcAsn) {
+                      // AutonomousSystem only has additionalProperties
+                      msg.setHeader("srcAsn", srcAsn.additionalProperties?.number?.toString() ?: "N/A")
+                      msg.setHeader("srcAsnName", srcAsn.additionalProperties?.name ?: "Unknown")
+                    } else {
+                      msg.setHeader("srcAsn", "N/A")
+                      msg.setHeader("srcAsnName", "Unknown")
+                    }
+                  } else {
+                    def srcEp = props.src_endpoint ?: [:]
+                    msg.setHeader("srcIp", srcEp.ip ?: "Unknown")
+                    msg.setHeader("srcPort", srcEp.port?.toString() ?: "N/A")
+                    msg.setHeader("srcHostname", srcEp.hostname ?: "Unknown")
+                    msg.setHeader("srcIsp", srcEp.isp ?: "Unknown")
+                    def srcLoc = srcEp.location ?: [:]
+                    msg.setHeader("srcCity", srcLoc.city ?: "Unknown")
+                    msg.setHeader("srcCountry", srcLoc.country ?: "Unknown")
+                    msg.setHeader("srcLat", srcLoc.lat?.toString() ?: "N/A")
+                    msg.setHeader("srcLong", srcLoc.long?.toString() ?: "N/A")
+                    def srcAs = srcEp.autonomous_system ?: [:]
+                    msg.setHeader("srcAsn", srcAs.number?.toString() ?: "N/A")
+                    msg.setHeader("srcAsnName", srcAs.name ?: "Unknown")
+                  }
 
-              // Destination endpoint - use direct property first (NetworkEndpoint object)
-              def dstEndpoint = network.dstEndpoint
-              if (dstEndpoint) {
-                msg.setHeader("dstIp", dstEndpoint.ip ?: "Unknown")
-                msg.setHeader("dstPort", dstEndpoint.port?.toString() ?: "N/A")
-                msg.setHeader("dstHostname", dstEndpoint.hostname ?: "Unknown")
-                msg.setHeader("dstService", dstEndpoint.svcName ?: "Unknown")
-                def dstLocation = dstEndpoint.location
-                if (dstLocation) {
-                  msg.setHeader("dstCity", dstLocation.city ?: "Unknown")
-                  msg.setHeader("dstCountry", dstLocation.country ?: "Unknown")
-                } else {
-                  msg.setHeader("dstCity", "Unknown")
-                  msg.setHeader("dstCountry", "Unknown")
-                }
-                def dstAsn = dstEndpoint.autonomousSystem
-                if (dstAsn) {
-                  // AutonomousSystem only has additionalProperties
-                  msg.setHeader("dstAsn", dstAsn.additionalProperties?.number?.toString() ?: "N/A")
-                  msg.setHeader("dstAsnName", dstAsn.additionalProperties?.name ?: "Unknown")
-                } else {
-                  msg.setHeader("dstAsn", "N/A")
-                  msg.setHeader("dstAsnName", "Unknown")
-                }
-              } else {
-                def dstEp = props.dst_endpoint ?: [:]
-                msg.setHeader("dstIp", dstEp.ip ?: "Unknown")
-                msg.setHeader("dstPort", dstEp.port?.toString() ?: "N/A")
-                msg.setHeader("dstHostname", dstEp.hostname ?: "Unknown")
-                msg.setHeader("dstService", dstEp.svc_name ?: "Unknown")
-                def dstLoc = dstEp.location ?: [:]
-                msg.setHeader("dstCity", dstLoc.city ?: "Unknown")
-                msg.setHeader("dstCountry", dstLoc.country ?: "Unknown")
-                def dstAs = dstEp.autonomous_system ?: [:]
-                msg.setHeader("dstAsn", dstAs.number?.toString() ?: "N/A")
-                msg.setHeader("dstAsnName", dstAs.name ?: "Unknown")
-              }
+                  // Destination endpoint - use direct property first (NetworkEndpoint object)
+                  def dstEndpoint = network.dstEndpoint
+                  if (dstEndpoint) {
+                    msg.setHeader("dstIp", dstEndpoint.ip ?: "Unknown")
+                    msg.setHeader("dstPort", dstEndpoint.port?.toString() ?: "N/A")
+                    msg.setHeader("dstHostname", dstEndpoint.hostname ?: "Unknown")
+                    msg.setHeader("dstService", dstEndpoint.svcName ?: "Unknown")
+                    def dstLocation = dstEndpoint.location
+                    if (dstLocation) {
+                      msg.setHeader("dstCity", dstLocation.city ?: "Unknown")
+                      msg.setHeader("dstCountry", dstLocation.country ?: "Unknown")
+                    } else {
+                      msg.setHeader("dstCity", "Unknown")
+                      msg.setHeader("dstCountry", "Unknown")
+                    }
+                    def dstAsn = dstEndpoint.autonomousSystem
+                    if (dstAsn) {
+                      // AutonomousSystem only has additionalProperties
+                      msg.setHeader("dstAsn", dstAsn.additionalProperties?.number?.toString() ?: "N/A")
+                      msg.setHeader("dstAsnName", dstAsn.additionalProperties?.name ?: "Unknown")
+                    } else {
+                      msg.setHeader("dstAsn", "N/A")
+                      msg.setHeader("dstAsnName", "Unknown")
+                    }
+                  } else {
+                    def dstEp = props.dst_endpoint ?: [:]
+                    msg.setHeader("dstIp", dstEp.ip ?: "Unknown")
+                    msg.setHeader("dstPort", dstEp.port?.toString() ?: "N/A")
+                    msg.setHeader("dstHostname", dstEp.hostname ?: "Unknown")
+                    msg.setHeader("dstService", dstEp.svc_name ?: "Unknown")
+                    def dstLoc = dstEp.location ?: [:]
+                    msg.setHeader("dstCity", dstLoc.city ?: "Unknown")
+                    msg.setHeader("dstCountry", dstLoc.country ?: "Unknown")
+                    def dstAs = dstEp.autonomous_system ?: [:]
+                    msg.setHeader("dstAsn", dstAs.number?.toString() ?: "N/A")
+                    msg.setHeader("dstAsnName", dstAs.name ?: "Unknown")
+                  }
 
-              // Traffic info - Traffic__4 only has additionalProperties
-              def traffic = network.traffic
-              if (traffic) {
-                def trafficProps = traffic.additionalProperties ?: [:]
-                msg.setHeader("bytesIn", trafficProps.bytes_in?.toString() ?: "0")
-                msg.setHeader("bytesOut", trafficProps.bytes_out?.toString() ?: "0")
-                msg.setHeader("packetsIn", trafficProps.packets_in?.toString() ?: "0")
-                msg.setHeader("packetsOut", trafficProps.packets_out?.toString() ?: "0")
-              } else {
-                def trafficProps = props.traffic ?: [:]
-                msg.setHeader("bytesIn", trafficProps.bytes_in?.toString() ?: "0")
-                msg.setHeader("bytesOut", trafficProps.bytes_out?.toString() ?: "0")
-                msg.setHeader("packetsIn", trafficProps.packets_in?.toString() ?: "0")
-                msg.setHeader("packetsOut", trafficProps.packets_out?.toString() ?: "0")
-              }
+                  // Traffic info - Traffic__4 only has additionalProperties
+                  def traffic = network.traffic
+                  if (traffic) {
+                    def trafficProps = traffic.additionalProperties ?: [:]
+                    msg.setHeader("bytesIn", trafficProps.bytes_in?.toString() ?: "0")
+                    msg.setHeader("bytesOut", trafficProps.bytes_out?.toString() ?: "0")
+                    msg.setHeader("packetsIn", trafficProps.packets_in?.toString() ?: "0")
+                    msg.setHeader("packetsOut", trafficProps.packets_out?.toString() ?: "0")
+                  } else {
+                    def trafficProps = props.traffic ?: [:]
+                    msg.setHeader("bytesIn", trafficProps.bytes_in?.toString() ?: "0")
+                    msg.setHeader("bytesOut", trafficProps.bytes_out?.toString() ?: "0")
+                    msg.setHeader("packetsIn", trafficProps.packets_in?.toString() ?: "0")
+                    msg.setHeader("packetsOut", trafficProps.packets_out?.toString() ?: "0")
+                  }
 
-              // Duration and count
-              msg.setHeader("duration", props.duration?.toString() ?: "0")
-              msg.setHeader("count", props.count?.toString() ?: "1")
+                  // Duration and count
+                  msg.setHeader("duration", props.duration?.toString() ?: "0")
+                  msg.setHeader("count", props.count?.toString() ?: "1")
 
-              // TLS info - Tls has direct properties (version, cipher, certificate)
-              def tls = network.tls
-              if (tls) {
-                msg.setHeader("tlsVersion", tls.version ?: "N/A")
-                msg.setHeader("tlsCipher", tls.cipher ?: "N/A")
-                def tlsCert = tls.certificate
-                msg.setHeader("tlsCertSubject", tlsCert?.subject ?: "N/A")
-              } else {
-                def tlsProps = props.tls ?: [:]
-                msg.setHeader("tlsVersion", tlsProps.version ?: "N/A")
-                msg.setHeader("tlsCipher", tlsProps.cipher ?: "N/A")
-                def tlsCertProps = tlsProps.certificate ?: [:]
-                msg.setHeader("tlsCertSubject", tlsCertProps.subject ?: "N/A")
-              }
+                  // TLS info - Tls has direct properties (version, cipher, certificate)
+                  def tls = network.tls
+                  if (tls) {
+                    msg.setHeader("tlsVersion", tls.version ?: "N/A")
+                    msg.setHeader("tlsCipher", tls.cipher ?: "N/A")
+                    def tlsCert = tls.certificate
+                    msg.setHeader("tlsCertSubject", tlsCert?.subject ?: "N/A")
+                  } else {
+                    def tlsProps = props.tls ?: [:]
+                    msg.setHeader("tlsVersion", tlsProps.version ?: "N/A")
+                    msg.setHeader("tlsCipher", tlsProps.cipher ?: "N/A")
+                    def tlsCertProps = tlsProps.certificate ?: [:]
+                    msg.setHeader("tlsCertSubject", tlsCertProps.subject ?: "N/A")
+                  }
 
-              // Cloud info
-              def cloud = props.cloud ?: [:]
-              msg.setHeader("cloudProvider", cloud.provider ?: "Unknown")
-              msg.setHeader("cloudRegion", cloud.region ?: "Unknown")
-              msg.setHeader("cloudAccountId", cloud.account?.uid ?: "Unknown")
+                  // Cloud info
+                  def cloud = props.cloud ?: [:]
+                  msg.setHeader("cloudProvider", cloud.provider ?: "Unknown")
+                  msg.setHeader("cloudRegion", cloud.region ?: "Unknown")
+                  msg.setHeader("cloudAccountId", cloud.account?.uid ?: "Unknown")
 
-              // Product info
-              def metadata = props.metadata ?: [:]
-              def product = metadata.product ?: [:]
-              msg.setHeader("productName", product.name ?: "Unknown")
-              msg.setHeader("productVendor", product.vendor_name ?: "Unknown")
+                  // Product info
+                  def metadata = props.metadata ?: [:]
+                  def product = metadata.product ?: [:]
+                  msg.setHeader("productName", product.name ?: "Unknown")
+                  msg.setHeader("productVendor", product.vendor_name ?: "Unknown")
         - log:
             message: |
               ============================================================
@@ -992,150 +1038,154 @@
             ocsf: {}
         - setHeader:
             name: Content-Type
-            constant: application/json
+            expression:
+              constant:
+                expression: application/json
         - setBody:
-            simple: |
-              {
-                "status": "received",
-                "message": "OCSF NetworkActivity processed successfully",
-                "action": "${header.action}",
-                "direction": "${header.direction}",
-                "src_ip": "${header.srcIp}",
-                "dst_ip": "${header.dstIp}",
-                "timestamp": "${date:now:yyyy-MM-dd'T'HH:mm:ss}"
-              }
-
-# File Activity event endpoint
-# POST JSON payload to http://localhost:8080/api/ocsf/file-activity
+            expression:
+              simple:
+                expression: |
+                  {
+                    "status": "received",
+                    "message": "OCSF NetworkActivity processed successfully",
+                    "action": "${header.action}",
+                    "direction": "${header.direction}",
+                    "src_ip": "${header.srcIp}",
+                    "dst_ip": "${header.dstIp}",
+                    "timestamp": "${date:now:yyyy-MM-dd'T'HH:mm:ss}"
+                  }
 - route:
     id: ocsf-file-activity-receiver
     from:
-      uri: "platform-http:/api/ocsf/file-activity"
+      uri: platform-http
       parameters:
+        path: /api/ocsf/file-activity
         httpMethodRestrict: POST
       steps:
         - log:
-            message: "Received OCSF FileActivity event"
+            message: Received OCSF FileActivity event
         - unmarshal:
             ocsf:
               unmarshalType: org.apache.camel.dataformat.ocsf.model.FileActivity
         - log:
-            message: "Unmarshalled FileActivity event"
+            message: Unmarshalled FileActivity event
         - script:
-            groovy: |
-              def fileActivity = exchange.getMessage().getBody()
-              def props = fileActivity.additionalProperties ?: [:]
-              def msg = exchange.getMessage()
+            expression:
+              groovy:
+                expression: |
+                  def fileActivity = exchange.getMessage().getBody()
+                  def props = fileActivity.additionalProperties ?: [:]
+                  def msg = exchange.getMessage()
 
-              // Basic activity info from additionalProperties
-              msg.setHeader("activityName", props.activity_name ?: "Unknown")
-              msg.setHeader("className", props.class_name ?: "File Activity")
-              msg.setHeader("severity", props.severity ?: "Unknown")
-              msg.setHeader("severityId", props.severity_id?.toString() ?: "N/A")
-              msg.setHeader("status", props.status ?: "Unknown")
-              msg.setHeader("message", props.message ?: "No message")
-              msg.setHeader("timeDt", props.time_dt ?: "Unknown")
+                  // Basic activity info from additionalProperties
+                  msg.setHeader("activityName", props.activity_name ?: "Unknown")
+                  msg.setHeader("className", props.class_name ?: "File Activity")
+                  msg.setHeader("severity", props.severity ?: "Unknown")
+                  msg.setHeader("severityId", props.severity_id?.toString() ?: "N/A")
+                  msg.setHeader("status", props.status ?: "Unknown")
+                  msg.setHeader("message", props.message ?: "No message")
+                  msg.setHeader("timeDt", props.time_dt ?: "Unknown")
 
-              // File info - use direct property (File object)
-              def file = fileActivity.file
-              if (file) {
-                msg.setHeader("fileName", file.name ?: "Unknown")
-                msg.setHeader("filePath", file.path ?: "Unknown")
-                msg.setHeader("fileSize", file.size?.toString() ?: "0")
-                msg.setHeader("fileType", file.type ?: "Unknown")
+                  // File info - use direct property (File object)
+                  def file = fileActivity.file
+                  if (file) {
+                    msg.setHeader("fileName", file.name ?: "Unknown")
+                    msg.setHeader("filePath", file.path ?: "Unknown")
+                    msg.setHeader("fileSize", file.size?.toString() ?: "0")
+                    msg.setHeader("fileType", file.type ?: "Unknown")
 
-                // File hashes - List<Fingerprint>
-                def hashes = file.hashes
-                if (hashes && hashes.size() > 0) {
-                  def hashList = hashes.collect { h -> "${h.algorithm ?: 'Unknown'}: ${h.value ?: 'N/A'}" }
-                  msg.setHeader("fileHashes", hashList.join(", "))
-                } else {
-                  msg.setHeader("fileHashes", "None")
-                }
+                    // File hashes - List<Fingerprint>
+                    def hashes = file.hashes
+                    if (hashes && hashes.size() > 0) {
+                      def hashList = hashes.collect { h -> "${h.algorithm ?: 'Unknown'}: ${h.value ?: 'N/A'}" }
+                      msg.setHeader("fileHashes", hashList.join(", "))
+                    } else {
+                      msg.setHeader("fileHashes", "None")
+                    }
 
-                // Signature info - Signature only has additionalProperties
-                def signature = file.signature
-                if (signature) {
-                  msg.setHeader("signatureState", signature.additionalProperties?.state ?: "Unknown")
-                } else {
-                  msg.setHeader("signatureState", "Unknown")
-                }
-              } else {
-                def fileProps = props.file ?: [:]
-                msg.setHeader("fileName", fileProps.name ?: "Unknown")
-                msg.setHeader("filePath", fileProps.path ?: "Unknown")
-                msg.setHeader("fileSize", fileProps.size?.toString() ?: "0")
-                msg.setHeader("fileType", fileProps.type ?: "Unknown")
-                msg.setHeader("fileHashes", "None")
-                msg.setHeader("signatureState", fileProps.signature?.state ?: "Unknown")
-              }
+                    // Signature info - Signature only has additionalProperties
+                    def signature = file.signature
+                    if (signature) {
+                      msg.setHeader("signatureState", signature.additionalProperties?.state ?: "Unknown")
+                    } else {
+                      msg.setHeader("signatureState", "Unknown")
+                    }
+                  } else {
+                    def fileProps = props.file ?: [:]
+                    msg.setHeader("fileName", fileProps.name ?: "Unknown")
+                    msg.setHeader("filePath", fileProps.path ?: "Unknown")
+                    msg.setHeader("fileSize", fileProps.size?.toString() ?: "0")
+                    msg.setHeader("fileType", fileProps.type ?: "Unknown")
+                    msg.setHeader("fileHashes", "None")
+                    msg.setHeader("signatureState", fileProps.signature?.state ?: "Unknown")
+                  }
 
-              // Actor info - use direct property (Actor object)
-              def actor = fileActivity.actor
-              if (actor) {
-                def actorProcess = actor.process
-                if (actorProcess) {
-                  msg.setHeader("actorProcessName", actorProcess.name ?: "Unknown")
-                  msg.setHeader("actorProcessPid", actorProcess.pid?.toString() ?: "N/A")
-                  msg.setHeader("actorProcessCmd", actorProcess.cmdLine ?: "Unknown")
-                  def actorFile = actorProcess.file
-                  msg.setHeader("actorProcessPath", actorFile?.path ?: "Unknown")
-                } else {
-                  msg.setHeader("actorProcessName", "Unknown")
-                  msg.setHeader("actorProcessPid", "N/A")
-                  msg.setHeader("actorProcessCmd", "Unknown")
-                  msg.setHeader("actorProcessPath", "Unknown")
-                }
+                  // Actor info - use direct property (Actor object)
+                  def actor = fileActivity.actor
+                  if (actor) {
+                    def actorProcess = actor.process
+                    if (actorProcess) {
+                      msg.setHeader("actorProcessName", actorProcess.name ?: "Unknown")
+                      msg.setHeader("actorProcessPid", actorProcess.pid?.toString() ?: "N/A")
+                      msg.setHeader("actorProcessCmd", actorProcess.cmdLine ?: "Unknown")
+                      def actorFile = actorProcess.file
+                      msg.setHeader("actorProcessPath", actorFile?.path ?: "Unknown")
+                    } else {
+                      msg.setHeader("actorProcessName", "Unknown")
+                      msg.setHeader("actorProcessPid", "N/A")
+                      msg.setHeader("actorProcessCmd", "Unknown")
+                      msg.setHeader("actorProcessPath", "Unknown")
+                    }
 
-                def actorUser = actor.user
-                if (actorUser) {
-                  msg.setHeader("actorUserName", actorUser.name ?: "Unknown")
-                  msg.setHeader("actorUserUid", actorUser.uid ?: "Unknown")
-                  msg.setHeader("actorUserType", actorUser.type ?: "Unknown")
-                } else {
-                  msg.setHeader("actorUserName", "Unknown")
-                  msg.setHeader("actorUserUid", "Unknown")
-                  msg.setHeader("actorUserType", "Unknown")
-                }
-              } else {
-                def actorProps = props.actor ?: [:]
-                def actorProcessProps = actorProps.process ?: [:]
-                msg.setHeader("actorProcessName", actorProcessProps.name ?: "Unknown")
-                msg.setHeader("actorProcessPid", actorProcessProps.pid?.toString() ?: "N/A")
-                msg.setHeader("actorProcessCmd", actorProcessProps.cmd_line ?: "Unknown")
-                msg.setHeader("actorProcessPath", actorProcessProps.file?.path ?: "Unknown")
-                def actorUserProps = actorProps.user ?: [:]
-                msg.setHeader("actorUserName", actorUserProps.name ?: "Unknown")
-                msg.setHeader("actorUserUid", actorUserProps.uid ?: "Unknown")
-                msg.setHeader("actorUserType", actorUserProps.type ?: "Unknown")
-              }
+                    def actorUser = actor.user
+                    if (actorUser) {
+                      msg.setHeader("actorUserName", actorUser.name ?: "Unknown")
+                      msg.setHeader("actorUserUid", actorUser.uid ?: "Unknown")
+                      msg.setHeader("actorUserType", actorUser.type ?: "Unknown")
+                    } else {
+                      msg.setHeader("actorUserName", "Unknown")
+                      msg.setHeader("actorUserUid", "Unknown")
+                      msg.setHeader("actorUserType", "Unknown")
+                    }
+                  } else {
+                    def actorProps = props.actor ?: [:]
+                    def actorProcessProps = actorProps.process ?: [:]
+                    msg.setHeader("actorProcessName", actorProcessProps.name ?: "Unknown")
+                    msg.setHeader("actorProcessPid", actorProcessProps.pid?.toString() ?: "N/A")
+                    msg.setHeader("actorProcessCmd", actorProcessProps.cmd_line ?: "Unknown")
+                    msg.setHeader("actorProcessPath", actorProcessProps.file?.path ?: "Unknown")
+                    def actorUserProps = actorProps.user ?: [:]
+                    msg.setHeader("actorUserName", actorUserProps.name ?: "Unknown")
+                    msg.setHeader("actorUserUid", actorUserProps.uid ?: "Unknown")
+                    msg.setHeader("actorUserType", actorUserProps.type ?: "Unknown")
+                  }
 
-              // Device info - use direct property (Device object)
-              def device = fileActivity.device
-              if (device) {
-                msg.setHeader("deviceHostname", device.hostname ?: "Unknown")
-                msg.setHeader("deviceIp", device.ip ?: "Unknown")
-                msg.setHeader("deviceType", device.type ?: "Unknown")
-                def deviceOs = device.os
-                if (deviceOs) {
-                  msg.setHeader("deviceOs", deviceOs.name ? "${deviceOs.name} ${deviceOs.version ?: ''}" : "Unknown")
-                } else {
-                  msg.setHeader("deviceOs", "Unknown")
-                }
-              } else {
-                def deviceProps = props.device ?: [:]
-                msg.setHeader("deviceHostname", deviceProps.hostname ?: "Unknown")
-                msg.setHeader("deviceIp", deviceProps.ip ?: "Unknown")
-                msg.setHeader("deviceType", deviceProps.type ?: "Unknown")
-                def deviceOsProps = deviceProps.os ?: [:]
-                msg.setHeader("deviceOs", deviceOsProps.name ? "${deviceOsProps.name} ${deviceOsProps.version ?: ''}" : "Unknown")
-              }
+                  // Device info - use direct property (Device object)
+                  def device = fileActivity.device
+                  if (device) {
+                    msg.setHeader("deviceHostname", device.hostname ?: "Unknown")
+                    msg.setHeader("deviceIp", device.ip ?: "Unknown")
+                    msg.setHeader("deviceType", device.type ?: "Unknown")
+                    def deviceOs = device.os
+                    if (deviceOs) {
+                      msg.setHeader("deviceOs", deviceOs.name ? "${deviceOs.name} ${deviceOs.version ?: ''}" : "Unknown")
+                    } else {
+                      msg.setHeader("deviceOs", "Unknown")
+                    }
+                  } else {
+                    def deviceProps = props.device ?: [:]
+                    msg.setHeader("deviceHostname", deviceProps.hostname ?: "Unknown")
+                    msg.setHeader("deviceIp", deviceProps.ip ?: "Unknown")
+                    msg.setHeader("deviceType", deviceProps.type ?: "Unknown")
+                    def deviceOsProps = deviceProps.os ?: [:]
+                    msg.setHeader("deviceOs", deviceOsProps.name ? "${deviceOsProps.name} ${deviceOsProps.version ?: ''}" : "Unknown")
+                  }
 
-              // Product info from additionalProperties
-              def metadata = props.metadata ?: [:]
-              def product = metadata.product ?: [:]
-              msg.setHeader("productName", product.name ?: "Unknown")
-              msg.setHeader("productVendor", product.vendor_name ?: "Unknown")
+                  // Product info from additionalProperties
+                  def metadata = props.metadata ?: [:]
+                  def product = metadata.product ?: [:]
+                  msg.setHeader("productName", product.name ?: "Unknown")
+                  msg.setHeader("productVendor", product.vendor_name ?: "Unknown")
         - log:
             message: |
               ============================================================
@@ -1167,191 +1217,195 @@
             ocsf: {}
         - setHeader:
             name: Content-Type
-            constant: application/json
+            expression:
+              constant:
+                expression: application/json
         - script:
-            groovy: |
-              def msg = exchange.getMessage()
-              def activity = msg.getHeader("activityName", String.class) ?: "Unknown"
-              def fileName = msg.getHeader("fileName", String.class) ?: "Unknown"
-              def filePath = msg.getHeader("filePath", String.class) ?: "Unknown"
-              def actorProcess = msg.getHeader("actorProcessName", String.class) ?: "Unknown"
-              def timestamp = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").format(new java.util.Date())
+            expression:
+              groovy:
+                expression: |
+                  def msg = exchange.getMessage()
+                  def activity = msg.getHeader("activityName", String.class) ?: "Unknown"
+                  def fileName = msg.getHeader("fileName", String.class) ?: "Unknown"
+                  def filePath = msg.getHeader("filePath", String.class) ?: "Unknown"
+                  def actorProcess = msg.getHeader("actorProcessName", String.class) ?: "Unknown"
+                  def timestamp = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").format(new java.util.Date())
 
-              // Escape backslashes for JSON
-              filePath = filePath.replace('\\', '/')
+                  // Escape backslashes for JSON
+                  filePath = filePath.replace('\\', '/')
 
-              StringBuilder sb = new StringBuilder()
-              sb.append("{")
-              sb.append("\"status\": \"received\",")
-              sb.append("\"message\": \"OCSF FileActivity processed successfully\",")
-              sb.append("\"activity\": \"").append(activity).append("\",")
-              sb.append("\"file_name\": \"").append(fileName).append("\",")
-              sb.append("\"file_path\": \"").append(filePath).append("\",")
-              sb.append("\"actor_process\": \"").append(actorProcess).append("\",")
-              sb.append("\"timestamp\": \"").append(timestamp).append("\"")
-              sb.append("}")
-              msg.setBody(sb.toString())
-
-# Process Activity event endpoint
-# POST JSON payload to http://localhost:8080/api/ocsf/process-activity
+                  StringBuilder sb = new StringBuilder()
+                  sb.append("{")
+                  sb.append("\"status\": \"received\",")
+                  sb.append("\"message\": \"OCSF FileActivity processed successfully\",")
+                  sb.append("\"activity\": \"").append(activity).append("\",")
+                  sb.append("\"file_name\": \"").append(fileName).append("\",")
+                  sb.append("\"file_path\": \"").append(filePath).append("\",")
+                  sb.append("\"actor_process\": \"").append(actorProcess).append("\",")
+                  sb.append("\"timestamp\": \"").append(timestamp).append("\"")
+                  sb.append("}")
+                  msg.setBody(sb.toString())
 - route:
     id: ocsf-process-activity-receiver
     from:
-      uri: "platform-http:/api/ocsf/process-activity"
+      uri: platform-http
       parameters:
+        path: /api/ocsf/process-activity
         httpMethodRestrict: POST
       steps:
         - log:
-            message: "Received OCSF ProcessActivity event"
+            message: Received OCSF ProcessActivity event
         - unmarshal:
             ocsf:
               unmarshalType: org.apache.camel.dataformat.ocsf.model.ProcessActivity
         - log:
-            message: "Unmarshalled ProcessActivity event"
+            message: Unmarshalled ProcessActivity event
         - script:
-            groovy: |
-              def processActivity = exchange.getMessage().getBody()
-              def props = processActivity.additionalProperties ?: [:]
-              def msg = exchange.getMessage()
+            expression:
+              groovy:
+                expression: |
+                  def processActivity = exchange.getMessage().getBody()
+                  def props = processActivity.additionalProperties ?: [:]
+                  def msg = exchange.getMessage()
 
-              // Basic activity info from additionalProperties
-              msg.setHeader("activityName", props.activity_name ?: "Unknown")
-              msg.setHeader("className", props.class_name ?: "Process Activity")
-              msg.setHeader("severity", props.severity ?: "Unknown")
-              msg.setHeader("severityId", props.severity_id?.toString() ?: "N/A")
-              msg.setHeader("status", props.status ?: "Unknown")
-              msg.setHeader("message", props.message ?: "No message")
-              msg.setHeader("timeDt", props.time_dt ?: "Unknown")
+                  // Basic activity info from additionalProperties
+                  msg.setHeader("activityName", props.activity_name ?: "Unknown")
+                  msg.setHeader("className", props.class_name ?: "Process Activity")
+                  msg.setHeader("severity", props.severity ?: "Unknown")
+                  msg.setHeader("severityId", props.severity_id?.toString() ?: "N/A")
+                  msg.setHeader("status", props.status ?: "Unknown")
+                  msg.setHeader("message", props.message ?: "No message")
+                  msg.setHeader("timeDt", props.time_dt ?: "Unknown")
 
-              // Process info - use direct property (Process object)
-              def process = processActivity.process
-              if (process) {
-                msg.setHeader("processName", process.name ?: "Unknown")
-                msg.setHeader("processPid", process.pid?.toString() ?: "N/A")
-                msg.setHeader("processTid", process.tid?.toString() ?: "N/A")
-                msg.setHeader("processUid", process.uid ?: "Unknown")
-                msg.setHeader("processCmd", process.cmdLine ?: "Unknown")
-                def processFile = process.file
-                msg.setHeader("processPath", processFile?.path ?: "Unknown")
+                  // Process info - use direct property (Process object)
+                  def process = processActivity.process
+                  if (process) {
+                    msg.setHeader("processName", process.name ?: "Unknown")
+                    msg.setHeader("processPid", process.pid?.toString() ?: "N/A")
+                    msg.setHeader("processTid", process.tid?.toString() ?: "N/A")
+                    msg.setHeader("processUid", process.uid ?: "Unknown")
+                    msg.setHeader("processCmd", process.cmdLine ?: "Unknown")
+                    def processFile = process.file
+                    msg.setHeader("processPath", processFile?.path ?: "Unknown")
 
-                // Parent process
-                def parentProcess = process.parentProcess
-                if (parentProcess) {
-                  msg.setHeader("parentProcessName", parentProcess.name ?: "Unknown")
-                  msg.setHeader("parentProcessPid", parentProcess.pid?.toString() ?: "N/A")
-                  def parentFile = parentProcess.file
-                  msg.setHeader("parentProcessPath", parentFile?.path ?: "Unknown")
-                } else {
-                  msg.setHeader("parentProcessName", "Unknown")
-                  msg.setHeader("parentProcessPid", "N/A")
-                  msg.setHeader("parentProcessPath", "Unknown")
-                }
+                    // Parent process
+                    def parentProcess = process.parentProcess
+                    if (parentProcess) {
+                      msg.setHeader("parentProcessName", parentProcess.name ?: "Unknown")
+                      msg.setHeader("parentProcessPid", parentProcess.pid?.toString() ?: "N/A")
+                      def parentFile = parentProcess.file
+                      msg.setHeader("parentProcessPath", parentFile?.path ?: "Unknown")
+                    } else {
+                      msg.setHeader("parentProcessName", "Unknown")
+                      msg.setHeader("parentProcessPid", "N/A")
+                      msg.setHeader("parentProcessPath", "Unknown")
+                    }
 
-                // Process user
-                def processUser = process.user
-                if (processUser) {
-                  msg.setHeader("processUserName", processUser.name ?: "Unknown")
-                  msg.setHeader("processUserType", processUser.type ?: "Unknown")
-                } else {
-                  msg.setHeader("processUserName", "Unknown")
-                  msg.setHeader("processUserType", "Unknown")
-                }
-              } else {
-                def processProps = props.process ?: [:]
-                msg.setHeader("processName", processProps.name ?: "Unknown")
-                msg.setHeader("processPid", processProps.pid?.toString() ?: "N/A")
-                msg.setHeader("processTid", processProps.tid?.toString() ?: "N/A")
-                msg.setHeader("processUid", processProps.uid ?: "Unknown")
-                msg.setHeader("processCmd", processProps.cmd_line ?: "Unknown")
-                msg.setHeader("processPath", processProps.file?.path ?: "Unknown")
-                def parentProcessProps = processProps.parent_process ?: [:]
-                msg.setHeader("parentProcessName", parentProcessProps.name ?: "Unknown")
-                msg.setHeader("parentProcessPid", parentProcessProps.pid?.toString() ?: "N/A")
-                msg.setHeader("parentProcessPath", parentProcessProps.file?.path ?: "Unknown")
-                def processUserProps = processProps.user ?: [:]
-                msg.setHeader("processUserName", processUserProps.name ?: "Unknown")
-                msg.setHeader("processUserType", processUserProps.type ?: "Unknown")
-              }
-
-              // Actor info - use direct property (Actor object)
-              def actor = processActivity.actor
-              if (actor) {
-                def actorProcess = actor.process
-                if (actorProcess) {
-                  msg.setHeader("actorProcessName", actorProcess.name ?: "Unknown")
-                  msg.setHeader("actorProcessPid", actorProcess.pid?.toString() ?: "N/A")
-                  msg.setHeader("actorProcessCmd", actorProcess.cmdLine ?: "Unknown")
-                  def actorParent = actorProcess.parentProcess
-                  if (actorParent) {
-                    msg.setHeader("actorParentName", actorParent.name ?: "Unknown")
-                    msg.setHeader("actorParentPid", actorParent.pid?.toString() ?: "N/A")
-                    msg.setHeader("actorParentCmd", actorParent.cmdLine ?: "Unknown")
+                    // Process user
+                    def processUser = process.user
+                    if (processUser) {
+                      msg.setHeader("processUserName", processUser.name ?: "Unknown")
+                      msg.setHeader("processUserType", processUser.type ?: "Unknown")
+                    } else {
+                      msg.setHeader("processUserName", "Unknown")
+                      msg.setHeader("processUserType", "Unknown")
+                    }
                   } else {
-                    msg.setHeader("actorParentName", "Unknown")
-                    msg.setHeader("actorParentPid", "N/A")
-                    msg.setHeader("actorParentCmd", "Unknown")
+                    def processProps = props.process ?: [:]
+                    msg.setHeader("processName", processProps.name ?: "Unknown")
+                    msg.setHeader("processPid", processProps.pid?.toString() ?: "N/A")
+                    msg.setHeader("processTid", processProps.tid?.toString() ?: "N/A")
+                    msg.setHeader("processUid", processProps.uid ?: "Unknown")
+                    msg.setHeader("processCmd", processProps.cmd_line ?: "Unknown")
+                    msg.setHeader("processPath", processProps.file?.path ?: "Unknown")
+                    def parentProcessProps = processProps.parent_process ?: [:]
+                    msg.setHeader("parentProcessName", parentProcessProps.name ?: "Unknown")
+                    msg.setHeader("parentProcessPid", parentProcessProps.pid?.toString() ?: "N/A")
+                    msg.setHeader("parentProcessPath", parentProcessProps.file?.path ?: "Unknown")
+                    def processUserProps = processProps.user ?: [:]
+                    msg.setHeader("processUserName", processUserProps.name ?: "Unknown")
+                    msg.setHeader("processUserType", processUserProps.type ?: "Unknown")
                   }
-                } else {
-                  msg.setHeader("actorProcessName", "Unknown")
-                  msg.setHeader("actorProcessPid", "N/A")
-                  msg.setHeader("actorProcessCmd", "Unknown")
-                  msg.setHeader("actorParentName", "Unknown")
-                  msg.setHeader("actorParentPid", "N/A")
-                  msg.setHeader("actorParentCmd", "Unknown")
-                }
 
-                def actorUser = actor.user
-                if (actorUser) {
-                  msg.setHeader("actorUserName", actorUser.name ?: "Unknown")
-                  msg.setHeader("actorUserUid", actorUser.uid ?: "Unknown")
-                  msg.setHeader("actorUserType", actorUser.type ?: "Unknown")
-                } else {
-                  msg.setHeader("actorUserName", "Unknown")
-                  msg.setHeader("actorUserUid", "Unknown")
-                  msg.setHeader("actorUserType", "Unknown")
-                }
-              } else {
-                def actorProps = props.actor ?: [:]
-                def actorProcessProps = actorProps.process ?: [:]
-                msg.setHeader("actorProcessName", actorProcessProps.name ?: "Unknown")
-                msg.setHeader("actorProcessPid", actorProcessProps.pid?.toString() ?: "N/A")
-                msg.setHeader("actorProcessCmd", actorProcessProps.cmd_line ?: "Unknown")
-                def actorParentProps = actorProcessProps.parent_process ?: [:]
-                msg.setHeader("actorParentName", actorParentProps.name ?: "Unknown")
-                msg.setHeader("actorParentPid", actorParentProps.pid?.toString() ?: "N/A")
-                msg.setHeader("actorParentCmd", actorParentProps.cmd_line ?: "Unknown")
-                def actorUserProps = actorProps.user ?: [:]
-                msg.setHeader("actorUserName", actorUserProps.name ?: "Unknown")
-                msg.setHeader("actorUserUid", actorUserProps.uid ?: "Unknown")
-                msg.setHeader("actorUserType", actorUserProps.type ?: "Unknown")
-              }
+                  // Actor info - use direct property (Actor object)
+                  def actor = processActivity.actor
+                  if (actor) {
+                    def actorProcess = actor.process
+                    if (actorProcess) {
+                      msg.setHeader("actorProcessName", actorProcess.name ?: "Unknown")
+                      msg.setHeader("actorProcessPid", actorProcess.pid?.toString() ?: "N/A")
+                      msg.setHeader("actorProcessCmd", actorProcess.cmdLine ?: "Unknown")
+                      def actorParent = actorProcess.parentProcess
+                      if (actorParent) {
+                        msg.setHeader("actorParentName", actorParent.name ?: "Unknown")
+                        msg.setHeader("actorParentPid", actorParent.pid?.toString() ?: "N/A")
+                        msg.setHeader("actorParentCmd", actorParent.cmdLine ?: "Unknown")
+                      } else {
+                        msg.setHeader("actorParentName", "Unknown")
+                        msg.setHeader("actorParentPid", "N/A")
+                        msg.setHeader("actorParentCmd", "Unknown")
+                      }
+                    } else {
+                      msg.setHeader("actorProcessName", "Unknown")
+                      msg.setHeader("actorProcessPid", "N/A")
+                      msg.setHeader("actorProcessCmd", "Unknown")
+                      msg.setHeader("actorParentName", "Unknown")
+                      msg.setHeader("actorParentPid", "N/A")
+                      msg.setHeader("actorParentCmd", "Unknown")
+                    }
 
-              // Device info - use direct property (Device object)
-              def device = processActivity.device
-              if (device) {
-                msg.setHeader("deviceHostname", device.hostname ?: "Unknown")
-                msg.setHeader("deviceIp", device.ip ?: "Unknown")
-                msg.setHeader("deviceType", device.type ?: "Unknown")
-                def deviceOs = device.os
-                if (deviceOs) {
-                  msg.setHeader("deviceOs", deviceOs.name ? "${deviceOs.name} ${deviceOs.version ?: ''}" : "Unknown")
-                } else {
-                  msg.setHeader("deviceOs", "Unknown")
-                }
-              } else {
-                def deviceProps = props.device ?: [:]
-                msg.setHeader("deviceHostname", deviceProps.hostname ?: "Unknown")
-                msg.setHeader("deviceIp", deviceProps.ip ?: "Unknown")
-                msg.setHeader("deviceType", deviceProps.type ?: "Unknown")
-                def deviceOsProps = deviceProps.os ?: [:]
-                msg.setHeader("deviceOs", deviceOsProps.name ? "${deviceOsProps.name} ${deviceOsProps.version ?: ''}" : "Unknown")
-              }
+                    def actorUser = actor.user
+                    if (actorUser) {
+                      msg.setHeader("actorUserName", actorUser.name ?: "Unknown")
+                      msg.setHeader("actorUserUid", actorUser.uid ?: "Unknown")
+                      msg.setHeader("actorUserType", actorUser.type ?: "Unknown")
+                    } else {
+                      msg.setHeader("actorUserName", "Unknown")
+                      msg.setHeader("actorUserUid", "Unknown")
+                      msg.setHeader("actorUserType", "Unknown")
+                    }
+                  } else {
+                    def actorProps = props.actor ?: [:]
+                    def actorProcessProps = actorProps.process ?: [:]
+                    msg.setHeader("actorProcessName", actorProcessProps.name ?: "Unknown")
+                    msg.setHeader("actorProcessPid", actorProcessProps.pid?.toString() ?: "N/A")
+                    msg.setHeader("actorProcessCmd", actorProcessProps.cmd_line ?: "Unknown")
+                    def actorParentProps = actorProcessProps.parent_process ?: [:]
+                    msg.setHeader("actorParentName", actorParentProps.name ?: "Unknown")
+                    msg.setHeader("actorParentPid", actorParentProps.pid?.toString() ?: "N/A")
+                    msg.setHeader("actorParentCmd", actorParentProps.cmd_line ?: "Unknown")
+                    def actorUserProps = actorProps.user ?: [:]
+                    msg.setHeader("actorUserName", actorUserProps.name ?: "Unknown")
+                    msg.setHeader("actorUserUid", actorUserProps.uid ?: "Unknown")
+                    msg.setHeader("actorUserType", actorUserProps.type ?: "Unknown")
+                  }
 
-              // Product info from additionalProperties
-              def metadata = props.metadata ?: [:]
-              def product = metadata.product ?: [:]
-              msg.setHeader("productName", product.name ?: "Unknown")
-              msg.setHeader("productVendor", product.vendor_name ?: "Unknown")
+                  // Device info - use direct property (Device object)
+                  def device = processActivity.device
+                  if (device) {
+                    msg.setHeader("deviceHostname", device.hostname ?: "Unknown")
+                    msg.setHeader("deviceIp", device.ip ?: "Unknown")
+                    msg.setHeader("deviceType", device.type ?: "Unknown")
+                    def deviceOs = device.os
+                    if (deviceOs) {
+                      msg.setHeader("deviceOs", deviceOs.name ? "${deviceOs.name} ${deviceOs.version ?: ''}" : "Unknown")
+                    } else {
+                      msg.setHeader("deviceOs", "Unknown")
+                    }
+                  } else {
+                    def deviceProps = props.device ?: [:]
+                    msg.setHeader("deviceHostname", deviceProps.hostname ?: "Unknown")
+                    msg.setHeader("deviceIp", deviceProps.ip ?: "Unknown")
+                    msg.setHeader("deviceType", deviceProps.type ?: "Unknown")
+                    def deviceOsProps = deviceProps.os ?: [:]
+                    msg.setHeader("deviceOs", deviceOsProps.name ? "${deviceOsProps.name} ${deviceOsProps.version ?: ''}" : "Unknown")
+                  }
+
+                  // Product info from additionalProperties
+                  def metadata = props.metadata ?: [:]
+                  def product = metadata.product ?: [:]
+                  msg.setHeader("productName", product.name ?: "Unknown")
+                  msg.setHeader("productVendor", product.vendor_name ?: "Unknown")
         - log:
             message: |
               ============================================================
@@ -1385,16 +1439,20 @@
             ocsf: {}
         - setHeader:
             name: Content-Type
-            constant: application/json
+            expression:
+              constant:
+                expression: application/json
         - setBody:
-            simple: |
-              {
-                "status": "received",
-                "message": "OCSF ProcessActivity processed successfully",
-                "activity": "${header.activityName}",
-                "process_name": "${header.processName}",
-                "process_pid": "${header.processPid}",
-                "parent_process": "${header.parentProcessName}",
-                "actor_process": "${header.actorProcessName}",
-                "timestamp": "${date:now:yyyy-MM-dd'T'HH:mm:ss}"
-              }
+            expression:
+              simple:
+                expression: |
+                  {
+                    "status": "received",
+                    "message": "OCSF ProcessActivity processed successfully",
+                    "activity": "${header.activityName}",
+                    "process_name": "${header.processName}",
+                    "process_pid": "${header.processPid}",
+                    "parent_process": "${header.parentProcessName}",
+                    "actor_process": "${header.actorProcessName}",
+                    "timestamp": "${date:now:yyyy-MM-dd'T'HH:mm:ss}"
+                  }

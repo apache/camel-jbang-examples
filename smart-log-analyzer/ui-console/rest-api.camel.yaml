@@ -1,84 +1,109 @@
 - rest:
     path: /api/traces
-    get:
-      - id: list-traces
-        produces: application/json
-        to: direct:list-traces
-      - id: get-trace-by-id
-        path: /{id}
-        produces: application/json
-        to: direct:get-trace
-
+    steps:
+      - get:
+          id: list-traces
+          produces: application/json
+      - get:
+          id: get-trace-by-id
+          path: "/{id}"
+          produces: application/json
 - route:
     id: route-list-traces
     from:
-      uri: direct:list-traces
+      uri: direct
+      parameters:
+        name: list-traces
       steps:
         - setVariable:
             name: storagePath
-            simple: "{{analyzer.storage.root}}"
+            expression:
+              simple:
+                expression: "{{analyzer.storage.root}}"
         - setBody:
-            groovy: |
-              import java.nio.file.*
-              try {
-                def path = Paths.get(exchange.getVariable('storagePath'))
-                if (!Files.exists(path)) {
-                  return []
-                }
-                return Files.list(path)
-                  .filter(Files::isRegularFile)
-                  .filter(p -> p.getFileName().toString().endsWith('.txt'))
-                  .map(p -> {
-                    def filename = p.getFileName().toString()
-                    def traceId = filename.substring(0, filename.lastIndexOf('.txt'))
-                    return [id: traceId]
-                  })
-                  .collect()
-              } catch (Exception e) {
-                return []
-              }
+            expression:
+              groovy:
+                expression: |
+                  import java.nio.file.*
+                  try {
+                    def path = Paths.get(exchange.getVariable('storagePath'))
+                    if (!Files.exists(path)) {
+                      return []
+                    }
+                    return Files.list(path)
+                      .filter(Files::isRegularFile)
+                      .filter(p -> p.getFileName().toString().endsWith('.txt'))
+                      .map(p -> {
+                        def filename = p.getFileName().toString()
+                        def traceId = filename.substring(0, filename.lastIndexOf('.txt'))
+                        return [id: traceId]
+                      })
+                      .collect()
+                  } catch (Exception e) {
+                    return []
+                  }
         - marshal:
-            json:
-              library: Jackson
+            json: {}
         - setHeader:
             name: Content-Type
-            constant: application/json
-
+            expression:
+              constant:
+                expression: application/json
 - route:
     id: route-get-trace
     from:
-      uri: direct:get-trace
+      uri: direct
+      parameters:
+        name: get-trace
       steps:
         - setVariable:
             name: traceId
-            simple: ${header.id}
-        - pollEnrich:
             expression:
-              simple: file:{{analyzer.storage.root}}?fileName=${variable.traceId}.txt&noop=true&idempotent=false
+              simple:
+                expression: "${header.id}"
+        - pollEnrich:
             timeout: 1000
+            expression:
+              simple:
+                expression: "file:{{analyzer.storage.root}}?fileName=${variable.traceId}.txt&noop=true&idempotent=false"
         - choice:
             when:
-              - simple: ${body} != null
+              - expression:
+                  simple:
+                    expression: "${body} != null"
                 steps:
                   - convertBodyTo:
                       type: String
                   - setVariable:
                       name: fileContent
-                      simple: ${body}
+                      expression:
+                        simple:
+                          expression: "${body}"
                   - marshal:
                       json: {}
                   - setBody:
-                      simple: '{"id":"${variable.traceId}","content":${body}}'
+                      expression:
+                        simple:
+                          expression: "{\"id\":\"${variable.traceId}\",\"content\"\
+                            :${body}}"
                   - setHeader:
                       name: Content-Type
-                      constant: application/json
+                      expression:
+                        constant:
+                          expression: application/json
             otherwise:
               steps:
                 - setHeader:
                     name: CamelHttpResponseCode
-                    constant: 404
+                    expression:
+                      constant:
+                        expression: 404
                 - setBody:
-                    constant: '{"error":"Trace not found"}'
+                    expression:
+                      constant:
+                        expression: "{\"error\":\"Trace not found\"}"
                 - setHeader:
                     name: Content-Type
-                    constant: application/json
+                    expression:
+                      constant:
+                        expression: application/json

@@ -55,7 +55,7 @@
                   uri: openai
                   parameters:
                     operation: chat-completion
-                    apiKey: not-needed
+                    apiKey: RAW(not-needed)
                     baseUrl: http://localhost:11434/v1
                     model: granite4:3b
                     systemMessage: "Analyze log events to identify errors, their\
@@ -63,4 +63,3 @@
                       \ concise and focus on the error chain and sequence of events."
               - log:
                   message: "LLM Analysis for traceId ${variable.traceId}: ${body}"
-

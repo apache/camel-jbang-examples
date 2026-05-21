@@ -1,115 +1,159 @@
 - routeConfiguration:
     id: as2Error
-    onException:
-      - onException:
-          handled:
-            constant: true
-          exception:
-            - java.lang.Exception
-          steps:
-            - script:
-                groovy: |
-                  httpContext = exchangeProperties['CamelAs2.interchange']
-                  httpContext.setAttribute(org.apache.camel.component.as2.api.AS2Header.DISPOSITION_TYPE, 
-                                           org.apache.camel.component.as2.api.entity.AS2DispositionType.FAILED)
-
 - route:
     id: receivePurchaseOrder
     routeConfigurationId: as2Error
     from:
-      uri: as2:server/listen
+      uri: as2
       parameters:
-        serverPortNumber: 8081
+        apiName: server
+        methodName: listen
         requestUriPattern: /mycorp/orders
+        serverPortNumber: 8081
       steps:
-        - to: jms:queue:edi
-
+        - onException:
+            exception:
+              - java.lang.Exception
+            handled:
+              constant:
+                expression: "true"
+        - script:
+            expression:
+              groovy:
+                expression: "httpContext = exchangeProperties['CamelAs2.interchange']\n\
+                  httpContext.setAttribute(org.apache.camel.component.as2.api.AS2Header.DISPOSITION_TYPE,\
+                  \ \n                         org.apache.camel.component.as2.api.entity.AS2DispositionType.FAILED)\n"
+        - to:
+            uri: jms
+            parameters:
+              destinationType: queue
+              destinationName: edi
 - route:
     id: ingestPurchaseOrder
     from:
-      uri: jms:queue:edi
+      uri: jms
+      parameters:
+        destinationType: queue
+        destinationName: edi
       steps:
-        - to: smooks:file:../smooks/ingest-x12-config.xml
-        - to: direct:track
-        - to: direct:genAck
-
+        - to:
+            uri: smooks
+            parameters:
+              smooksConfig: file:../smooks/ingest-x12-config.xml
+        - to:
+            uri: direct
+            parameters:
+              name: track
+        - to:
+            uri: direct
+            parameters:
+              name: genAck
 - route:
     id: generateFunctionalAck
     from:
-      uri: direct:genAck
+      uri: direct
+      parameters:
+        name: genAck
       steps:
         - setBody:
-            groovy: |
-              new org.smooks.io.source.JavaSource([*:headers.CamelSmooksExecutionContext.beanContext.beanMap])
+            expression:
+              groovy:
+                expression: |
+                  new org.smooks.io.source.JavaSource([*:headers.CamelSmooksExecutionContext.beanContext.beanMap])
         - choice:
             when:
-              - simple: ${headers.CamelSmooksExecutionContext.getTerminationError} == null
+              - expression:
+                  simple:
+                    expression: "${headers.CamelSmooksExecutionContext.getTerminationError}\
+                      \ == null"
                 steps:
                   - transform:
-                      groovy: body.with {beans.ackStatus = 'A'; body}
+                      expression:
+                        groovy:
+                          expression: "body.with {beans.ackStatus = 'A'; body}"
             otherwise:
               steps:
                 - transform:
-                    groovy: body.with {beans.ackStatus = 'R'; body}
-        - to: smooks:file:../smooks/gen-x12-ack-config.xml
+                    expression:
+                      groovy:
+                        expression: "body.with {beans.ackStatus = 'R'; body}"
         - to:
-            uri: as2:client/send
+            uri: smooks
             parameters:
-              targetHostName: "{{partner.host.name}}"
-              targetPortNumber: 8081
-              ediMessageContentType: application/edi-x12
-              ediMessageCharset: charset=US-ASCII
-              as2To: acme
+              smooksConfig: file:../smooks/gen-x12-ack-config.xml
+        - to:
+            uri: as2
+            parameters:
+              apiName: client
+              methodName: send
               as2From: mycorp
+              as2MessageStructure: PLAIN
+              as2To: acme
+              ediMessageCharset: charset=US-ASCII
+              ediMessageContentType: application/edi-x12
               from: bob@example.org
+              inBody: ediMessage
               requestUri: /acme/gateway
               subject: Purchase Order Ack
-              as2MessageStructure: PLAIN
-              inBody: ediMessage
-
+              targetHostName: "{{partner.host.name}}"
+              targetPortNumber: 8081
 - route:
     id: verifyAgreement
     from:
-      uri: direct:tpm
+      uri: direct
+      parameters:
+        name: tpm
       steps:
         - toD:
-            uri: "http://{{tpm.address}}"
+            uri: http
             parameters:
-              sender: ${body['applicationSenderCode']}
-              receiver: ${body['applicationReceiverCode']}
+              httpUri: "{{tpm.address}}"
               httpMethod: GET
+              receiver: "${body['applicationReceiverCode']}"
+              sender: "${body['applicationSenderCode']}"
         - choice:
             when:
-              - simple: ${headers.CamelHttpResponseCode} > 299
+              - expression:
+                  simple:
+                    expression: "${headers.CamelHttpResponseCode} > 299"
                 steps:
                   - throwException:
                       exceptionType: org.apache.camel.edi.example.InvalidPartnerException
-
 - route:
     id: createErpOrder
     from:
-      uri: direct:erp
+      uri: direct
+      parameters:
+        name: erp
       steps:
         - choice:
             when:
-              - simple: ${headers.CamelSmooksExecutionContext.getTerminationError} == null
+              - expression:
+                  simple:
+                    expression: "${headers.CamelSmooksExecutionContext.getTerminationError}\
+                      \ == null"
                 steps:
                   - marshal:
                       json: {}
                   - to:
-                      uri: "http://{{erp.address}}/purchase_orders"
+                      uri: http
                       parameters:
+                        httpUri: "{{erp.address}}/purchase_orders"
                         httpMethod: POST
-
 - route:
     id: track
     from:
-      uri: direct:track
+      uri: direct
+      parameters:
+        name: track
       steps:
         - setHeader:
             name: Content-Type
-            constant: application/xml
+            expression:
+              constant:
+                expression: application/xml
         - to:
-            uri: "http://{{tracker.address}}"
+            uri: http
             parameters:
+              httpUri: "{{tracker.address}}"
               httpMethod: POST
