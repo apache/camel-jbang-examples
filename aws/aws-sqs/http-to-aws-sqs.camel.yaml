@@ -17,7 +17,9 @@
 
 - route:
     from:
-      uri: "platform-http:/news?httpMethodRestrict=POST"
+      uri: platform-http:/news
+      parameters:
+        httpMethodRestrict: POST
       steps:
       - to:
           uri: "kamelet:aws-sqs-sink"

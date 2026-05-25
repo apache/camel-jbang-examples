@@ -18,7 +18,9 @@
 - route:
     id: "analyze-sentiment-api"
     from:
-      uri: "platform-http:/analyze/sentiment?httpMethodRestrict=POST"
+      uri: platform-http:/analyze/sentiment
+      parameters:
+        httpMethodRestrict: POST
       steps:
       - log:
           message: "Received text for sentiment analysis: ${body}"
@@ -41,7 +43,9 @@
 - route:
     id: "analyze-entities-api"
     from:
-      uri: "platform-http:/analyze/entities?httpMethodRestrict=POST"
+      uri: platform-http:/analyze/entities
+      parameters:
+        httpMethodRestrict: POST
       steps:
       - log:
           message: "Received text for entity extraction: ${body}"
@@ -64,7 +68,9 @@
 - route:
     id: "analyze-comprehensive-api"
     from:
-      uri: "platform-http:/analyze/all?httpMethodRestrict=POST"
+      uri: platform-http:/analyze/all
+      parameters:
+        httpMethodRestrict: POST
       steps:
       - log:
           message: "Received text for comprehensive analysis: ${body}"

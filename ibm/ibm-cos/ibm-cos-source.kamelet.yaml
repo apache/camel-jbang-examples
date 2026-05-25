@@ -174,4 +174,5 @@ spec:
         delay: "{{delay}}"
         maxMessagesPerPoll: "{{maxMessagesPerPoll}}"
       steps:
-      - to: "kamelet:sink"
+      - to:
+          uri: kamelet:sink
