@@ -101,25 +101,37 @@ spec:
       - choice:
           precondition: true
           when:
-            - simple: '${propertiesExist:!keyName}'
+            - expression:
+                simple:
+                  expression: '${propertiesExist:!keyName}'
               steps:
                 - choice:
                     when:
-                      - simple: "${header[file]}"
+                      - expression:
+                          simple:
+                            expression: "${header[file]}"
                         steps:
                           - setHeader:
                               name: CamelIbmCosKey
-                              simple: "${header[file]}"
-                      - simple: "${header[ce-file]}"
+                              expression:
+                                simple:
+                                  expression: "${header[file]}"
+                      - expression:
+                          simple:
+                            expression: "${header[ce-file]}"
                         steps:
                           - setHeader:
                               name: CamelIbmCosKey
-                              simple: "${header[ce-file]}"
+                              expression:
+                                simple:
+                                  expression: "${header[ce-file]}"
                     otherwise:
                       steps:
                         - setHeader:
                             name: CamelIbmCosKey
-                            simple: "${exchangeId}"
+                            expression:
+                              simple:
+                                expression: "${exchangeId}"
       - to:
           uri: "ibm-cos:{{bucketName}}"
           parameters:
