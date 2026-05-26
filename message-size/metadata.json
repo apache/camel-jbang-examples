@@ -1,0 +1,11 @@
+{
+    "title": "Message Size",
+    "description": "Track message body and header sizes per endpoint",
+    "tags": [
+        "observability",
+        "monitoring",
+        "seda"
+    ],
+    "bundled": true,
+    "level": "beginner"
+}
