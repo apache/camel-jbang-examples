@@ -9,6 +9,21 @@
             expression:
               constant:
                 expression: Hello Camel
+        - setVariable:
+            name: myCounter
+            expression:
+              simple:
+                expression: "${random(100)}"
+        - setProperty:
+            name: myRegion
+            expression:
+              constant:
+                expression: us-east-1
+        - setHeader:
+            name: myTraceId
+            expression:
+              simple:
+                expression: "trace-${exchangeId}"
         - circuitBreaker:
             resilience4jConfiguration:
               minimumNumberOfCalls: 10
