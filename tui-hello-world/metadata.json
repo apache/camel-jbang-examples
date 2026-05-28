@@ -1,6 +1,6 @@
 {
-    "title": "Send Message Test",
-    "description": "Test sending messages to a running integration via TUI or CLI",
+    "title": "TUI Hello World",
+    "description": "Say hello via TUI Send Message (F2) or CLI",
     "tags": [
         "beginner",
         "direct",
