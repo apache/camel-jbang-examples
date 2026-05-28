@@ -370,6 +370,25 @@
         ]
     },
     {
+        "name": "send-test",
+        "title": "Send Message Test",
+        "description": "Test sending messages to a running integration via TUI or CLI",
+        "level": "beginner",
+        "tags": [
+            "beginner",
+            "direct",
+            "send",
+            "tui"
+        ],
+        "bundled": true,
+        "requiresDocker": false,
+        "hasCitrusTests": false,
+        "files": [
+            "README.md",
+            "send-test.yaml"
+        ]
+    },
+    {
         "name": "smart-log-analyzer",
         "title": "Smart Log Analyzer",
         "description": "Intelligent observability correlating OpenTelemetry logs and traces with LLM analysis",

@@ -1,0 +1,12 @@
+{
+    "title": "Send Message Test",
+    "description": "Test sending messages to a running integration via TUI or CLI",
+    "tags": [
+        "beginner",
+        "direct",
+        "send",
+        "tui"
+    ],
+    "bundled": true,
+    "level": "beginner"
+}
