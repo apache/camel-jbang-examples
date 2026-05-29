@@ -7,5 +7,9 @@
         "activemq"
     ],
     "bundled": false,
-    "level": "intermediate"
+    "level": "intermediate",
+    "infraServices": [
+        "artemis",
+        "ftp"
+    ]
 }

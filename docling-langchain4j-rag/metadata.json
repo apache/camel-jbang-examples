@@ -8,5 +8,9 @@
         "docling"
     ],
     "bundled": false,
-    "level": "advanced"
+    "level": "advanced",
+    "infraServices": [
+        "docling",
+        "ollama"
+    ]
 }

@@ -7,5 +7,8 @@
         "postgres"
     ],
     "bundled": false,
-    "level": "intermediate"
+    "level": "intermediate",
+    "infraServices": [
+        "postgres"
+    ]
 }

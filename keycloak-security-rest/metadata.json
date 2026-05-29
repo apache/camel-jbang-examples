@@ -8,5 +8,8 @@
         "oauth"
     ],
     "bundled": false,
-    "level": "advanced"
+    "level": "advanced",
+    "infraServices": [
+        "keycloak"
+    ]
 }

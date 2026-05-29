@@ -111,6 +111,8 @@ for dirpath, dirnames, filenames in sorted(os.walk(repo_root)):
         "hasCitrusTests": has_citrus_tests,
         "files": files,
     }
+    if "infraServices" in meta:
+        entry["infraServices"] = meta["infraServices"]
     catalog.append(entry)
 
 with open(catalog_file, "w") as f:
