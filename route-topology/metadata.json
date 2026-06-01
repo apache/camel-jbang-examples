@@ -1,0 +1,12 @@
+{
+    "title": "Route Topology",
+    "description": "Demonstrates inter-route topology with triggers, shared routes, and external systems",
+    "tags": [
+        "topology",
+        "direct",
+        "kafka",
+        "timer"
+    ],
+    "bundled": true,
+    "level": "intermediate"
+}
