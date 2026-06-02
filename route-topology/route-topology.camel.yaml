@@ -72,7 +72,7 @@
               - to:
                   uri: kafka:notifications
 
-# Kafka consumer: handles fulfillment
+# Kafka consumer: handles fulfillment and reports to warehouse
 - route:
     id: fulfillment
     description: Fulfill Order
@@ -81,8 +81,10 @@
       steps:
         - log:
             message: "Fulfilling order: ${body}"
+        - to:
+            uri: kafka:warehouse-shipments
 
-# Kafka consumer: sends notifications
+# Kafka consumer: sends notifications via external email service
 - route:
     id: notification
     description: Send Notification
@@ -91,3 +93,5 @@
       steps:
         - log:
             message: "Sending notification for: ${body}"
+        - to:
+            uri: kafka:email-outbox
