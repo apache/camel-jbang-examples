@@ -390,6 +390,9 @@
             "README.md",
             "application.properties",
             "route-topology.camel.yaml"
+        ],
+        "infraServices": [
+            "kafka"
         ]
     },
     {

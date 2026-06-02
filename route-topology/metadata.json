@@ -8,5 +8,8 @@
         "timer"
     ],
     "bundled": true,
-    "level": "intermediate"
+    "level": "intermediate",
+    "infraServices": [
+        "kafka"
+    ]
 }
