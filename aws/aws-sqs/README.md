@@ -3,7 +3,7 @@
 In this sample you'll use the AWS SQS Sink Kamelet.
 The Camel integration exposes a Http service and for each incoming request the message body data is pushed to an AWS SQS queue.
 
-## Install Camel JBang
+## Install Camel CLI
 
 <!-- see ../../install.adoc for installation instructions -->
 

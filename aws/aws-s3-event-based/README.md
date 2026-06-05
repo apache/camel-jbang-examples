@@ -4,7 +4,7 @@ In this sample you'll use the AWS S3 CDC Source Kamelet.
 
 Through the usage of EventBridge and SQS Services you'll be able to consume events from specific bucket.
 
-## Install Camel JBang
+## Install Camel CLI
 
 <!-- see ../../install.adoc for installation instructions -->
 

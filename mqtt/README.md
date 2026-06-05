@@ -5,7 +5,7 @@ as illustrated below.
 
 ![](mqtt-kaoto.png)
 
-## Install Camel JBang
+## Install Camel CLI
 
 <!-- see installation instructions in ../install.adoc -->
 

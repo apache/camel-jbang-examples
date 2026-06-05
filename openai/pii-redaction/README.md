@@ -7,7 +7,7 @@ This example demonstrates how to use OpenAI-compatible LLM providers with Apache
 * Java 17/21
 * A running LLM service with exposed OpenAI-compatible API (for chat completions)
 
-## Install Camel JBang
+## Install Camel CLI
 
 <!-- see installation instructions in ../install.adoc -->
 

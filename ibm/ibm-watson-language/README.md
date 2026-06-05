@@ -7,7 +7,7 @@ This example demonstrates how to use IBM Watson Natural Language Understanding (
 * IBM Cloud account with Watson Natural Language Understanding service instance
 * IBM Cloud API key with access to Watson NLU
 
-## Install Camel JBang
+## Install Camel CLI
 
 include::../install.adoc[see installation]
 

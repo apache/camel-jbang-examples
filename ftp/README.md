@@ -4,7 +4,7 @@ This example shows how to integrate ActiveMQ with FTP server.
 
 ![](ftp-kaoto.png)
 
-## Install Camel JBang
+## Install Camel CLI
 
 include::../install.adoc[see installation]
 
@@ -44,7 +44,7 @@ camel run *
 
 When the example is running, you need to trigger Camel, by sending messages to the ActiveMQ broker.
 You can either do this via the broker web console http://localhost:8161 (login with `artemis/artemis`
-or by using Camel JBang (by sending the message into the existing running Camel named ftp):
+or by using Camel CLI (by sending the message into the existing running Camel named ftp):
 
 ```shell
 camel cmd send ftp --body=file:test/payload.xml
@@ -53,7 +53,7 @@ camel cmd send ftp --body=file:test/payload.xml
 ## Browsing FTP server
 
 When you have sent some messages to ActiveMQ Camel will route these to the FTP server.
-To see which files have been uploaded, you can start a remote shell into the Docker container or use Camel JBang:
+To see which files have been uploaded, you can start a remote shell into the Docker container or use Camel CLI:
 
 ```shell
 camel cmd browse

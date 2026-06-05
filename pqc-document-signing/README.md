@@ -21,11 +21,11 @@ This example demonstrates how to build a secure document signing service using A
 
 ## Running HashiCorp Vault
 
-You can run HashiCorp Vault using either Camel JBang infrastructure support or Docker.
+You can run HashiCorp Vault using either Camel CLI infrastructure support or Docker.
 
-### Option 1: Using Camel JBang Infra (Recommended)
+### Option 1: Using Camel CLI Infra (Recommended)
 
-Use Camel JBang's built-in infrastructure support to easily run HashiCorp Vault:
+Use Camel CLI's built-in infrastructure support to easily run HashiCorp Vault:
 
 ```sh
 $ jbang -Dcamel.jbang.version=4.16.0 camel@apache/camel infra run hashicorp vault
@@ -307,7 +307,7 @@ To stop the Camel application, press `Ctrl+C`.
 
 To stop HashiCorp Vault:
 
-If using Camel JBang infra:
+If using Camel CLI infra:
 ```sh
 $ jbang -Dcamel.jbang.version=4.16.0 camel@apache/camel infra stop hashicorp-vault
 ```

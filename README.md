@@ -1,11 +1,11 @@
-# Apache Camel JBang Examples
+# Apache Camel CLI Examples
 
 [Apache Camel](http://camel.apache.org/) is a powerful open source integration framework based on known
 Enterprise Integration Patterns with powerful bean integration.
 
 ## Introduction
 
-This project provides examples for low-code integrations with Apache Camel JBang.
+This project provides examples for low-code integrations with Apache Camel CLI.
 
 ### Examples
 
@@ -15,9 +15,9 @@ they can run without having to use traditional Java compilation or build systems
 
 All examples can run local on your computer from a CLI terminal by executing a few commands.
 
-These examples uses JBang as the CLI which is a great tool that makes using Java much easier.
+The Camel CLI is powered by [JBang](https://www.jbang.dev/) which makes using Java much easier.
 
-## Install Camel JBang
+## Install Camel CLI
 
 First install JBang according to https://www.jbang.dev
 
@@ -57,7 +57,7 @@ Now you can start running commands for the Citrus JBang app with `citrus`:
 citrus --version
 ```
 
-Usually the Citrus tests are written in YAML files and named accordingly to the Camel JBang route source file.
+Usually the Citrus tests are written in YAML files and named accordingly to the Camel CLI route source file.
 
 For instance the Camel route `mqtt.camel.yaml` route provides a test named `mqtt.citrus.it.yaml`.
 You can run the test with Citrus JBang like this:
@@ -71,7 +71,7 @@ Of course the test also performs some validation steps to make sure that the Cam
 
 ## Other Examples
 
-You can also find a set of various Camel JBang examples at: https://github.com/apache/camel-kamelets-examples/tree/main/jbang
+You can also find a set of various Camel CLI examples at: https://github.com/apache/camel-kamelets-examples/tree/main/jbang
 
 ## Help and contributions
 

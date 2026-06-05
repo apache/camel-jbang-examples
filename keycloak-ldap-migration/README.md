@@ -19,7 +19,7 @@ It leverages the `camel-ldap` component to read users from LDAP and the `camel-k
 
 * JBang installed (https://www.jbang.dev)
 * Access to an LDAP server with users to migrate
-* Keycloak server (can be started with Camel JBang infra)
+* Keycloak server (can be started with Camel CLI infra)
 * Basic understanding of LDAP and Keycloak concepts
 
 ## Dependencies
@@ -47,7 +47,7 @@ To run this example you can either install Camel on JBang via:
 $ jbang app install camel@apache/camel
 ```
 
-Which allows to run Camel JBang with `camel` as shown below.
+Which allows to run Camel CLI with `camel` as shown below.
 
 ## Setting Up LDAP Server
 
@@ -140,7 +140,7 @@ adding new entry "uid=admin,ou=users,dc=example,dc=org"
 
 ## Setting Up Keycloak
 
-Use Camel JBang Infra to run Keycloak:
+Use Camel CLI Infra to run Keycloak:
 
 ```sh
 $ camel infra run keycloak

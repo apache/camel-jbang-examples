@@ -6,7 +6,7 @@ This example is contributed from the [Smooks](https://www.smooks.org/) community
 
 The Camel application (i.e., `camel/edi-x12-as2.camel.yaml`) represents the supplier and the downstream systems are mocked with the help of Camel routes (i.e., `camel/fake.camel.yaml`). The example integrates a flavour of EDI called [X12](https://x12.org/) over [AS2](https://camel.apache.org/components/next/as2-component.html). From the Camel application, the [Smooks component](https://camel.apache.org/components/next/smooks-component.html) is leveraged to parse the EDI purchase order and generate the EDI acknowledgement. Smooks breaks down the EDI purchase order into fragments so that individual EDI segments can be transformed and routed accordingly.
 
-## Install Camel JBang
+## Install Camel CLI
 
 <!-- see ../install.adoc for installation instructions -->
 
@@ -18,7 +18,7 @@ The Camel application (i.e., `camel/edi-x12-as2.camel.yaml`) represents the supp
     cd camel && camel run *
     ```
 
-2. From another terminal window, send an X12 850 purchase order to the AS2 Camel endpoint, or better yet, dispatch the message from Camel JBang as shown next:
+2. From another terminal window, send an X12 850 purchase order to the AS2 Camel endpoint, or better yet, dispatch the message from Camel CLI as shown next:
 
     ```shell
     camel cmd send --body="$(cat test/payload.edi)" --endpoint="as2:client/send?inBody=ediMessage&targetHostName=localhost&targetPortNumber=8081&ediMessageContentType=application/edi-x12&ediMessageCharset=US-ASCII&as2From=acme&as2To=mycorp&from=alice@example.org&requestUri=/mycorp/orders&subject=Purchase Order&as2MessageStructure=PLAIN"
