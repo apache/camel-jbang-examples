@@ -3,7 +3,7 @@
 This example uses an Open API specification as a base for creating a REST service in Camel.
 The Camel route is configured to implement the operations declared in the Open API specification.
 
-## Install Camel JBang
+## Install Camel CLI
 
 <!-- see installation instructions in ../../install.adoc -->
 

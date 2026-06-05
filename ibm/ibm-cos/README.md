@@ -24,11 +24,11 @@ You must have:
 
 ## Setup Kafka (for Kafka to IBM COS example)
 
-You need a running Kafka broker. The easiest way is to use Camel JBang's built-in infrastructure support.
+You need a running Kafka broker. The easiest way is to use Camel CLI's built-in infrastructure support.
 
 ### Start Kafka with JBang
 
-Start a local Kafka broker using Camel JBang:
+Start a local Kafka broker using Camel CLI:
 
 ```shell
 $ camel infra run kafka

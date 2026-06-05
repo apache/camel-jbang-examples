@@ -3,7 +3,7 @@
 This example uses the Open API specification as a base for a Camel REST client.
 The Camel route reads files from a local directory and sends the content in the form of an Open API REST request to a service.
 
-## Install Camel JBang
+## Install Camel CLI
 
 <!-- see installation instructions in ../../install.adoc -->
 

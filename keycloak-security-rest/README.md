@@ -39,13 +39,13 @@ To run this example you can either install Camel on JBang via:
 $ jbang app install camel@apache/camel
 ```
 
-Which allows to run Camel JBang with `camel` as shown below.
+Which allows to run Camel CLI with `camel` as shown below.
 
 ## Running Keycloak
 
-### Option 1: Using Camel JBang Infra (Recommended)
+### Option 1: Using Camel CLI Infra (Recommended)
 
-Starting from Camel JBang 4.16.0, you can easily run Keycloak using the built-in infrastructure support:
+Starting from Camel CLI 4.16.0, you can easily run Keycloak using the built-in infrastructure support:
 
 ```sh
 $ jbang -Dcamel.jbang.version=4.16.0 camel@apache/camel infra run keycloak
@@ -87,7 +87,7 @@ After Keycloak starts, you need to configure it:
 ### 1. Access Keycloak Admin Console
 
 Open your browser and navigate to:
-* If using Camel JBang infra: http://localhost:8080
+* If using Camel CLI infra: http://localhost:8080
 * If using Docker manually: http://localhost:8180
 
 Login with:
@@ -320,7 +320,7 @@ To stop the Camel application, press `Ctrl+C`.
 
 To stop Keycloak:
 
-If you used Camel JBang infra:
+If you used Camel CLI infra:
 ```sh
 $ jbang -Dcamel.jbang.version=4.16.0 camel@apache/camel infra stop keycloak
 ```
