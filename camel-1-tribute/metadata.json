@@ -1,0 +1,16 @@
+{
+    "title": "Camel 1.0 Tribute",
+    "description": "A tribute to the very first Apache Camel example from 2007 - JMS to File",
+    "tags": [
+        "beginner",
+        "jms",
+        "file",
+        "artemis",
+        "tribute"
+    ],
+    "bundled": true,
+    "level": "beginner",
+    "infraServices": [
+        "artemis"
+    ]
+}
