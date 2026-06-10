@@ -1,7 +1,6 @@
 - rest:
-    steps:
-      - openApi:
-          specification: petstore-api.json
+    openApi:
+      specification: petstore-api.json
 - route:
     from:
       uri: direct
