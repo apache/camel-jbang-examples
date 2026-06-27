@@ -6,7 +6,7 @@
         "sql",
         "postgres"
     ],
-    "bundled": false,
+    "bundled": true,
     "level": "intermediate",
     "infraServices": [
         "postgres"

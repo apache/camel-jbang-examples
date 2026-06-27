@@ -498,7 +498,7 @@
             "sql",
             "postgres"
         ],
-        "bundled": false,
+        "bundled": true,
         "requiresDocker": true,
         "hasCitrusTests": false,
         "files": [
