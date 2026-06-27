@@ -84,7 +84,8 @@ for dirpath, dirnames, filenames in sorted(os.walk(repo_root)):
                 files.append(rel)
     files.sort()
 
-    requires_docker = "compose.yaml" in filenames or "docker-compose.yaml" in filenames
+    requires_docker = ("compose.yaml" in filenames or "docker-compose.yaml" in filenames
+                       or len(meta.get("infraServices", [])) > 0)
 
     # detect Citrus integration tests (also in sub-directories without own metadata)
     has_citrus_tests = False
