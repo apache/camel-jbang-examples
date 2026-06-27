@@ -37,6 +37,7 @@ catalog_file = sys.argv[2]
 
 SKIP_FILES = {
     "metadata.json",
+    "compose.yaml", "docker-compose.yaml",
     ".gitignore", ".DS_Store"
 }
 SKIP_EXTENSIONS = {
