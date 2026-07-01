@@ -1,5 +1,19 @@
 - routeConfiguration:
     id: as2Error
+    onException:
+      - onException:
+          exception:
+            - java.lang.Exception
+          handled:
+            constant:
+              expression: "true"
+          steps:
+            - script:
+                expression:
+                  groovy:
+                    expression: "httpContext = exchangeProperties['CamelAs2.interchange']\n\
+                      httpContext.setAttribute(org.apache.camel.component.as2.api.AS2Header.DISPOSITION_TYPE,\
+                      \ \n                         org.apache.camel.component.as2.api.entity.AS2DispositionType.FAILED)\n"
 - route:
     id: receivePurchaseOrder
     routeConfigurationId: as2Error
@@ -11,18 +25,6 @@
         requestUriPattern: /mycorp/orders
         serverPortNumber: 8081
       steps:
-        - onException:
-            exception:
-              - java.lang.Exception
-            handled:
-              constant:
-                expression: "true"
-        - script:
-            expression:
-              groovy:
-                expression: "httpContext = exchangeProperties['CamelAs2.interchange']\n\
-                  httpContext.setAttribute(org.apache.camel.component.as2.api.AS2Header.DISPOSITION_TYPE,\
-                  \ \n                         org.apache.camel.component.as2.api.entity.AS2DispositionType.FAILED)\n"
         - to:
             uri: jms
             parameters:
@@ -89,7 +91,7 @@
               as2From: mycorp
               as2MessageStructure: PLAIN
               as2To: acme
-              ediMessageCharset: charset=US-ASCII
+              ediMessageCharset: US-ASCII
               ediMessageContentType: application/edi-x12
               from: bob@example.org
               inBody: ediMessage
