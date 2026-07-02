@@ -1,0 +1,12 @@
+{
+    "title": "Memory Leak",
+    "description": "Simulates a memory leak for testing JFR Old Object Sample diagnostics",
+    "tags": [
+        "observability",
+        "jfr",
+        "diagnostics",
+        "tui"
+    ],
+    "bundled": true,
+    "level": "beginner"
+}
