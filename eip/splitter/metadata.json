@@ -1,0 +1,11 @@
+{
+    "title": "Splitter",
+    "description": "Split a batch of items into individual messages for processing",
+    "tags": [
+        "eip",
+        "splitter",
+        "batch"
+    ],
+    "bundled": true,
+    "level": "beginner"
+}
