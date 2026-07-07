@@ -29,7 +29,7 @@ jobs:
       - name: Set up JDK
         uses: actions/setup-java@v4
         with:
-          java-version: '17'
+          java-version: '21'
           distribution: 'temurin'
       - name: Checkout code
         uses: actions/checkout@v4
@@ -61,21 +61,21 @@ jobs:
 
           echo "Running tests"
 
-          jbang citrus@citrusframework/citrus run ftp/test
+          jbang citrus@citrusframework/citrus run messaging/ftp/test
 
-          jbang citrus@citrusframework/citrus run mqtt/test
+          jbang citrus@citrusframework/citrus run messaging/mqtt/test
 
-          jbang citrus@citrusframework/citrus run openapi/server/test
+          jbang citrus@citrusframework/citrus run rest/openapi-server/test
 
-          jbang citrus@citrusframework/citrus run openapi/client/test
+          jbang citrus@citrusframework/citrus run rest/openapi-client/test
 
-          jbang citrus@citrusframework/citrus run aws/aws-s3-event-based/test
+          jbang citrus@citrusframework/citrus run cloud/aws-s3-event-based/test
 
-          jbang citrus@citrusframework/citrus run aws/aws-sqs/test
-          
-          jbang citrus@citrusframework/citrus run edi-x12-as2/test
+          jbang citrus@citrusframework/citrus run cloud/aws-sqs/test
 
-          jbang citrus@citrusframework/citrus run smart-log-analyzer/first-iteration/test
+          jbang citrus@citrusframework/citrus run transformation/edi-x12-as2/test
+
+          jbang citrus@citrusframework/citrus run ai/smart-log-analyzer/first-iteration/test
 
       - uses: actions/upload-artifact@50769540e7f4bd5e21e526ee35c689e35e0d6874 # v4.4.0
         if: always()
