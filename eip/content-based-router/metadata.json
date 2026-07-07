@@ -1,0 +1,11 @@
+{
+    "title": "Content Based Router",
+    "description": "Route messages to different destinations based on message content using the Choice EIP",
+    "tags": [
+        "eip",
+        "choice",
+        "routing"
+    ],
+    "bundled": true,
+    "level": "beginner"
+}

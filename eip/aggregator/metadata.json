@@ -1,0 +1,11 @@
+{
+    "title": "Aggregator",
+    "description": "Collect individual messages into a batch using the Aggregator EIP",
+    "tags": [
+        "eip",
+        "aggregator",
+        "batch"
+    ],
+    "bundled": true,
+    "level": "beginner"
+}
