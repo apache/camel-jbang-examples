@@ -29,42 +29,11 @@ import software.amazon.awssdk.services.sqs.SqsClient
 import software.amazon.awssdk.services.sqs.model.CreateQueueResponse
 import software.amazon.awssdk.services.sqs.model.QueueAttributeName
 
-// Creates an AWS S3 client that is used in the test to push data to the bucket.
-// Also creates and prepares the bucket as well as the SQS queue and EVENT_BRIDGE notifications.
+// Creates and prepares the S3 bucket as well as the SQS queue and EVENT_BRIDGE notifications.
 
-S3Client s3 = S3Client
-        .builder()
-        .endpointOverride(URI.create('${CITRUS_TESTCONTAINERS_LOCALSTACK_S3_URL}'))
-        .credentialsProvider(StaticCredentialsProvider.create(
-                AwsBasicCredentials.create(
-                        '${CITRUS_TESTCONTAINERS_LOCALSTACK_ACCESS_KEY}',
-                        '${CITRUS_TESTCONTAINERS_LOCALSTACK_SECRET_KEY}')
-        ))
-        .forcePathStyle(true)
-        .region(Region.of('${CITRUS_TESTCONTAINERS_LOCALSTACK_REGION}'))
-        .build()
-
-SqsClient sqsClient = SqsClient
-        .builder()
-        .endpointOverride(URI.create('${CITRUS_TESTCONTAINERS_LOCALSTACK_SQS_URL}'))
-        .credentialsProvider(StaticCredentialsProvider.create(
-                AwsBasicCredentials.create(
-                        '${CITRUS_TESTCONTAINERS_LOCALSTACK_ACCESS_KEY}',
-                        '${CITRUS_TESTCONTAINERS_LOCALSTACK_SECRET_KEY}')
-        ))
-        .region(Region.of('${CITRUS_TESTCONTAINERS_LOCALSTACK_REGION}'))
-        .build()
-
-EventBridgeClient eventBridgeClient = EventBridgeClient
-        .builder()
-        .endpointOverride(URI.create('${CITRUS_TESTCONTAINERS_LOCALSTACK_EVENTBRIDGE_URL}'))
-        .credentialsProvider(StaticCredentialsProvider.create(
-                AwsBasicCredentials.create(
-                        '${CITRUS_TESTCONTAINERS_LOCALSTACK_ACCESS_KEY}',
-                        '${CITRUS_TESTCONTAINERS_LOCALSTACK_SECRET_KEY}')
-        ))
-        .region(Region.of('${CITRUS_TESTCONTAINERS_LOCALSTACK_REGION}'))
-        .build()
+S3Client s3 = context.getReferenceResolver().resolve("s3Client", S3Client.class)
+SqsClient sqsClient = context.getReferenceResolver().resolve("sqsClient", SqsClient.class)
+EventBridgeClient eventBridgeClient = context.getReferenceResolver().resolve("eventbridgeClient", EventBridgeClient.class)
 
 // Create bucket
 s3.createBucket(b -> b.bucket('${aws.bucketNameOrArn}'))
@@ -112,5 +81,3 @@ sqsClient.setQueueAttributes(b -> b.queueUrl(queueUrl).attributes(Collections.si
 
 // Add a target for EventBridge Rule which will be the SQS Queue just created
 eventBridgeClient.putTargets(b -> b.rule('s3-events-cdc').targets(Target.builder().id("sqs-sub").arn(queueArn).build()))
-
-return s3
