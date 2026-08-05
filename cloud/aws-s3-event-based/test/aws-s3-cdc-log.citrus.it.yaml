@@ -1,8 +1,5 @@
-# deps: org.apache.camel:camel-endpointdsl:4.18.0
-# deps: org.apache.camel:camel-aws2-s3:4.18.0
-# deps: org.apache.camel:camel-aws2-sqs:4.18.0
-# deps: org.apache.camel:camel-aws2-eventbridge:4.18.0
-# deps: software.amazon.awssdk:sdk-core:2.41.28
+# deps: org.apache.camel:camel-aws2-sqs:${camel.version}
+# deps: org.apache.camel:camel-aws2-eventbridge:${camel.version}
 name: aws-s3-cdc-log-test
 description: Sample test in YAML
 variables:
@@ -22,12 +19,9 @@ actions:
             - "S3"
             - "SQS"
             - "EVENT_BRIDGE"
-  - camel:
-      startContext: { }
-  - camel:
-      createComponent:
-        name: amazonS3Client
-        file: amazonS3Client.groovy
+  - groovy:
+      script:
+        file: setupEventBridge.groovy
   - camel:
       jbang:
         run:
@@ -37,8 +31,8 @@ actions:
             systemProperties:
               file: "application.test.properties"
   - send:
-      endpoint: |
-        camel:aws2-s3:${aws.bucketNameOrArn}?amazonS3Client=#amazonS3Client
+      endpoint: >-
+        camel:aws2-s3:${aws.bucketNameOrArn}?amazonS3Client=#s3Client
       message:
         body:
           data: "${aws.s3.message}"

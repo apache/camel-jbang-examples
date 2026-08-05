@@ -1,4 +1,3 @@
-# deps: org.apache.camel:camel-test-infra-kafka:4.17.0
 name: first-iteration-test
 description: Integration test for the first-iteration log analyzer prototype
 variables:
@@ -11,6 +10,8 @@ actions:
       infra:
         run:
           service: kafka
+          fixedPort: true
+          port: 9092
   - camel:
       jbang:
         run:
@@ -22,15 +23,15 @@ actions:
             systemProperties:
               file: "../application.properties"
   - send:
-      endpoint: |
-        camel:kafka:${kafka.topic}?brokers=${kafka.broker}
+      endpoint: >-
+        kafka:${kafka.topic}?server=${kafka.broker}
       message:
         body:
           resource:
             file: "payload-info.json"
   - send:
-      endpoint: |
-        camel:kafka:${kafka.topic}?brokers=${kafka.broker}
+      endpoint: >-
+        kafka:${kafka.topic}?server=${kafka.broker}
       message:
         body:
           resource:

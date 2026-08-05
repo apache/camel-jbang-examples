@@ -1,5 +1,3 @@
-# deps: org.apache.camel:camel-aws2-sqs:4.18.0
-# deps: software.amazon.awssdk:sdk-core:2.41.28
 name: http-to-aws-sqs
 description: Sample test in YAML
 variables:
@@ -13,12 +11,8 @@ actions:
         localstack:
           services:
             - "SQS"
-  - camel:
-      startContext: { }
-  - camel:
-      createComponent:
-        name: amazonSQSClient
-        file: amazonSQSClient.groovy
+          options:
+            queues: "${aws.sqs.queueName}"
   - camel:
       jbang:
         run:
@@ -41,8 +35,8 @@ actions:
         response:
           status: 200
   - receive:
-      endpoint: |
-        camel:aws2-sqs:${aws.sqs.queueName}?amazonSQSClient=#amazonSQSClient
+      endpoint: >-
+        camel:aws2-sqs:${aws.sqs.queueName}?amazonSQSClient=#sqsClient
       message:
         body:
           data: "${news.message}"
