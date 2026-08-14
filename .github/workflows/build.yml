@@ -25,32 +25,56 @@ on:
 jobs:
   integration-tests:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - name: FTP messaging
+            path: messaging/ftp
+          - name: MQTT messaging
+            path: messaging/mqtt
+          - name: OpenAPI server
+            path: rest/openapi-server
+          - name: OpenAPI client
+            path: rest/openapi-client
+          - name: AWS S3 event-based
+            path: cloud/aws-s3-event-based
+          - name: AWS SQS
+            path: cloud/aws-sqs
+          - name: EDI X12 AS2
+            path: transformation/edi-x12-as2
+          - name: Smart log analyzer
+            path: ai/smart-log-analyzer/first-iteration
+      fail-fast: false
+    name: ${{ matrix.name }}
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
       - name: Set up JDK
         uses: actions/setup-java@v4
         with:
           java-version: '21'
           distribution: 'temurin'
-      - name: Checkout code
-        uses: actions/checkout@v4
       - name: Cache Maven cache
         uses: actions/cache@v4
         with:
           path: ~/.m2/repository
           key: ${{ runner.os }}-m2-${{ hashFiles('**/*.camel.yaml') }}
           restore-keys: ${{ runner.os }}-m2-
-      - name: Run Tests
-        env:
-          CITRUS_CAMEL_JBANG_DUMP_INTEGRATION_OUTPUT: "true"
-          CITRUS_TESTCONTAINERS_REGISTRY_MIRROR_ENABLED: "true"
-          CITRUS_TESTCONTAINERS_REGISTRY_MIRROR: "mirror.gcr.io"
+      - name: Cache SDKMAN and JBang
+        id: cache-sdkman
+        uses: actions/cache@v4
+        with:
+          path: ~/.sdkman
+          key: ${{ runner.os }}-sdkman-jbang
+      - name: Install JBang
+        if: steps.cache-sdkman.outputs.cache-hit != 'true'
         run: |
-          echo "Install JBang via SDKMAN"
-
-          curl -s "https://get.sdkman.io" | bash 
+          curl -s "https://get.sdkman.io" | bash
           source "/home/runner/.sdkman/bin/sdkman-init.sh"
           sdk install jbang
-
+      - name: Setup JBang
+        run: |
+          source "/home/runner/.sdkman/bin/sdkman-init.sh"
           jbang --version
 
           jbang trust add https://github.com/citrusframework/citrus/
@@ -58,29 +82,18 @@ jobs:
 
           jbang citrus@citrusframework/citrus --version
           jbang camel@apache/camel --version
-
-          echo "Running tests"
-
-          jbang citrus@citrusframework/citrus run messaging/ftp/test
-
-          jbang citrus@citrusframework/citrus run messaging/mqtt/test
-
-          jbang citrus@citrusframework/citrus run rest/openapi-server/test
-
-          jbang citrus@citrusframework/citrus run rest/openapi-client/test
-
-          jbang citrus@citrusframework/citrus run cloud/aws-s3-event-based/test
-
-          jbang citrus@citrusframework/citrus run cloud/aws-sqs/test
-
-          jbang citrus@citrusframework/citrus run transformation/edi-x12-as2/test
-
-          jbang citrus@citrusframework/citrus run ai/smart-log-analyzer/first-iteration/test
-
-      - uses: actions/upload-artifact@50769540e7f4bd5e21e526ee35c689e35e0d6874 # v4.4.0
+      - name: Run tests
+        env:
+          CITRUS_CAMEL_JBANG_DUMP_INTEGRATION_OUTPUT: "true"
+          CITRUS_TESTCONTAINERS_REGISTRY_MIRROR_ENABLED: "true"
+          CITRUS_TESTCONTAINERS_REGISTRY_MIRROR: "mirror.gcr.io"
+        run: |
+          source "/home/runner/.sdkman/bin/sdkman-init.sh"
+          jbang citrus@citrusframework/citrus run ${{ matrix.path }}/test
+      - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: dumps
+          name: dumps-${{ strategy.job-index }}
           include-hidden-files: true
           path: |
             **/.citrus-jbang/*-output.txt
