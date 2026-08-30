@@ -30,10 +30,12 @@ import static java.time.Duration.ofSeconds;
 public class GenAiObservabilityRoute extends RouteBuilder {
 
     @Override
-    public void configure() {
+    public void configure() throws Exception {
+        String baseUrl = getContext().resolvePropertyPlaceholders("{{ollama.baseUrl:http://localhost:11434}}");
+        String modelName = getContext().resolvePropertyPlaceholders("{{ollama.model:llama3.2}}");
         ChatModel chatModel = OllamaChatModel.builder()
-                .baseUrl("{{ollama.baseUrl:http://localhost:11434}}")
-                .modelName("{{ollama.model:llama3.2}}")
+                .baseUrl(baseUrl)
+                .modelName(modelName)
                 .temperature(0.2)
                 .timeout(ofSeconds(120))
                 .build();

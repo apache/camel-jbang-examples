@@ -77,7 +77,7 @@ camel ask "Which routes call an LLM and what model do they use?"
 ### Disable GenAI observability
 
 ```properties
-camel.ai.observability.enabled=false
+camel.aiObservability.enabled=false
 ```
 
 ### Help and contributions
