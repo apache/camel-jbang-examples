@@ -1,0 +1,17 @@
+{
+    "title": "GenAI Observability",
+    "description": "Observe LangChain4j LLM calls with OpenTelemetry gen_ai spans, Micrometer metrics, and the Camel TUI",
+    "tags": [
+        "ai",
+        "observability",
+        "langchain4j",
+        "opentelemetry",
+        "genai",
+        "tui"
+    ],
+    "bundled": false,
+    "level": "intermediate",
+    "infraServices": [
+        "ollama"
+    ]
+}

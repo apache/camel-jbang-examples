@@ -53,6 +53,31 @@
         ]
     },
     {
+        "name": "ai/genai-observability",
+        "title": "GenAI Observability",
+        "description": "Observe LangChain4j LLM calls with OpenTelemetry gen_ai spans, Micrometer metrics, and the Camel TUI",
+        "level": "intermediate",
+        "tags": [
+            "ai",
+            "observability",
+            "langchain4j",
+            "opentelemetry",
+            "genai",
+            "tui"
+        ],
+        "bundled": false,
+        "requiresDocker": true,
+        "hasCitrusTests": false,
+        "files": [
+            "GenAiObservabilityRoute.java",
+            "README.md",
+            "application.properties"
+        ],
+        "infraServices": [
+            "ollama"
+        ]
+    },
+    {
         "name": "ai/openai-pii-redaction",
         "title": "OpenAI PII Redaction",
         "description": "Redact personal identifiable information from text using OpenAI-compatible LLMs",
