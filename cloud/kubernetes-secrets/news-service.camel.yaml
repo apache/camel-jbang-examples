@@ -22,7 +22,9 @@
         httpMethodRestrict: GET
       steps:
         - setBody:
-            constant: "{{news.headline}}"
+            expression:
+              constant:
+                expression: "{{news.headline}}"
         - to:
             uri: "log:info"
             parameters:

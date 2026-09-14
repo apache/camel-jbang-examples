@@ -290,14 +290,18 @@ Routes are protected by adding a policy reference. The policy will validate the 
         - policy:
             ref: keycloakPolicy
         - setBody:
-            simple: |
-              {
-                "message": "This is a protected endpoint, admin role required",
-                "timestamp": "${date:now:yyyy-MM-dd'T'HH:mm:ss}"
-              }
+            expression:
+              simple:
+                expression: |
+                  {
+                    "message": "This is a protected endpoint, admin role required",
+                    "timestamp": "${date:now:yyyy-MM-dd'T'HH:mm:ss}"
+                  }
         - setHeader:
             name: Content-Type
-            constant: application/json
+            expression:
+              constant:
+                expression: application/json
         - log:
             message: "Protected API called"
 ```

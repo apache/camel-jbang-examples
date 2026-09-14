@@ -23,22 +23,29 @@
     exception:
       - "org.apache.camel.CamelAuthorizationException"
     handled:
-      constant: true
+      constant:
+        expression: true
     steps:
       - setHeader:
           name: CamelHttpResponseCode
-          constant: 403
+          expression:
+            constant:
+              expression: 403
       - setHeader:
           name: Content-Type
-          constant: application/json
+          expression:
+            constant:
+              expression: application/json
       - setBody:
-          simple: |
-            {
-              "error": "Forbidden",
-              "message": "Access denied. ${exception.message}",
-              "timestamp": "${date:now:yyyy-MM-dd'T'HH:mm:ss}",
-              "status": 403
-            }
+          expression:
+            simple:
+              expression: |
+                {
+                  "error": "Forbidden",
+                  "message": "Access denied. ${exception.message}",
+                  "timestamp": "${date:now:yyyy-MM-dd'T'HH:mm:ss}",
+                  "status": 403
+                }
       - log:
           message: "Authorization failed: ${exception.message}"
 
@@ -79,15 +86,19 @@
       uri: "platform-http:/api/public"
       steps:
         - setBody:
-            simple: |
-              {
-                "message": "This is a public endpoint, no authentication required",
-                "timestamp": "${date:now:yyyy-MM-dd'T'HH:mm:ss}",
-                "security": "none"
-              }
+            expression:
+              simple:
+                expression: |
+                  {
+                    "message": "This is a public endpoint, no authentication required",
+                    "timestamp": "${date:now:yyyy-MM-dd'T'HH:mm:ss}",
+                    "security": "none"
+                  }
         - setHeader:
             name: Content-Type
-            constant: application/json
+            expression:
+              constant:
+                expression: application/json
         - log:
             message: "Public API called"
 
@@ -102,22 +113,26 @@
         - policy:
             ref: keycloakIntrospectionPolicy
         - setBody:
-            simple: |
-              {
-                "message": "This is a protected endpoint using Token Introspection (RFC 7662)",
-                "timestamp": "${date:now:yyyy-MM-dd'T'HH:mm:ss}",
-                "security": "introspection",
-                "role_required": "admin",
-                "validation": "real-time via Keycloak introspection endpoint",
-                "features": [
-                  "Detects revoked tokens before expiration",
-                  "Centralized validation",
-                  "Caching enabled (TTL: {{keycloak.introspection.cache.ttl}}s)"
-                ]
-              }
+            expression:
+              simple:
+                expression: |
+                  {
+                    "message": "This is a protected endpoint using Token Introspection (RFC 7662)",
+                    "timestamp": "${date:now:yyyy-MM-dd'T'HH:mm:ss}",
+                    "security": "introspection",
+                    "role_required": "admin",
+                    "validation": "real-time via Keycloak introspection endpoint",
+                    "features": [
+                      "Detects revoked tokens before expiration",
+                      "Centralized validation",
+                      "Caching enabled (TTL: {{keycloak.introspection.cache.ttl}}s)"
+                    ]
+                  }
         - setHeader:
             name: Content-Type
-            constant: application/json
+            expression:
+              constant:
+                expression: application/json
         - log:
             message: "Protected API with Introspection called successfully"
 
@@ -131,22 +146,26 @@
         - policy:
             ref: keycloakStandardPolicy
         - setBody:
-            simple: |
-              {
-                "message": "This is a protected endpoint using standard JWT validation",
-                "timestamp": "${date:now:yyyy-MM-dd'T'HH:mm:ss}",
-                "security": "local-jwt",
-                "role_required": "admin",
-                "validation": "local JWT signature verification",
-                "features": [
-                  "Fast offline validation",
-                  "No network calls to Keycloak",
-                  "Cannot detect revoked tokens before expiration"
-                ]
-              }
+            expression:
+              simple:
+                expression: |
+                  {
+                    "message": "This is a protected endpoint using standard JWT validation",
+                    "timestamp": "${date:now:yyyy-MM-dd'T'HH:mm:ss}",
+                    "security": "local-jwt",
+                    "role_required": "admin",
+                    "validation": "local JWT signature verification",
+                    "features": [
+                      "Fast offline validation",
+                      "No network calls to Keycloak",
+                      "Cannot detect revoked tokens before expiration"
+                    ]
+                  }
         - setHeader:
             name: Content-Type
-            constant: application/json
+            expression:
+              constant:
+                expression: application/json
         - log:
             message: "Protected API with standard JWT called successfully"
 
@@ -157,51 +176,55 @@
       uri: "platform-http:/api/info"
       steps:
         - setBody:
-            simple: |
-              {
-                "example": "Keycloak Token Introspection REST API",
-                "endpoints": {
-                  "public": {
-                    "path": "/api/public",
-                    "security": "none",
-                    "description": "Public endpoint, no authentication required"
-                  },
-                  "protected_introspection": {
-                    "path": "/api/protected-introspection",
-                    "security": "token_introspection",
-                    "role": "admin",
-                    "description": "Real-time token validation via Keycloak introspection endpoint (RFC 7662)",
-                    "features": [
-                      "Detects revoked tokens",
-                      "Centralized validation",
-                      "Caching enabled"
-                    ]
-                  },
-                  "protected_standard": {
-                    "path": "/api/protected-standard",
-                    "security": "local_jwt",
-                    "role": "admin",
-                    "description": "Local JWT signature verification without introspection",
-                    "features": [
-                      "Fast offline validation",
-                      "No network overhead",
-                      "Cannot detect token revocation"
-                    ]
+            expression:
+              simple:
+                expression: |
+                  {
+                    "example": "Keycloak Token Introspection REST API",
+                    "endpoints": {
+                      "public": {
+                        "path": "/api/public",
+                        "security": "none",
+                        "description": "Public endpoint, no authentication required"
+                      },
+                      "protected_introspection": {
+                        "path": "/api/protected-introspection",
+                        "security": "token_introspection",
+                        "role": "admin",
+                        "description": "Real-time token validation via Keycloak introspection endpoint (RFC 7662)",
+                        "features": [
+                          "Detects revoked tokens",
+                          "Centralized validation",
+                          "Caching enabled"
+                        ]
+                      },
+                      "protected_standard": {
+                        "path": "/api/protected-standard",
+                        "security": "local_jwt",
+                        "role": "admin",
+                        "description": "Local JWT signature verification without introspection",
+                        "features": [
+                          "Fast offline validation",
+                          "No network overhead",
+                          "Cannot detect token revocation"
+                        ]
+                      }
+                    },
+                    "introspection_config": {
+                      "enabled": "{{keycloak.introspection.enabled}}",
+                      "cache_enabled": "{{keycloak.introspection.cache.enabled}}",
+                      "cache_ttl_seconds": "{{keycloak.introspection.cache.ttl}}"
+                    },
+                    "keycloak_config": {
+                      "server_url": "{{keycloak.server.url}}",
+                      "realm": "{{keycloak.realm}}",
+                      "client_id": "{{keycloak.client.id}}"
+                    }
                   }
-                },
-                "introspection_config": {
-                  "enabled": "{{keycloak.introspection.enabled}}",
-                  "cache_enabled": "{{keycloak.introspection.cache.enabled}}",
-                  "cache_ttl_seconds": "{{keycloak.introspection.cache.ttl}}"
-                },
-                "keycloak_config": {
-                  "server_url": "{{keycloak.server.url}}",
-                  "realm": "{{keycloak.realm}}",
-                  "client_id": "{{keycloak.client.id}}"
-                }
-              }
         - setHeader:
             name: Content-Type
-            constant: application/json
+            expression:
+              constant:
+                expression: application/json
         - log:
             message: "Info API called"

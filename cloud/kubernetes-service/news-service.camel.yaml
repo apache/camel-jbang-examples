@@ -22,7 +22,9 @@
         httpMethodRestrict: GET
       steps:
         - setBody:
-            constant: "Hello from Camel"
+            expression:
+              constant:
+                expression: "Hello from Camel"
         - to:
             uri: "log:info"
             parameters:

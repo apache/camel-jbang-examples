@@ -85,6 +85,13 @@ example. If your example ships a `test/`, add it to that workflow.
   `<name>.citrus.it.yaml`; Java package `camel.example.*`.
 - **License headers**: required on `application.properties` and `*.java`
   (ASF header). YAML route files do not carry a header.
+- **YAML format**: write routes in the canonical YAML DSL format — an expression
+  under `expression:` and a step as a map of its options
+  (`setBody: {expression: {simple: {expression: "..."}}}`, `log: {message: "..."}`,
+  `to: {uri: "..."}`). The compact notation (`setBody: {simple: "..."}`,
+  `log: "..."`, `- simple:` in a `when` item) is deprecated and `camel run` warns
+  about it. Check with `camel validate yaml --canonical <file>` (Camel 4.23+);
+  `camel validate normalize` rewrites a file but drops its comments.
 - **README**: follow the existing examples — title, description, install CLI,
   start infra, how to run, stop/cleanup, integration testing, community footer.
 
@@ -95,7 +102,8 @@ example. If your example ships a `test/`, add it to that workflow.
    and a correct `metadata.json`.
 3. Add `compose.yaml` if infra is required; add `test/` Citrus tests where it
    makes sense and wire them into `.github/workflows/build.yml`.
-4. Run it locally with `camel run` and verify the README's expected output.
+4. Run it locally with `camel run` and verify the README's expected output;
+   `camel validate yaml --canonical` must report nothing.
 5. Open the PR from your fork, link the JIRA ticket, and request review from
    active committers.
 
