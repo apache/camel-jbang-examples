@@ -500,7 +500,9 @@ ollama.timeout=300
 # Add to routes
 - setHeader:
     name: Authorization
-    constant: "Bearer ${env:API_TOKEN}"
+    expression:
+      constant:
+        expression: "Bearer ${env:API_TOKEN}"
 ```
 
 **2. Input Validation**

@@ -23,7 +23,9 @@
         repeatCount: "2"
       steps:
       - setBody:
-          constant: "Apple Inc. announced record-breaking profits in its latest quarterly earnings. The company's CEO praised the innovative team for their groundbreaking work on artificial intelligence and sustainable technology. Investors are optimistic about the future growth potential."
+          expression:
+            constant:
+              expression: "Apple Inc. announced record-breaking profits in its latest quarterly earnings. The company's CEO praised the innovative team for their groundbreaking work on artificial intelligence and sustainable technology. Investors are optimistic about the future growth potential."
       - log:
           message: "Analyzing comprehensive text: ${body}"
       - to:

@@ -36,7 +36,9 @@
             analyzeKeywords: "false"
       - setHeader:
           name: "Content-Type"
-          constant: "application/json"
+          expression:
+            constant:
+              expression: "application/json"
       - marshal:
           json: {}
 
@@ -61,7 +63,9 @@
             analyzeKeywords: "true"
       - setHeader:
           name: "Content-Type"
-          constant: "application/json"
+          expression:
+            constant:
+              expression: "application/json"
       - marshal:
           json: {}
 
@@ -87,6 +91,8 @@
             analyzeConcepts: "true"
       - setHeader:
           name: "Content-Type"
-          constant: "application/json"
+          expression:
+            constant:
+              expression: "application/json"
       - marshal:
           json: {}

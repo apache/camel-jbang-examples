@@ -23,7 +23,9 @@
         repeatCount: "3"
       steps:
       - setBody:
-          constant: "I love this product! It's absolutely amazing and exceeded all my expectations. The customer service was outstanding!"
+          expression:
+            constant:
+              expression: "I love this product! It's absolutely amazing and exceeded all my expectations. The customer service was outstanding!"
       - log:
           message: "Analyzing text: ${body}"
       - to:

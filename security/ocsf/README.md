@@ -208,10 +208,14 @@ After unmarshalling, you can access fields directly:
 ```yaml
 - setHeader:
     name: severity
-    simple: "${body.additionalProperties[severity]}"
+    expression:
+      simple:
+        expression: "${body.additionalProperties[severity]}"
 - setHeader:
     name: findingTitle
-    simple: "${body.findingInfo.title}"
+    expression:
+      simple:
+        expression: "${body.findingInfo.title}"
 ```
 
 Some fields are direct properties on the Java class (like `findingInfo`, `vulnerabilities`), while others are in `additionalProperties` (like `severity`, `time_dt`). Check the generated model classes in `camel-ocsf` if you need to know which is which.

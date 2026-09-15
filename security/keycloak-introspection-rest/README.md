@@ -496,10 +496,12 @@ Routes are protected by referencing the appropriate policy:
         - policy:
             ref: keycloakIntrospectionPolicy
         - setBody:
-            simple: |
-              {
-                "message": "Protected with introspection"
-              }
+            expression:
+              simple:
+                expression: |
+                  {
+                    "message": "Protected with introspection"
+                  }
 ```
 
 ### Introspection Flow

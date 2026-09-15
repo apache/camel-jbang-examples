@@ -62,12 +62,14 @@
         - log:
             message: "PQC signing key initialized successfully"
         - script:
-            groovy: |
-              // Register the KeyPair bean
-              def keyManager = camelContext.registry.lookupByNameAndType('keyLifecycleManager',
-                  org.apache.camel.component.pqc.lifecycle.HashicorpVaultKeyLifecycleManager.class)
-              def keyPair = keyManager.getKey('document-signing-key')
-              camelContext.registry.bind('signingKey', keyPair)
+            expression:
+              groovy:
+                expression: |
+                  // Register the KeyPair bean
+                  def keyManager = camelContext.registry.lookupByNameAndType('keyLifecycleManager',
+                      org.apache.camel.component.pqc.lifecycle.HashicorpVaultKeyLifecycleManager.class)
+                  def keyPair = keyManager.getKey('document-signing-key')
+                  camelContext.registry.bind('signingKey', keyPair)
         - to:
             uri: direct:get-key-metadata
 
@@ -83,15 +85,18 @@
             expression:
               simple:
                 expression: "${body}"
-        - toD: "pqc:sign?operation=sign&signatureAlgorithm=DILITHIUM&keyPair=#signingKey"
+        - toD:
+            uri: "pqc:sign?operation=sign&signatureAlgorithm=DILITHIUM&keyPair=#signingKey"
         - script:
-            groovy: |
-              // Convert binary signature to base64
-              def signature = exchange.message.getHeader('CamelPQCSignature', byte[].class)
-              if (signature != null) {
-                  def base64Signature = java.util.Base64.encoder.encodeToString(signature)
-                  exchange.message.setHeader('CamelPQCSignature', base64Signature)
-              }
+            expression:
+              groovy:
+                expression: |
+                  // Convert binary signature to base64
+                  def signature = exchange.message.getHeader('CamelPQCSignature', byte[].class)
+                  if (signature != null) {
+                      def base64Signature = java.util.Base64.encoder.encodeToString(signature)
+                      exchange.message.setHeader('CamelPQCSignature', base64Signature)
+                  }
         - log:
             message: "Document signed with quantum-resistant signature"
         - to:
@@ -112,7 +117,9 @@
                   }
         - setHeader:
             name: Content-Type
-            constant: "application/json"
+            expression:
+              constant:
+                expression: "application/json"
         - log:
             message: "Response: ${body}"
 
@@ -124,20 +131,23 @@
         - log:
             message: "Received document verification request: ${body}"
         - script:
-            groovy: |
-              // Get signature from X-Signature header
-              def base64Signature = exchange.getIn().getHeader('X-Signature', String.class)
-              if (base64Signature == null || base64Signature.isEmpty()) {
-                  throw new IllegalArgumentException('X-Signature header is missing or empty')
-              }
-              def signature = java.util.Base64.decoder.decode(base64Signature)
-              exchange.getIn().setHeader('CamelPQCSignature', signature)
-              exchange.getIn().setHeader('signatureLength', signature.length)
+            expression:
+              groovy:
+                expression: |
+                  // Get signature from X-Signature header
+                  def base64Signature = exchange.getIn().getHeader('X-Signature', String.class)
+                  if (base64Signature == null || base64Signature.isEmpty()) {
+                      throw new IllegalArgumentException('X-Signature header is missing or empty')
+                  }
+                  def signature = java.util.Base64.decoder.decode(base64Signature)
+                  exchange.getIn().setHeader('CamelPQCSignature', signature)
+                  exchange.getIn().setHeader('signatureLength', signature.length)
         - log:
             message: "Verifying signature of length: ${header.signatureLength} bytes"
         - doTry:
             steps:
-              - toD: "pqc:verify?operation=verify&signatureAlgorithm=DILITHIUM&keyPair=#signingKey"
+              - toD:
+                  uri: "pqc:verify?operation=verify&signatureAlgorithm=DILITHIUM&keyPair=#signingKey"
               - log:
                   message: "Verification completed. Result: ${header.CamelPQCVerification}"
             doCatch:
@@ -148,7 +158,9 @@
                       message: "ERROR during verification: ${exception.message}"
                   - setHeader:
                       name: CamelPQCVerification
-                      constant: false
+                      expression:
+                        constant:
+                          expression: false
         - choice:
             when:
               - expression:
@@ -181,7 +193,9 @@
                             }
         - setHeader:
             name: Content-Type
-            constant: "application/json"
+            expression:
+              constant:
+                expression: "application/json"
         - log:
             message: "Verification result: ${body}"
 
@@ -214,7 +228,9 @@
                   }
         - setHeader:
             name: Content-Type
-            constant: "application/json"
+            expression:
+              constant:
+                expression: "application/json"
         - log:
             message: "Keys listed: ${body}"
 
@@ -242,7 +258,9 @@
                   }
         - setHeader:
             name: Content-Type
-            constant: "application/json"
+            expression:
+              constant:
+                expression: "application/json"
 
 - route:
     id: check-rotation-schedule
@@ -287,13 +305,15 @@
               simple:
                 expression: "${body}"
         - script:
-            groovy: |
-              // Update last used timestamp and increment usage count
-              def metadata = exchange.getProperty('metadata')
-              if (metadata != null) {
-                  metadata.getClass().getMethod('updateLastUsed').invoke(metadata)
-                  exchange.message.setBody(metadata)
-              }
+            expression:
+              groovy:
+                expression: |
+                  // Update last used timestamp and increment usage count
+                  def metadata = exchange.getProperty('metadata')
+                  if (metadata != null) {
+                      metadata.getClass().getMethod('updateLastUsed').invoke(metadata)
+                      exchange.message.setBody(metadata)
+                  }
         - bean:
             ref: keyLifecycleManager
             method: "updateKeyMetadata('document-signing-key', ${body})"
@@ -327,7 +347,9 @@
                   }
         - setHeader:
             name: Content-Type
-            constant: "application/json"
+            expression:
+              constant:
+                expression: "application/json"
         - log:
             message: "Key metadata: ${body}"
 
