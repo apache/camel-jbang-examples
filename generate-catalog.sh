@@ -118,6 +118,8 @@ for dirpath, dirnames, filenames in sorted(os.walk(repo_root)):
         entry["infraServices"] = meta["infraServices"]
     if meta.get("ciSkip", False):
         entry["ciSkip"] = True
+    if "order" in meta:
+        entry["order"] = meta["order"]
     catalog.append(entry)
 
 with open(catalog_file, "w") as f:
@@ -144,6 +146,17 @@ by_level = {}
 for e in catalog:
     by_level.setdefault(e["level"], []).append(e)
 
+def by_order(e):
+    return (e.get("order", 999), e["name"])
+
+def table(entries, link_prefix):
+    rows = ["| Example | What you will see | Needs |", "|---|---|---|"]
+    for e in entries:
+        short = e["name"].split("/", 1)[1] if "/" in e["name"] else e["name"]
+        link = link_prefix + e["name"] + "/" if link_prefix is not None else short + "/"
+        rows.append(f"| [{e['title']}]({link}) | {e['description']} | {needs(e)} |")
+    return rows
+
 def needs(e):
     parts = []
     if e.get("infraServices"):
@@ -154,18 +167,46 @@ def needs(e):
 
 lines = []
 for level, title, intro in GROUPS:
-    entries = sorted(by_level.get(level, []), key=lambda x: x["name"])
+    entries = sorted(by_level.get(level, []), key=by_order)
     if not entries:
         continue
-    lines.append(f"### {title}")
+    lines.append(f"### [{title}]({level}/)")
     lines.append("")
     lines.append(intro)
     lines.append("")
-    lines.append("| Example | What you will see | Needs |")
-    lines.append("|---|---|---|")
-    for e in entries:
-        lines.append(f"| [{e['title']}]({e['name']}/) | {e['description']} | {needs(e)} |")
+    lines.extend(table(entries, ""))
     lines.append("")
+
+    # the group's own README: title, intro and its examples in reading order, between markers so
+    # prose outside them survives; created when missing
+    group_readme = os.path.join(repo_root, level, "README.md")
+    gstart, gend = "<!-- group:start -->", "<!-- group:end -->"
+    body = [intro, ""]
+    body.extend(table(entries, None))
+    body.append("")
+    first = entries[0]
+    first_short = first["name"].split("/", 1)[1]
+    if len(entries) == 1:
+        body.append(f"Start with [{first['title']}]({first_short}/).")
+    elif level in ("quick-start", "showcase"):
+        body.append(f"Start with [{first['title']}]({first_short}/); the others stand on their own, in any order.")
+    else:
+        body.append(f"Start with [{first['title']}]({first_short}/); the examples read best in the order above, "
+                    f"each one building on what the one before it set up.")
+    body.append("")
+    body.append("Every example has a README that says what you will see, how it works, how to build it step by step, "
+                "what to try changing, and how to run its test with `camel test run`.")
+    if os.path.exists(group_readme):
+        g = open(group_readme).read()
+        if gstart in g and gend in g:
+            a2 = g.index(gstart) + len(gstart)
+            b2 = g.index(gend)
+            g = g[:a2] + "\n" + "\n".join(body) + "\n" + g[b2:]
+        else:
+            g = g.rstrip("\n") + "\n\n" + gstart + "\n" + "\n".join(body) + "\n" + gend + "\n"
+    else:
+        g = f"# {title}\n\n{gstart}\n" + "\n".join(body) + f"\n{gend}\n"
+    open(group_readme, "w").write(g)
 readme_path = os.path.join(repo_root, "README.md")
 readme = open(readme_path).read()
 start, end = "<!-- examples:start -->", "<!-- examples:end -->"

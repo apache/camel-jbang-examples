@@ -2,6 +2,7 @@
     "title": "Aggregator",
     "description": "The warehouse reports each picked line on its own and the aggregator collects the lines of one order back into a shipment, correlated by the order id and complete when as many lines are in as the order had; each shipment is logged as JSON.",
     "level": "route",
+    "order": 3,
     "teaches": {
         "components": [
             "file",

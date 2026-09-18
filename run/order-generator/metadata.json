@@ -2,11 +2,26 @@
     "title": "Order generator",
     "description": "A timer creates a shop order every five seconds: a Java bean hands out the order number, the body is the order as JSON, and the log shows each new order. The order feed every later example starts from.",
     "level": "run",
+    "order": 1,
     "teaches": {
-        "components": ["timer", "log"],
-        "eips": ["setHeader", "setBody"],
-        "languages": ["simple", "method"]
+        "components": [
+            "timer",
+            "log"
+        ],
+        "eips": [
+            "setHeader",
+            "setBody"
+        ],
+        "languages": [
+            "simple",
+            "method"
+        ]
     },
-    "tags": ["shop", "timer", "bean", "json"],
+    "tags": [
+        "shop",
+        "timer",
+        "bean",
+        "json"
+    ],
     "bundled": false
 }

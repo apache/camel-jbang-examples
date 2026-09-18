@@ -2,6 +2,7 @@
     "title": "AWS SQS",
     "description": "Each of the three orders is put on an Amazon SQS queue called shipments and a courier route takes it off and logs the order, country and line count; locally the queue lives on the LocalStack that camel infra run aws sqs starts, and the same properties point at real AWS.",
     "level": "cloud",
+    "order": 1,
     "teaches": {
         "components": [
             "aws2-sqs",

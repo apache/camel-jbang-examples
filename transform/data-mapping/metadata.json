@@ -2,12 +2,31 @@
     "title": "Data mapping",
     "description": "The shop's order in order.json is mapped field by field to the courier's shipment format, with renamed fields, a nested recipient, one parcel per line, a computed total and a service chosen from the country; the order is parsed to a map, the script shipment-mapping.groovy builds the shipment, and it is logged as JSON.",
     "level": "transform",
+    "order": 4,
     "teaches": {
-        "components": ["timer", "log"],
-        "eips": ["unmarshal", "setBody", "marshal"],
-        "languages": ["groovy", "constant"],
-        "dataformats": ["json"]
+        "components": [
+            "timer",
+            "log"
+        ],
+        "eips": [
+            "unmarshal",
+            "setBody",
+            "marshal"
+        ],
+        "languages": [
+            "groovy",
+            "constant"
+        ],
+        "dataformats": [
+            "json"
+        ]
     },
-    "tags": ["shop", "mapping", "groovy", "json", "transformation"],
+    "tags": [
+        "shop",
+        "mapping",
+        "groovy",
+        "json",
+        "transformation"
+    ],
     "bundled": false
 }

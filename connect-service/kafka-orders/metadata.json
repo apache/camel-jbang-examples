@@ -2,6 +2,7 @@
     "title": "Kafka orders",
     "description": "The three orders go through a shared validation route to a Kafka topic on a broker started with camel infra; the pending one is stopped, the paid ones are dispatched to the fulfilment and notifications topics, whose consumers log the picking and the email; camel cmd route-topology draws the flow.",
     "level": "connect-service",
+    "order": 4,
     "teaches": {
         "components": [
             "kafka",

@@ -2,6 +2,7 @@
     "title": "Splitter",
     "description": "A timer creates a comma-separated batch of items, the splitter turns it into one message per item, and each item is logged on its own line.",
     "level": "quick-start",
+    "order": 3,
     "teaches": {
         "components": [
             "timer",

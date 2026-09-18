@@ -2,6 +2,7 @@
     "title": "LangChain4j chat",
     "description": "A local Ollama model started with camel infra writes the shipping notification for each of the three orders; the chat model is a bean built from properties, the prompt comes from the order, and the log shows the reply with its token counts.",
     "level": "ai",
+    "order": 1,
     "teaches": {
         "components": [
             "langchain4j-chat",

@@ -2,6 +2,7 @@
     "title": "Message Size",
     "description": "Timer routes send messages of small, medium and large sizes to seda queues with a Content-Length header, so camel cmd and the CLI's message-size views show sizes per endpoint.",
     "level": "showcase",
+    "order": 3,
     "teaches": {
         "components": [
             "timer",
