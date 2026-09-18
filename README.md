@@ -48,13 +48,13 @@ The examples provide automated integration tests in the [Citrus](https://citrusf
 Usually the Citrus tests are written in YAML files and named accordingly to the Camel CLI route source file.
 
 For instance the Camel route `mqtt.camel.yaml` route provides a test named `mqtt.citrus.it.yaml`.
-You can run the test with Citrus JBang like this:
+You can run the test with the Camel CLI like this:
 
 ```shell
 camel test run test/mqtt.citrus.it.yaml
 ```
 
-Usually the test prepares the complete infrastructure (e.g. via Docker compose) and starts the Camel route automatically via JBang.
+Usually the test prepares the complete infrastructure (e.g. via Docker compose) and starts the Camel route automatically.
 Of course the test also performs some validation steps to make sure that the Camel route works as expected.
 
 ## Other Examples

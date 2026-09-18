@@ -66,7 +66,7 @@ You can run the test with:
 camel test run test/petstore.citrus.it.yaml
 ```
 
-The test prepares the complete infrastructure and starts the Camel route automatically via JBang.
+The test prepares the complete infrastructure and starts the Camel route automatically.
 The Citrus test loads the Open API specification from the Camel service and uses the rules in that specification to verify the response data.
 
 ## Help and contributions

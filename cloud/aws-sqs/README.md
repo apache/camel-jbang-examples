@@ -87,7 +87,7 @@ You can run the test with:
 camel test run test/http-to-aws-sqs.citrus.it.yaml
 ```
 
-The test prepares the complete infrastructure and starts the Camel route automatically via JBang.
+The test prepares the complete infrastructure and starts the Camel route automatically.
 The Citrus test starts a Localstack Testcontainers instance to simulate the AWS SQS services.
 Once the AWS services are configured the test loads the Camel route and creates a proper Http POST request.
 As a result you will see the SQS data being consumed by the test to verify the event processing.

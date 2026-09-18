@@ -43,7 +43,7 @@ You can run the test with:
 citrus test/run petstore-client.citrus.it.yaml
 ```
 
-The test prepares the complete infrastructure and starts the Camel route automatically via JBang.
+The test prepares the complete infrastructure and starts the Camel route automatically.
 
 ## Help and contributions
 

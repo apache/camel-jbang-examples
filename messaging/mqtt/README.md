@@ -92,7 +92,7 @@ You can run the test with:
 camel test run test/mqtt.citrus.it.yaml
 ```
 
-The test prepares the complete infrastructure (e.g. via Docker compose) and starts the Camel route automatically via JBang.
+The test prepares the complete infrastructure (e.g. via Docker compose) and starts the Camel route automatically.
 The test sends some test data to the MQTT broker and verifies that the Camel route successfully processes the messages.
 
 ## Help and contributions

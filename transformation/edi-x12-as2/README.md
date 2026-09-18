@@ -48,7 +48,7 @@ You can run the test with:
 camel test run test/edi-x12-as2.citrus.it.yaml
 ```
 
-The test prepares the complete infrastructure and starts the Camel route automatically via JBang. The test sends some test data to the AS2 endpoint and verifies that the Camel route successfully processed the purchase order.
+The test prepares the complete infrastructure and starts the Camel route automatically. The test sends some test data to the AS2 endpoint and verifies that the Camel route successfully processed the purchase order.
 
 ## Help and contributions
 
