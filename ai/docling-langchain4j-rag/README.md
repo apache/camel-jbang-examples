@@ -50,7 +50,6 @@ Documents -> Docling (Convert) -> Markdown -> LangChain4j -> Ollama (LLM) -> Ana
 docling-langchain4j-rag/
 ├── docling-langchain4j-rag.yaml   # Main YAML configuration
 ├── application.properties          # Configuration settings
-├── compose.yaml                    # Docker Compose for services
 ├── sample.md                       # Sample document (copy to documents/ for testing)
 ├── README.md                       # This file
 ├── documents/                      # Input directory (files auto-deleted after processing)
@@ -61,51 +60,15 @@ docling-langchain4j-rag/
 
 ### Step 1: Start Required Services
 
-You have two options for running the required services:
-
-#### Option A: Using Docker Compose (Recommended)
-
-Start both Docling and Ollama services:
+The Camel CLI starts both services in containers (Docker or Podman must be running):
 
 ```sh
-$ docker compose up -d
+$ camel infra run docling ollama
 ```
 
-Pull the Ollama model (first time only):
-
-```sh
-$ docker exec -it ollama ollama pull orca-mini
-```
-
-Verify services are running:
-
-```sh
-$ curl http://localhost:5001/   # Docling
-$ curl http://localhost:11434/  # Ollama
-```
-
-#### Option B: Using Camel Infra Commands (If Available)
-
-```sh
-# Start Docling (if camel infra supports it)
-$ jbang -Dcamel.jbang.version=4.16.0 camel@apache/camel infra run docling
-
-# Start Ollama (if camel infra supports it)
-$ jbang -Dcamel.jbang.version=4.16.0 camel@apache/camel infra run ollama
-```
-
-#### Option C: Manual Docker Commands
-
-```sh
-# Start Docling-Serve
-$ docker run -d -p 5001:5001 --name docling-serve ghcr.io/docling-project/docling-serve:latest
-
-# Start Ollama
-$ docker run -d -p 11434:11434 --name ollama ollama/ollama:latest
-
-# Pull Ollama model
-$ docker exec -it ollama ollama pull orca-mini
-```
+Docling serves on http://localhost:5001 and Ollama on http://localhost:11434, where the container pulls the
+`granite4:3b` model on first start; both match `application.properties`. Stop them later with
+`camel infra stop docling` and `camel infra stop ollama`.
 
 ### Step 2: Create Required Directories
 
@@ -120,8 +83,7 @@ $ mkdir -p documents output
 ### Step 3: Run the Camel Application
 
 ```sh
-$ jbang -Dcamel.jbang.version=4.16.0 camel@apache/camel run \
-  --fresh \
+$ camel run *
   --dep=camel:docling \
   --dep=camel:langchain4j-chat \
   --dep=camel:platform-http \
@@ -549,7 +511,8 @@ Stop all services:
 
 ```sh
 # Docker Compose
-$ docker compose down
+$ camel infra stop docling
+$ camel infra stop ollama
 
 # Or manual cleanup
 $ docker stop docling-serve ollama

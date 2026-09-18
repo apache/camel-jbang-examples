@@ -1,0 +1,77 @@
+name: mcp-server-test
+description: The shop tools answer over MCP
+actions:
+  - camel:
+      jbang:
+        run:
+          integration:
+            name: "mcp-server"
+            file: "../mcp-server.camel.yaml"
+            systemProperties:
+              file: "../application.properties"
+          resources:
+            - "stock.json"
+            - "orders/order-1001.json"
+            - "orders/order-1002.json"
+            - "orders/order-1003.json"
+  - camel:
+      jbang:
+        verify:
+          integration: "mcp-server"
+          logMessage: "MCP server 'webshop' serving tools"
+  - http:
+      client: "http://localhost:8080"
+      sendRequest:
+        POST:
+          path: "/mcp"
+          contentType: "application/json"
+          accept: "application/json, text/event-stream"
+          body:
+            data: '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"citrus","version":"1"}}}'
+  - http:
+      client: "http://localhost:8080"
+      receiveResponse:
+        response:
+          status: "200"
+        extract:
+          header:
+            - name: "Mcp-Session-Id"
+              variable: "sessionId"
+  - http:
+      client: "http://localhost:8080"
+      sendRequest:
+        POST:
+          path: "/mcp"
+          contentType: "application/json"
+          accept: "application/json, text/event-stream"
+          headers:
+            - name: "Mcp-Session-Id"
+              value: "${sessionId}"
+          body:
+            data: '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"stock_level","arguments":{"sku":"CAMEL-MUG"}}}'
+  - http:
+      client: "http://localhost:8080"
+      receiveResponse:
+        response:
+          status: "200"
+          body:
+            data: "@contains('42 CAMEL-MUG in stock')@"
+  - http:
+      client: "http://localhost:8080"
+      sendRequest:
+        POST:
+          path: "/mcp"
+          contentType: "application/json"
+          accept: "application/json, text/event-stream"
+          headers:
+            - name: "Mcp-Session-Id"
+              value: "${sessionId}"
+          body:
+            data: '{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"order_status","arguments":{"orderId":"ORD-1003"}}}'
+  - http:
+      client: "http://localhost:8080"
+      receiveResponse:
+        response:
+          status: "200"
+          body:
+            data: "@contains('Order ORD-1003 for customer C-134 in US is pending with 3 line(s)')@"

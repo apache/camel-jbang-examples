@@ -1,0 +1,82 @@
+# Two routes exposed as MCP tools, so an AI agent can ask the shop about
+# stock and orders. No server route is needed: application.properties
+# switches the MCP server on and picks the tools by tag.
+- route:
+    id: stock-level
+    from:
+      uri: ai-tool:stock_level
+      parameters:
+        tags: shop
+        description: "Stock level of one product in the warehouse, by SKU"
+        parameter.sku: string
+        parameter.sku.description: "The product SKU, for example CAMEL-MUG"
+        parameter.sku.required: "true"
+        readOnlyHint: "true"
+      steps:
+        - setBody:
+            expression:
+              constant:
+                expression: resource:file:stock.json
+        - setBody:
+            expression:
+              jsonpath:
+                expression: "$[?(@.sku == '${header.sku}')]"
+                resultType: java.util.List
+        - choice:
+            when:
+              - expression:
+                  simple:
+                    expression: "${body.size()} == 0"
+                steps:
+                  - setBody:
+                      expression:
+                        simple:
+                          expression: "Unknown SKU ${header.sku}"
+            otherwise:
+              steps:
+                - setBody:
+                    expression:
+                      simple:
+                        expression: "${body[0][qty]} ${header.sku} in stock"
+        - log:
+            message: "Tool stock_level(${header.sku}): ${body}"
+
+- route:
+    id: order-status
+    from:
+      uri: ai-tool:order_status
+      parameters:
+        tags: shop
+        description: "Status and lines of an order, by order id"
+        parameter.orderId: string
+        parameter.orderId.description: "The order id, for example ORD-1001"
+        parameter.orderId.required: "true"
+        readOnlyHint: "true"
+      steps:
+        # order ORD-1001 is the file orders/order-1001.json
+        - pollEnrich:
+            expression:
+              simple:
+                expression: "file:orders?fileName=order-${header.orderId.substring(4)}.json&noop=true&idempotent=false"
+            timeout: 1000
+        - choice:
+            when:
+              - expression:
+                  simple:
+                    expression: "${body} == null"
+                steps:
+                  - setBody:
+                      expression:
+                        simple:
+                          expression: "Unknown order ${header.orderId}"
+            otherwise:
+              steps:
+                - unmarshal:
+                    json:
+                      library: Jackson
+                - setBody:
+                    expression:
+                      simple:
+                        expression: "Order ${body[orderId]} for customer ${body[customer]} in ${body[country]} is ${body[status]} with ${body[lines].size()} line(s)"
+        - log:
+            message: "Tool order_status(${header.orderId}): ${body}"

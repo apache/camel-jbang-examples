@@ -1,0 +1,51 @@
+name: langchain4j-chat-test
+description: A local model writes the shipping notification for an order
+actions:
+  - camel:
+      infra:
+        run:
+          service: ollama
+          # a side port, so an Ollama already installed on the machine does not get in the way
+          port: 11435
+  # the container pulls the model after it starts; wait until Ollama lists it
+  - repeatOnError:
+      until: i >= 60
+      index: i
+      autoSleep: 5000
+      actions:
+        - http:
+            client: "http://localhost:11435"
+            sendRequest:
+              GET:
+                path: "/api/tags"
+        - http:
+            client: "http://localhost:11435"
+            receiveResponse:
+              response:
+                status: "200"
+              validate:
+                - jsonPath:
+                    - expression: "$.models[?(@.name=='granite4:3b')].name"
+                      value: "granite4:3b"
+  - camel:
+      jbang:
+        run:
+          integration:
+            name: "langchain4j-chat"
+            file: "../langchain4j-chat.camel.yaml"
+            # the properties file would win over an inline property, so both are given here
+            systemProperties:
+              properties:
+                - name: ollama.base.url
+                  value: http://localhost:11435
+                - name: ollama.model
+                  value: granite4:3b
+          resources:
+            - "orders/order-1001.json"
+            - "orders/order-1002.json"
+            - "orders/order-1003.json"
+  - camel:
+      jbang:
+        verify:
+          integration: "langchain4j-chat"
+          logMessage: "Notification for ORD-1001"

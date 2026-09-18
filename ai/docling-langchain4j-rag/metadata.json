@@ -31,5 +31,6 @@
     "infraServices": [
         "docling",
         "ollama"
-    ]
+    ],
+    "requiresDocker": true
 }

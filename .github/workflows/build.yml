@@ -76,6 +76,8 @@ jobs:
             path: connect/http-client
           - name: File processing
             path: connect/file-processing
+          - name: MCP server
+            path: ai/mcp-server
           - name: OpenAPI server
             path: contracts/openapi-server
           - name: OpenAPI client
