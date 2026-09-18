@@ -116,6 +116,8 @@ for dirpath, dirnames, filenames in sorted(os.walk(repo_root)):
     }
     if "infraServices" in meta:
         entry["infraServices"] = meta["infraServices"]
+    if meta.get("ciSkip", False):
+        entry["ciSkip"] = True
     catalog.append(entry)
 
 with open(catalog_file, "w") as f:
@@ -123,4 +125,54 @@ with open(catalog_file, "w") as f:
     f.write("\n")
 
 print(f"Generated {catalog_file} with {len(catalog)} examples")
+
+# render the example tables of README.md, between the markers, one table per group in ladder order
+GROUPS = [
+    ("quick-start", "Quick start", "The first ten minutes: generic examples with no story and no service, each running in seconds."),
+    ("run", "Run", "Running Camel: timers and cron schedules, a bean in a route, properties and profiles."),
+    ("transform", "Transform and map", "JSON, XML and CSV in and out, field-by-field mapping, Groovy and XSLT."),
+    ("route", "Route", "The routing patterns: content-based router, splitter, aggregator, filter and multicast."),
+    ("fail-well", "Fail well", "Retries, a dead letter channel, and a circuit breaker in front of a flaky service."),
+    ("connect", "Connect without a service", "Files, an HTTP client and a REST server; everything runs inside the example."),
+    ("connect-service", "Connect to one service", "SQL, JMS, MQTT, Kafka and FTP against a service the Camel CLI starts for you with `camel infra run`."),
+    ("contracts", "Contracts and security", "An OpenAPI contract served and called, and an API protected by Keycloak."),
+    ("ai", "AI", "A local model writing text, routes exposed as MCP tools, RAG over documents, PII redaction."),
+    ("cloud", "Cloud", "A cloud service, run locally through LocalStack and switched to the real thing by properties."),
+    ("showcase", "Showcase", "Tooling demos outside the ladder: the TUI, a memory leak, message sizes, log analysis."),
+]
+by_level = {}
+for e in catalog:
+    by_level.setdefault(e["level"], []).append(e)
+
+def needs(e):
+    parts = []
+    if e.get("infraServices"):
+        parts.append("`camel infra run " + " ".join(e["infraServices"]) + "`")
+    if e.get("ciSkip"):
+        parts.append("a local model")
+    return ", ".join(parts) if parts else "nothing"
+
+lines = []
+for level, title, intro in GROUPS:
+    entries = sorted(by_level.get(level, []), key=lambda x: x["name"])
+    if not entries:
+        continue
+    lines.append(f"### {title}")
+    lines.append("")
+    lines.append(intro)
+    lines.append("")
+    lines.append("| Example | What you will see | Needs |")
+    lines.append("|---|---|---|")
+    for e in entries:
+        lines.append(f"| [{e['title']}]({e['name']}/) | {e['description']} | {needs(e)} |")
+    lines.append("")
+readme_path = os.path.join(repo_root, "README.md")
+readme = open(readme_path).read()
+start, end = "<!-- examples:start -->", "<!-- examples:end -->"
+if start in readme and end in readme:
+    a = readme.index(start) + len(start)
+    b = readme.index(end)
+    readme = readme[:a] + "\n" + "\n".join(lines) + readme[b:]
+    open(readme_path, "w").write(readme)
+    print(f"Updated the example tables in {readme_path}")
 PYEOF
