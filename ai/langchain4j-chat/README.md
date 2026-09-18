@@ -7,8 +7,8 @@ token counts in headers.
 ## What you will see
 
 ```text
-INFO ... langchain4j-chat.camel.yaml:45 : Notification for ORD-1001 (126 in, 51 out): Dear Customer C-482,
-INFO ... langchain4j-chat.camel.yaml:45 : Notification for ORD-1002 (107 in, 35 out): Dear Customer C-207,
+INFO ... langchain4j-chat.camel.yaml:45      : Notification for ORD-1002 (107 in, 35 out): Dear Customer C-207,
+Your order ORD-1002 containing 3 CAMEL-MUGs has been shipped today. We hope you enjoy your new items!
 ```
 
 The wording is the model's; `granite4:3b` writes plainly, a larger model writes better.
