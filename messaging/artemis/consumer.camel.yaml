@@ -1,9 +1,0 @@
-- route:
-    from:
-      uri: jms
-      parameters:
-        destinationName: numbers
-      steps:
-        - log:
-            message: "${body}"
-

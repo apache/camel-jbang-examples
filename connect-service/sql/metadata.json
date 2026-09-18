@@ -1,0 +1,34 @@
+{
+    "title": "SQL database",
+    "description": "Against a Postgres started with camel infra, a customers table is created, the three orders register their customers with an insert that counts orders on conflict, and every ten seconds a select lists the customers; run it twice and the order counts go up.",
+    "level": "connect-service",
+    "teaches": {
+        "components": [
+            "sql",
+            "file",
+            "timer",
+            "log"
+        ],
+        "eips": [
+            "split",
+            "unmarshal"
+        ],
+        "languages": [
+            "simple"
+        ],
+        "dataformats": [
+            "json"
+        ]
+    },
+    "tags": [
+        "shop",
+        "sql",
+        "postgres",
+        "database"
+    ],
+    "infraServices": [
+        "postgres"
+    ],
+    "requiresDocker": true,
+    "bundled": false
+}

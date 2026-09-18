@@ -1,0 +1,33 @@
+{
+    "title": "MQTT sensors",
+    "description": "Temperature sensors in the warehouse's cold rooms publish JSON readings on an MQTT topic of a Mosquitto broker started with camel infra; a consumer logs each reading and raises a warning when a room is above 8 degrees.",
+    "level": "connect-service",
+    "teaches": {
+        "components": [
+            "paho-mqtt5",
+            "timer",
+            "log"
+        ],
+        "eips": [
+            "choice",
+            "unmarshal"
+        ],
+        "languages": [
+            "simple"
+        ],
+        "dataformats": [
+            "json"
+        ]
+    },
+    "tags": [
+        "shop",
+        "mqtt",
+        "mosquitto",
+        "iot"
+    ],
+    "infraServices": [
+        "mosquitto"
+    ],
+    "requiresDocker": true,
+    "bundled": false
+}

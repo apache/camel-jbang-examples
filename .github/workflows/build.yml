@@ -28,10 +28,18 @@ jobs:
     strategy:
       matrix:
         include:
-          - name: FTP messaging
-            path: messaging/ftp
-          - name: MQTT messaging
-            path: messaging/mqtt
+          - name: SQL database
+            path: connect-service/sql
+          - name: MQTT sensors
+            path: connect-service/mqtt
+          - name: Kafka orders
+            path: connect-service/kafka-orders
+          - name: Artemis queue
+            path: connect-service/artemis
+          - name: FTP courier
+            path: connect-service/ftp
+          - name: Camel 1.0 tribute
+            path: connect-service/camel-1-tribute
           - name: Order generator
             path: run/order-generator
           - name: Nightly report

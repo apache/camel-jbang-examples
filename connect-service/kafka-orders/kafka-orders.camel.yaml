@@ -1,0 +1,104 @@
+# Orders flow through validation to a Kafka topic, where fulfilment and
+# notification each pick them up. Start Kafka with: camel infra run kafka
+# See how the routes connect with: camel cmd route-topology <pid>
+- route:
+    id: incoming-orders
+    from:
+      uri: file
+      parameters:
+        directoryName: orders
+        noop: true
+        sortBy: "file:name"
+      steps:
+        - setHeader:
+            name: orderId
+            expression:
+              jsonpath:
+                expression: "$.orderId"
+        - setHeader:
+            name: status
+            expression:
+              jsonpath:
+                expression: "$.status"
+        - to:
+            uri: direct:validate-order
+        - setHeader:
+            name: CamelKafkaKey
+            expression:
+              simple:
+                expression: "${header.orderId}"
+        - to:
+            uri: kafka
+            parameters:
+              topic: orders
+        - log:
+            message: "Published ${header.orderId} to the orders topic"
+
+# Shared by every way an order can come in
+- route:
+    id: validate-order
+    from:
+      uri: direct
+      parameters:
+        name: validate-order
+      steps:
+        - choice:
+            when:
+              - expression:
+                  simple:
+                    expression: "${header.status} != 'paid'"
+                steps:
+                  - log:
+                      message: "Order ${header.orderId} is ${header.status}, not published"
+                  - stop: {}
+            otherwise:
+              steps:
+                - log:
+                    message: "Order ${header.orderId} validated"
+
+# Picks up orders and fans out to the two departments
+- route:
+    id: dispatch
+    from:
+      uri: kafka
+      parameters:
+        topic: orders
+      steps:
+        - log:
+            message: "Dispatching ${header.orderId} from partition ${header.CamelKafkaPartition} offset ${header.CamelKafkaOffset}"
+        - multicast:
+            steps:
+              - to:
+                  uri: kafka
+                  parameters:
+                    topic: fulfilment
+              - to:
+                  uri: kafka
+                  parameters:
+                    topic: notifications
+
+- route:
+    id: fulfilment
+    from:
+      uri: kafka
+      parameters:
+        topic: fulfilment
+      steps:
+        - unmarshal:
+            json:
+              library: Jackson
+        - log:
+            message: "Fulfilment: ${body[lines].size()} line(s) of ${body[orderId]} to the warehouse"
+
+- route:
+    id: notification
+    from:
+      uri: kafka
+      parameters:
+        topic: notifications
+      steps:
+        - unmarshal:
+            json:
+              library: Jackson
+        - log:
+            message: "Notification: email to customer ${body[customer]} about ${body[orderId]}"

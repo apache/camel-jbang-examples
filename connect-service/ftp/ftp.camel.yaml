@@ -1,0 +1,43 @@
+# Shipments are handed to the courier as files on its FTP server. An order on
+# the shipments queue becomes one file per order. Start both services with:
+# camel infra run artemis ftp
+- route:
+    id: ready-to-ship
+    from:
+      uri: file
+      parameters:
+        directoryName: orders
+        noop: true
+        sortBy: "file:name"
+      steps:
+        - setHeader:
+            name: orderId
+            expression:
+              jsonpath:
+                expression: "$.orderId"
+        - to:
+            uri: jms
+            parameters:
+              destinationType: queue
+              destinationName: shipments
+
+- route:
+    id: courier-upload
+    from:
+      uri: jms
+      parameters:
+        destinationType: queue
+        destinationName: shipments
+      steps:
+        - to:
+            uri: ftp
+            parameters:
+              host: localhost
+              port: 2121
+              directoryName: courier
+              username: admin
+              password: admin
+              fileName: "shipment-${header.orderId}.json"
+              passiveMode: true
+        - log:
+            message: "Shipment ${header.orderId} uploaded to the courier as ${header.CamelFileNameProduced}"
