@@ -61,8 +61,8 @@ The MCP server is a preview feature since Camel 4.22.
   and `readOnlyHint` as an advisory hint. When a client calls the tool, the arguments arrive as headers and the
   route's final body is the tool result.
 - `tags: shop` groups the tools; `camel.server.mcp-tags=shop` in `application.properties` exposes that group.
-  `camel.server.mcp-enabled=true` starts the MCP server on the CLI's HTTP server; the name and description
-  are what the client shows.
+  `camel.server.mcp-enabled=true` starts the MCP server on the CLI's HTTP server and `camel.server.mcp-server-name`
+  is what the client shows; Camel 4.23 adds a title, description and instructions next to it.
 - `order_status` reads the order file with `pollEnrich` and a file name built from the id, `order-1001.json`
   for `ORD-1001`, and answers a sentence; a missing file leaves the body null, which becomes the unknown answer.
 - Nothing here is specific to MCP: the same `ai-tool` routes are the tools of a Camel agent built with
