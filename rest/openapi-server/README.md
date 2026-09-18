@@ -58,16 +58,15 @@ The REST service in Camel is configured to load example response data from a dir
 
 ## Integration testing
 
-The example provides an automated integration test (`petstore.citrus.it.yaml`) that you can run with the [Citrus](https://citrusframework.org/) test framework.
-Please make sure to install Citrus as a JBang application (see [Citrus installation guide](../../install-citrus.adoc)).
+The example provides an automated integration test (`petstore.citrus.it.yaml`) in the [Citrus](https://citrusframework.org/) YAML DSL, which the Camel CLI runs (the test plugin installs on first use).
 
 You can run the test with:
 
 ```shell
-citrus run test/petstore.citrus.it.yaml
+camel test run test/petstore.citrus.it.yaml
 ```
 
-The test prepares the complete infrastructure and starts the Camel route automatically via JBang.
+The test prepares the complete infrastructure and starts the Camel route automatically.
 The Citrus test loads the Open API specification from the Camel service and uses the rules in that specification to verify the response data.
 
 ## Help and contributions

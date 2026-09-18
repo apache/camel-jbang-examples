@@ -75,11 +75,10 @@ jobs:
           source "/home/runner/.sdkman/bin/sdkman-init.sh"
           jbang --version
 
-          jbang trust add https://github.com/citrusframework/citrus/
           jbang trust add https://github.com/apache/camel/
 
-          jbang citrus@citrusframework/citrus --version
           jbang camel@apache/camel --version
+          jbang camel@apache/camel plugin add test
       - name: Run tests
         env:
           CITRUS_CAMEL_JBANG_DUMP_INTEGRATION_OUTPUT: "true"
@@ -87,7 +86,7 @@ jobs:
           CITRUS_TESTCONTAINERS_REGISTRY_MIRROR: "mirror.gcr.io"
         run: |
           source "/home/runner/.sdkman/bin/sdkman-init.sh"
-          jbang citrus@citrusframework/citrus run ${{ matrix.path }}/test
+          jbang camel@apache/camel test run ${{ matrix.path }}/test
       - uses: actions/upload-artifact@v4
         if: always()
         with:
