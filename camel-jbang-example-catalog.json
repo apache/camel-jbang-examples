@@ -44,48 +44,6 @@
         ]
     },
     {
-        "name": "ai/financial-doc-analyzer",
-        "title": "Financial Document Analyzer",
-        "description": "Financial documents dropped in a directory are converted by Docling, analysed by a local Ollama model, enriched with market data over HTTP, and the analysis is written out and served over HTTP.",
-        "level": "ai",
-        "teaches": {
-            "components": [
-                "file",
-                "docling",
-                "langchain4j-chat",
-                "http",
-                "platform-http"
-            ],
-            "eips": [
-                "choice",
-                "script",
-                "toD"
-            ]
-        },
-        "tags": [
-            "ai",
-            "langchain4j",
-            "docling",
-            "finance"
-        ],
-        "bundled": false,
-        "requiresDocker": true,
-        "hasCitrusTests": false,
-        "files": [
-            "README.md",
-            "application.properties",
-            "examples/banking-sector-brief.pdf",
-            "examples/magnificent-seven-update.pdf",
-            "examples/semiconductor-sector-analysis.pdf",
-            "examples/tesla-q3-2024.pdf",
-            "financial-doc-analyzer.yaml"
-        ],
-        "infraServices": [
-            "docling",
-            "ollama"
-        ]
-    },
-    {
         "name": "ai/genai-observability",
         "title": "GenAI Observability",
         "description": "A timer sends a prompt to a local Ollama model through langchain4j-chat every fifteen seconds and logs the reply and the model name; with --observe, OpenTelemetry gen_ai spans and Micrometer metrics show token usage per call.",
@@ -239,32 +197,6 @@
         ]
     },
     {
-        "name": "beginner/cron-log",
-        "title": "Cron Log",
-        "description": "A cron trigger fires every five seconds and logs the message from application.properties.",
-        "level": "run",
-        "teaches": {
-            "components": [
-                "cron",
-                "log"
-            ]
-        },
-        "tags": [
-            "beginner",
-            "timer",
-            "cron",
-            "log"
-        ],
-        "bundled": true,
-        "requiresDocker": false,
-        "hasCitrusTests": false,
-        "files": [
-            "README.md",
-            "application.properties",
-            "cron-log.camel.yaml"
-        ]
-    },
-    {
         "name": "beginner/rest-api",
         "title": "REST API",
         "description": "A REST API on port 8080: GET /api/hello answers the greeting from application.properties and GET /api/hello/{name} answers a greeting with the name.",
@@ -381,35 +313,6 @@
         "files": [
             "README.md",
             "tui-hello-world.yaml"
-        ]
-    },
-    {
-        "name": "cloud/aws-s3-event-based",
-        "title": "AWS S3 CDC",
-        "description": "Object events from an S3 bucket, delivered through EventBridge to an SQS queue, are consumed with the aws-s3-cdc-source Kamelet and logged; a change data capture feed for a bucket.",
-        "level": "cloud",
-        "teaches": {
-            "components": [
-                "kamelet"
-            ]
-        },
-        "tags": [
-            "aws",
-            "s3",
-            "sqs",
-            "eventbridge",
-            "cloud"
-        ],
-        "bundled": false,
-        "requiresDocker": false,
-        "hasCitrusTests": true,
-        "files": [
-            "README.md",
-            "application.properties",
-            "aws-s3-cdc-log.camel.yaml",
-            "example-file.txt",
-            "policy-queue.json",
-            "terraform/main.tf"
         ]
     },
     {
@@ -899,39 +802,6 @@
             "examples/pet/1000.json",
             "petstore-api.json",
             "petstore.camel.yaml"
-        ]
-    },
-    {
-        "name": "security/keycloak-introspection-rest",
-        "title": "Keycloak Token Introspection REST API",
-        "description": "A REST API on platform-http validates bearer tokens by OAuth 2.0 introspection against a running Keycloak, with the introspection result cached; requests without a valid token are refused with 401.",
-        "level": "contracts",
-        "teaches": {
-            "components": [
-                "platform-http",
-                "log"
-            ],
-            "eips": [
-                "policy",
-                "onException"
-            ]
-        },
-        "tags": [
-            "security",
-            "keycloak",
-            "rest",
-            "oauth"
-        ],
-        "bundled": false,
-        "requiresDocker": true,
-        "hasCitrusTests": false,
-        "files": [
-            "README.md",
-            "application.properties",
-            "rest-api.camel.yaml"
-        ],
-        "infraServices": [
-            "keycloak"
         ]
     },
     {
