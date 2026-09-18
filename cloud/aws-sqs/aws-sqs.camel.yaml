@@ -1,0 +1,36 @@
+# Shipments are handed to the courier through an Amazon SQS queue: the shop
+# puts each order on the queue, the courier's system takes it off. Locally
+# the queue lives on LocalStack, started with: camel infra run aws sqs
+- route:
+    id: hand-over
+    from:
+      uri: file
+      parameters:
+        directoryName: orders
+        noop: true
+        sortBy: "file:name"
+      steps:
+        - setHeader:
+            name: orderId
+            expression:
+              jsonpath:
+                expression: "$.orderId"
+        - to:
+            uri: aws2-sqs
+            parameters:
+              queueNameOrArn: shipments
+        - log:
+            message: "Order ${header.orderId} handed over on the shipments queue"
+
+- route:
+    id: courier
+    from:
+      uri: aws2-sqs
+      parameters:
+        queueNameOrArn: shipments
+      steps:
+        - unmarshal:
+            json:
+              library: Jackson
+        - log:
+            message: "Courier picked up ${body[orderId]} for ${body[country]}: ${body[lines].size()} line(s)"
