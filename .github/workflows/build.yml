@@ -62,6 +62,12 @@ jobs:
             path: fail-well/error-handling
           - name: Circuit breaker
             path: fail-well/circuit-breaker
+          - name: Stock API
+            path: connect/stock-api
+          - name: HTTP client
+            path: connect/http-client
+          - name: File processing
+            path: connect/file-processing
           - name: OpenAPI server
             path: rest/openapi-server
           - name: OpenAPI client

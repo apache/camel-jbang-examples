@@ -342,6 +342,140 @@
         ]
     },
     {
+        "name": "connect/file-processing",
+        "title": "File processing",
+        "description": "A courier route copies five files into an inbox; the invoices are checked, archived under a month directory and moved to done, the invoice with a negative amount is rejected with a warning and moved to failed, and the driver's note is left alone because only .json files are picked up.",
+        "level": "connect",
+        "teaches": {
+            "components": [
+                "file",
+                "log"
+            ],
+            "eips": [
+                "validate",
+                "onException",
+                "unmarshal",
+                "marshal"
+            ],
+            "languages": [
+                "simple"
+            ],
+            "dataformats": [
+                "json"
+            ]
+        },
+        "tags": [
+            "shop",
+            "file",
+            "inbox",
+            "archive"
+        ],
+        "bundled": false,
+        "requiresDocker": false,
+        "hasCitrusTests": true,
+        "files": [
+            "README.md",
+            "application.properties",
+            "file-processing.camel.yaml",
+            "samples/invoice-2001.json",
+            "samples/invoice-2002.json",
+            "samples/invoice-2003.json",
+            "samples/invoice-2004.json",
+            "samples/note-2005.txt"
+        ]
+    },
+    {
+        "name": "connect/http-client",
+        "title": "HTTP client",
+        "description": "Every line of the three orders is checked against the stock service over HTTP, served by the same example; the log shows each line as ok, or back-order when the stock is short, with the stock level from the response.",
+        "level": "connect",
+        "teaches": {
+            "components": [
+                "file",
+                "http",
+                "rest",
+                "platform-http",
+                "direct",
+                "log"
+            ],
+            "eips": [
+                "split",
+                "setProperty",
+                "toD",
+                "choice",
+                "unmarshal",
+                "marshal"
+            ],
+            "languages": [
+                "simple",
+                "jsonpath"
+            ],
+            "dataformats": [
+                "json"
+            ]
+        },
+        "tags": [
+            "shop",
+            "http",
+            "rest",
+            "client"
+        ],
+        "bundled": false,
+        "requiresDocker": false,
+        "hasCitrusTests": true,
+        "files": [
+            "README.md",
+            "application.properties",
+            "http-client.camel.yaml",
+            "orders/order-1001.json",
+            "orders/order-1002.json",
+            "orders/order-1003.json",
+            "stock.json"
+        ]
+    },
+    {
+        "name": "connect/stock-api",
+        "title": "Stock API",
+        "description": "The shop's stock service on port 8080: GET /stock returns the stock file, GET /stock/{sku} returns one SKU as JSON and a 404 with an error message for an unknown SKU.",
+        "level": "connect",
+        "teaches": {
+            "components": [
+                "rest",
+                "platform-http",
+                "direct"
+            ],
+            "eips": [
+                "setBody",
+                "setHeader",
+                "choice",
+                "marshal"
+            ],
+            "languages": [
+                "constant",
+                "jsonpath",
+                "simple"
+            ],
+            "dataformats": [
+                "json"
+            ]
+        },
+        "tags": [
+            "shop",
+            "rest",
+            "http",
+            "platform-http"
+        ],
+        "bundled": false,
+        "requiresDocker": false,
+        "hasCitrusTests": false,
+        "files": [
+            "README.md",
+            "application.properties",
+            "stock-api.camel.yaml",
+            "stock.json"
+        ]
+    },
+    {
         "name": "database/sql",
         "title": "SQL Database",
         "description": "Against a running Postgres, a table is created and a row inserted on startup, and every five seconds a select logs the rows; the datasource comes from application.properties.",
