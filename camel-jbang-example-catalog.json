@@ -86,7 +86,8 @@
         ],
         "infraServices": [
             "ollama"
-        ]
+        ],
+        "ciSkip": true
     },
     {
         "name": "ai/mcp-server",
