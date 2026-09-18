@@ -9,7 +9,7 @@ that tag becomes a tool any MCP client can discover and call, a coding agent inc
 ```text
 $ camel run *
 ...
-INFO ... VertxMcpServerEngine : MCP server 'webshop' serving tools and resources on path /mcp
+INFO ... VertxMcpServerEngine : MCP server 'webshop' serving tools on path /mcp
 INFO ... Started stock-level (ai-tool://stock_level)
 INFO ... Started order-status (ai-tool://order_status)
 

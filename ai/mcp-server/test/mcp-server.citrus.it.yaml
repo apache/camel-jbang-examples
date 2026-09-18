@@ -18,7 +18,7 @@ actions:
       jbang:
         verify:
           integration: "mcp-server"
-          logMessage: "serving tools and resources on path /mcp"
+          logMessage: "MCP server 'webshop' serving tools"
   - http:
       client: "http://localhost:8080"
       sendRequest:
