@@ -61,7 +61,6 @@ essentials and adds what is specific to this examples repository.
 ```shell
 # install tooling once
 jbang app install camel@apache/camel
-jbang app install citrus@citrusframework/citrus
 
 # start infra if the example needs it
 camel infra run <service>        # or: docker compose up --detach
@@ -72,11 +71,11 @@ camel run *                      # loads every YAML in the directory
 camel run <name>.camel.yaml application.properties
 
 # run its test
-citrus run test/<name>.citrus.it.yaml
+camel test run test/<name>.citrus.it.yaml
 ```
 
-The CI workflow (`.github/workflows/build.yml`) installs the Camel CLI and Citrus
-and runs `jbang citrus@citrusframework/citrus run <example>/test` for each tested
+The CI workflow (`.github/workflows/build.yml`) installs the Camel CLI and its test
+plugin and runs `camel test run <example>/test` for each tested
 example. If your example ships a `test/`, add it to that workflow.
 
 ## Conventions

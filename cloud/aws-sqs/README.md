@@ -79,13 +79,12 @@ You will see the message content being processed and the AWS SQS queue should re
 
 ## Integration testing
 
-The example provides an automated integration test (`http-to-aws-sqs.citrus.it.yaml`) that you can run with the [Citrus](https://citrusframework.org/) test framework.
-Please make sure to install Citrus as a JBang application (see [Citrus installation guide](../../install-citrus.adoc)).
+The example provides an automated integration test (`http-to-aws-sqs.citrus.it.yaml`) in the [Citrus](https://citrusframework.org/) YAML DSL, which the Camel CLI runs (the test plugin installs on first use).
 
 You can run the test with:
 
 ```shell
-citrus run test/http-to-aws-sqs.citrus.it.yaml
+camel test run test/http-to-aws-sqs.citrus.it.yaml
 ```
 
 The test prepares the complete infrastructure and starts the Camel route automatically via JBang.

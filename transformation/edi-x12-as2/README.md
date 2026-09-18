@@ -40,12 +40,12 @@ The Camel application (i.e., `camel/edi-x12-as2.camel.yaml`) represents the supp
 
 ## Integration testing
 
-The example provides an automated integration test (`edi-x12-as2.citrus.it.yaml`) that you can run with the [Citrus](https://citrusframework.org/) test framework. Please make sure to have installed Citrus as a JBang application.
+The example provides an automated integration test (`edi-x12-as2.citrus.it.yaml`) in the [Citrus](https://citrusframework.org/) YAML DSL, which the Camel CLI runs (the test plugin installs on first use). Please make sure to have installed Citrus as a JBang application.
 
 You can run the test with:
 
 ```shell
-citrus run test/edi-x12-as2.citrus.it.yaml
+camel test run test/edi-x12-as2.citrus.it.yaml
 ```
 
 The test prepares the complete infrastructure and starts the Camel route automatically via JBang. The test sends some test data to the AS2 endpoint and verifies that the Camel route successfully processed the purchase order.

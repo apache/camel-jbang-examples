@@ -61,16 +61,10 @@ camel run analyzer.camel.yaml --dep=org.apache.camel:camel-openai
 
 The first-iteration includes a Citrus integration test that uses `--stub=openai` to mock the LLM endpoint.
 
-First, install Citrus as a JBang app (one-time setup):
+Run the test with the Camel CLI (the test plugin installs on first use):
 
 ```bash
-jbang app install citrus@citrusframework/citrus
-```
-
-Then run the test:
-
-```bash
-citrus run first-iteration/test/first-iteration.citrus.it.yaml
+camel test run first-iteration/test/first-iteration.citrus.it.yaml
 ```
 
 The test starts Kafka via testcontainers, sends log events, and verifies the aggregation triggers correctly.

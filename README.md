@@ -43,19 +43,7 @@ camel --version
 
 ## Integration testing
 
-The examples provide automated integration tests that you can run with the [Citrus](https://citrusframework.org/) test framework.
-
-You need to install Citrus as a JBang app, too:
-
-```shell
-jbang app install citrus@citrusframework/citrus
-```
-
-Now you can start running commands for the Citrus JBang app with `citrus`:
-
-```shell
-citrus --version
-```
+The examples provide automated integration tests in the [Citrus](https://citrusframework.org/) YAML DSL, which the Camel CLI runs (the test plugin installs on first use).
 
 Usually the Citrus tests are written in YAML files and named accordingly to the Camel CLI route source file.
 
@@ -63,7 +51,7 @@ For instance the Camel route `mqtt.camel.yaml` route provides a test named `mqtt
 You can run the test with Citrus JBang like this:
 
 ```shell
-citrus run test/mqtt.citrus.it.yaml
+camel test run test/mqtt.citrus.it.yaml
 ```
 
 Usually the test prepares the complete infrastructure (e.g. via Docker compose) and starts the Camel route automatically via JBang.

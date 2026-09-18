@@ -81,13 +81,12 @@ Then you can browse: http://localhost:8080/q/dev to introspect the running Camel
 
 ## Integration testing
 
-The example provides an automated integration test (`ftp.citrus.it.yaml`) that you can run with the [Citrus](https://citrusframework.org/) test framework.
-Please make sure to install Citrus as a JBang application (see [Citrus installation guide](../../install-citrus.adoc)).
+The example provides an automated integration test (`ftp.citrus.it.yaml`) in the [Citrus](https://citrusframework.org/) YAML DSL, which the Camel CLI runs (the test plugin installs on first use).
 
 You may run the test with:
 
 ```shell
-citrus run test/ftp.citrus.it.yaml
+camel test run test/ftp.citrus.it.yaml
 ```
 
 ## More Information
