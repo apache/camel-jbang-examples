@@ -1,0 +1,13 @@
+{
+    "title": "CSV to JSON",
+    "description": "A CSV of invoices dropped in the inbox directory is read with the CSV data format, its header line naming the fields, split into one message per invoice, and each invoice is logged as JSON and written to the outbox directory as its own file.",
+    "level": "transform",
+    "teaches": {
+        "components": ["file", "log"],
+        "eips": ["unmarshal", "split", "marshal"],
+        "dataformats": ["csv", "json"],
+        "languages": ["simple"]
+    },
+    "tags": ["shop", "csv", "json", "file", "transformation"],
+    "bundled": false
+}

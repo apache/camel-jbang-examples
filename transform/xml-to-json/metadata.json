@@ -1,0 +1,12 @@
+{
+    "title": "XML to JSON",
+    "description": "A supplier's XML order dropped in the inbox directory is read with the Jackson XML data format and written out as the shop's JSON with the Jackson JSON data format, both logged; no mapping code, the XML elements and attributes become JSON fields.",
+    "level": "transform",
+    "teaches": {
+        "components": ["file", "log"],
+        "eips": ["unmarshal", "marshal"],
+        "dataformats": ["jacksonXml", "json"]
+    },
+    "tags": ["shop", "xml", "json", "jackson", "transformation"],
+    "bundled": false
+}
