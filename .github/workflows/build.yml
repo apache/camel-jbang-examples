@@ -87,7 +87,7 @@ jobs:
           - name: EDI X12 AS2
             path: transformation/edi-x12-as2
           - name: Smart log analyzer
-            path: ai/smart-log-analyzer/first-iteration
+            path: showcase/smart-log-analyzer/first-iteration
       fail-fast: false
     name: ${{ matrix.name }}
     steps:
