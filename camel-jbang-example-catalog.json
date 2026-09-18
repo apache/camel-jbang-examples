@@ -162,183 +162,6 @@
         ]
     },
     {
-        "name": "ai/smart-log-analyzer",
-        "title": "Smart Log Analyzer",
-        "description": "A multi-part showcase: a load generator produces logs and traces, a correlator maps OpenTelemetry logs to traces, an LLM analyses the correlated records, and a small web console with a REST API shows the results.",
-        "level": "showcase",
-        "teaches": {
-            "components": [
-                "platform-http",
-                "jms",
-                "file",
-                "langchain4j-chat"
-            ],
-            "eips": [
-                "rest"
-            ]
-        },
-        "tags": [
-            "ai",
-            "observability",
-            "opentelemetry",
-            "logging"
-        ],
-        "bundled": false,
-        "requiresDocker": false,
-        "hasCitrusTests": true,
-        "files": [
-            "README.md",
-            "analyzer/application-dev.properties",
-            "analyzer/error-analyzer.camel.yaml",
-            "containers/caches/infinispan-events-config.json",
-            "containers/caches/infinispan-events-to-process-config.json",
-            "containers/otel-collector-config.yaml",
-            "correlator/application-dev.properties",
-            "correlator/correlated-log-schema.json",
-            "correlator/correlated-trace-schema.json",
-            "correlator/infinispan.camel.yaml",
-            "correlator/kafka-ca-cert.pem",
-            "correlator/kaoto-datamapper-4a94acc3.xsl",
-            "correlator/kaoto-datamapper-8f5bb2dd.xsl",
-            "correlator/logs-mapper.camel.yaml",
-            "correlator/otel-log-record-schema.json",
-            "correlator/otel-logs-schema.json",
-            "correlator/otel-span-schema.json",
-            "correlator/otel-traces-schema.json",
-            "correlator/traces-mapper.camel.yaml",
-            "first-iteration/analyzer.camel.yaml",
-            "first-iteration/application.properties",
-            "first-iteration/load-generator.camel.yaml",
-            "log-generator/agent.properties",
-            "log-generator/application-dev.properties",
-            "log-generator/log-generator.camel.yaml",
-            "log-generator/opentelemetry-javaagent.jar",
-            "ui-console/application-dev.properties",
-            "ui-console/index.html",
-            "ui-console/jms-file-storage.camel.yaml",
-            "ui-console/rest-api.camel.yaml"
-        ]
-    },
-    {
-        "name": "beginner/rest-api",
-        "title": "REST API",
-        "description": "A REST API on port 8080: GET /api/hello answers the greeting from application.properties and GET /api/hello/{name} answers a greeting with the name.",
-        "level": "quick-start",
-        "teaches": {
-            "components": [
-                "platform-http",
-                "direct"
-            ],
-            "eips": [
-                "rest"
-            ],
-            "languages": [
-                "simple"
-            ]
-        },
-        "tags": [
-            "beginner",
-            "rest",
-            "http"
-        ],
-        "bundled": true,
-        "requiresDocker": false,
-        "hasCitrusTests": false,
-        "files": [
-            "README.md",
-            "application.properties",
-            "rest-api.camel.yaml"
-        ]
-    },
-    {
-        "name": "beginner/routes",
-        "title": "Routes",
-        "description": "A timer route in YAML calls a Java bean, Greeter, that builds the message, and logs what the bean returned; the first step from YAML into your own code.",
-        "level": "quick-start",
-        "teaches": {
-            "components": [
-                "timer",
-                "log"
-            ],
-            "eips": [
-                "bean"
-            ]
-        },
-        "tags": [
-            "beginner",
-            "yaml",
-            "bean"
-        ],
-        "bundled": true,
-        "requiresDocker": false,
-        "hasCitrusTests": false,
-        "files": [
-            "Greeter.java",
-            "README.md",
-            "application.properties",
-            "beans.yaml",
-            "routes.camel.yaml"
-        ]
-    },
-    {
-        "name": "beginner/timer-log",
-        "title": "Timer Log",
-        "description": "A timer fires every second and a log line prints the greeting from application.properties; the hello of Camel in one file.",
-        "level": "quick-start",
-        "teaches": {
-            "components": [
-                "timer",
-                "log"
-            ],
-            "languages": [
-                "simple"
-            ]
-        },
-        "tags": [
-            "beginner",
-            "timer",
-            "log"
-        ],
-        "bundled": true,
-        "requiresDocker": false,
-        "hasCitrusTests": false,
-        "files": [
-            "README.md",
-            "application.properties",
-            "timer-log.camel.yaml"
-        ]
-    },
-    {
-        "name": "beginner/tui-hello-world",
-        "title": "TUI Hello World",
-        "description": "A one-shot timer prints an invitation; the route direct:greet then logs and greets any message sent to it from the CLI (camel cmd send --endpoint=direct:greet --body=...) or from a tool that can send messages.",
-        "level": "showcase",
-        "teaches": {
-            "components": [
-                "timer",
-                "direct",
-                "log"
-            ],
-            "languages": [
-                "simple",
-                "constant"
-            ]
-        },
-        "tags": [
-            "beginner",
-            "direct",
-            "send",
-            "tui"
-        ],
-        "bundled": true,
-        "requiresDocker": false,
-        "hasCitrusTests": false,
-        "files": [
-            "README.md",
-            "tui-hello-world.yaml"
-        ]
-    },
-    {
         "name": "cloud/aws-sqs",
         "title": "AWS SQS",
         "description": "Each of the three orders is put on an Amazon SQS queue called shipments and a courier route takes it off and logs the order, country and line count; locally the queue lives on the LocalStack that camel infra run aws sqs starts, and the same properties point at real AWS.",
@@ -908,37 +731,6 @@
         ]
     },
     {
-        "name": "eip/splitter",
-        "title": "Splitter",
-        "description": "A timer creates a comma-separated batch of items, the splitter turns it into one message per item, and each item is logged on its own line.",
-        "level": "quick-start",
-        "teaches": {
-            "components": [
-                "timer",
-                "log"
-            ],
-            "eips": [
-                "split"
-            ],
-            "languages": [
-                "tokenize",
-                "simple"
-            ]
-        },
-        "tags": [
-            "eip",
-            "splitter",
-            "batch"
-        ],
-        "bundled": true,
-        "requiresDocker": false,
-        "hasCitrusTests": false,
-        "files": [
-            "README.md",
-            "splitter.camel.yaml"
-        ]
-    },
-    {
         "name": "fail-well/circuit-breaker",
         "title": "Circuit breaker",
         "description": "A stock check calls the supplier every second; the supplier goes down for nine calls, the breaker opens after two failures in its window of four, answers from the fallback while open, tries the supplier again after five seconds and closes once a call succeeds; each line logs the breaker state.",
@@ -1021,62 +813,123 @@
         ]
     },
     {
-        "name": "observability/memory-leak",
-        "title": "Memory Leak",
-        "description": "Three timer routes run side by side: two leak memory into a cache and a buffer, one is healthy, so a JFR Old Object Sample recording and the CLI's heap tools show which route leaks.",
-        "level": "showcase",
+        "name": "quick-start/rest-api",
+        "title": "REST API",
+        "description": "A REST API on port 8080: GET /api/hello answers the greeting from application.properties and GET /api/hello/{name} answers a greeting with the name.",
+        "level": "quick-start",
         "teaches": {
             "components": [
-                "timer",
-                "log"
+                "platform-http",
+                "direct"
             ],
             "eips": [
-                "process"
-            ]
-        },
-        "tags": [
-            "observability",
-            "jfr",
-            "diagnostics",
-            "tui"
-        ],
-        "bundled": true,
-        "requiresDocker": false,
-        "hasCitrusTests": false,
-        "files": [
-            "MemoryLeak.java",
-            "README.md"
-        ]
-    },
-    {
-        "name": "observability/message-size",
-        "title": "Message Size",
-        "description": "Timer routes send messages of small, medium and large sizes to seda queues with a Content-Length header, so camel cmd and the CLI's message-size views show sizes per endpoint.",
-        "level": "showcase",
-        "teaches": {
-            "components": [
-                "timer",
-                "seda",
-                "log"
-            ],
-            "eips": [
-                "setHeader"
+                "rest"
             ],
             "languages": [
                 "simple"
             ]
         },
         "tags": [
-            "observability",
-            "monitoring",
-            "seda"
+            "beginner",
+            "rest",
+            "http"
         ],
         "bundled": true,
         "requiresDocker": false,
         "hasCitrusTests": false,
         "files": [
             "README.md",
-            "orders.camel.yaml"
+            "application.properties",
+            "rest-api.camel.yaml"
+        ]
+    },
+    {
+        "name": "quick-start/routes",
+        "title": "Routes",
+        "description": "A timer route in YAML calls a Java bean, Greeter, that builds the message, and logs what the bean returned; the first step from YAML into your own code.",
+        "level": "quick-start",
+        "teaches": {
+            "components": [
+                "timer",
+                "log"
+            ],
+            "eips": [
+                "bean"
+            ]
+        },
+        "tags": [
+            "beginner",
+            "yaml",
+            "bean"
+        ],
+        "bundled": true,
+        "requiresDocker": false,
+        "hasCitrusTests": false,
+        "files": [
+            "Greeter.java",
+            "README.md",
+            "application.properties",
+            "beans.yaml",
+            "routes.camel.yaml"
+        ]
+    },
+    {
+        "name": "quick-start/splitter",
+        "title": "Splitter",
+        "description": "A timer creates a comma-separated batch of items, the splitter turns it into one message per item, and each item is logged on its own line.",
+        "level": "quick-start",
+        "teaches": {
+            "components": [
+                "timer",
+                "log"
+            ],
+            "eips": [
+                "split"
+            ],
+            "languages": [
+                "tokenize",
+                "simple"
+            ]
+        },
+        "tags": [
+            "eip",
+            "splitter",
+            "batch"
+        ],
+        "bundled": true,
+        "requiresDocker": false,
+        "hasCitrusTests": false,
+        "files": [
+            "README.md",
+            "splitter.camel.yaml"
+        ]
+    },
+    {
+        "name": "quick-start/timer-log",
+        "title": "Timer Log",
+        "description": "A timer fires every second and a log line prints the greeting from application.properties; the hello of Camel in one file.",
+        "level": "quick-start",
+        "teaches": {
+            "components": [
+                "timer",
+                "log"
+            ],
+            "languages": [
+                "simple"
+            ]
+        },
+        "tags": [
+            "beginner",
+            "timer",
+            "log"
+        ],
+        "bundled": true,
+        "requiresDocker": false,
+        "hasCitrusTests": false,
+        "files": [
+            "README.md",
+            "application.properties",
+            "timer-log.camel.yaml"
         ]
     },
     {
@@ -1340,6 +1193,153 @@
             "application-prod.properties",
             "application.properties",
             "properties-and-profiles.camel.yaml"
+        ]
+    },
+    {
+        "name": "showcase/memory-leak",
+        "title": "Memory Leak",
+        "description": "Three timer routes run side by side: two leak memory into a cache and a buffer, one is healthy, so a JFR Old Object Sample recording and the CLI's heap tools show which route leaks.",
+        "level": "showcase",
+        "teaches": {
+            "components": [
+                "timer",
+                "log"
+            ],
+            "eips": [
+                "process"
+            ]
+        },
+        "tags": [
+            "observability",
+            "jfr",
+            "diagnostics",
+            "tui"
+        ],
+        "bundled": true,
+        "requiresDocker": false,
+        "hasCitrusTests": false,
+        "files": [
+            "MemoryLeak.java",
+            "README.md"
+        ]
+    },
+    {
+        "name": "showcase/message-size",
+        "title": "Message Size",
+        "description": "Timer routes send messages of small, medium and large sizes to seda queues with a Content-Length header, so camel cmd and the CLI's message-size views show sizes per endpoint.",
+        "level": "showcase",
+        "teaches": {
+            "components": [
+                "timer",
+                "seda",
+                "log"
+            ],
+            "eips": [
+                "setHeader"
+            ],
+            "languages": [
+                "simple"
+            ]
+        },
+        "tags": [
+            "observability",
+            "monitoring",
+            "seda"
+        ],
+        "bundled": true,
+        "requiresDocker": false,
+        "hasCitrusTests": false,
+        "files": [
+            "README.md",
+            "orders.camel.yaml"
+        ]
+    },
+    {
+        "name": "showcase/smart-log-analyzer",
+        "title": "Smart Log Analyzer",
+        "description": "A multi-part showcase: a load generator produces logs and traces, a correlator maps OpenTelemetry logs to traces, an LLM analyses the correlated records, and a small web console with a REST API shows the results.",
+        "level": "showcase",
+        "teaches": {
+            "components": [
+                "platform-http",
+                "jms",
+                "file",
+                "langchain4j-chat"
+            ],
+            "eips": [
+                "rest"
+            ]
+        },
+        "tags": [
+            "ai",
+            "observability",
+            "opentelemetry",
+            "logging"
+        ],
+        "bundled": false,
+        "requiresDocker": false,
+        "hasCitrusTests": true,
+        "files": [
+            "README.md",
+            "analyzer/application-dev.properties",
+            "analyzer/error-analyzer.camel.yaml",
+            "containers/caches/infinispan-events-config.json",
+            "containers/caches/infinispan-events-to-process-config.json",
+            "containers/otel-collector-config.yaml",
+            "correlator/application-dev.properties",
+            "correlator/correlated-log-schema.json",
+            "correlator/correlated-trace-schema.json",
+            "correlator/infinispan.camel.yaml",
+            "correlator/kafka-ca-cert.pem",
+            "correlator/kaoto-datamapper-4a94acc3.xsl",
+            "correlator/kaoto-datamapper-8f5bb2dd.xsl",
+            "correlator/logs-mapper.camel.yaml",
+            "correlator/otel-log-record-schema.json",
+            "correlator/otel-logs-schema.json",
+            "correlator/otel-span-schema.json",
+            "correlator/otel-traces-schema.json",
+            "correlator/traces-mapper.camel.yaml",
+            "first-iteration/analyzer.camel.yaml",
+            "first-iteration/application.properties",
+            "first-iteration/load-generator.camel.yaml",
+            "log-generator/agent.properties",
+            "log-generator/application-dev.properties",
+            "log-generator/log-generator.camel.yaml",
+            "log-generator/opentelemetry-javaagent.jar",
+            "ui-console/application-dev.properties",
+            "ui-console/index.html",
+            "ui-console/jms-file-storage.camel.yaml",
+            "ui-console/rest-api.camel.yaml"
+        ]
+    },
+    {
+        "name": "showcase/tui-hello-world",
+        "title": "TUI Hello World",
+        "description": "A one-shot timer prints an invitation; the route direct:greet then logs and greets any message sent to it from the CLI (camel cmd send --endpoint=direct:greet --body=...) or from a tool that can send messages.",
+        "level": "showcase",
+        "teaches": {
+            "components": [
+                "timer",
+                "direct",
+                "log"
+            ],
+            "languages": [
+                "simple",
+                "constant"
+            ]
+        },
+        "tags": [
+            "beginner",
+            "direct",
+            "send",
+            "tui"
+        ],
+        "bundled": true,
+        "requiresDocker": false,
+        "hasCitrusTests": false,
+        "files": [
+            "README.md",
+            "tui-hello-world.yaml"
         ]
     },
     {
