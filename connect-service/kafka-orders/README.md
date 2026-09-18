@@ -57,6 +57,8 @@ Stop the example with `ctrl` + `c` and the service with `camel infra stop kafka`
   same partition and stay in order.
 - `dispatch` consumes `orders` and `multicast`s to two topics; `fulfilment` and `notification` consume those.
   `CamelKafkaPartition` and `CamelKafkaOffset` are set by the consumer on every message.
+- `autoOffsetReset: earliest` makes a consumer group that joins for the first time start at the beginning of the
+  topic; with the default, `latest`, an order published a moment before the consumer joined would never be seen.
 - Topics are created on first use by this broker; a production cluster usually has that switched off.
 
 ## Build it step by step

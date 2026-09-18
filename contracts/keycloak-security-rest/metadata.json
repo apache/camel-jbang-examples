@@ -1,0 +1,34 @@
+{
+    "title": "Keycloak security",
+    "description": "Two HTTP endpoints on port 8081: the public one answers everyone, the protected one requires a bearer token from a Keycloak started with camel infra whose user has the admin role, otherwise 403; the realm, client and users are created in the Keycloak console as the README describes.",
+    "level": "contracts",
+    "teaches": {
+        "components": [
+            "platform-http",
+            "keycloak",
+            "log"
+        ],
+        "eips": [
+            "policy",
+            "onException",
+            "setHeader",
+            "setBody"
+        ],
+        "languages": [
+            "simple"
+        ]
+    },
+    "tags": [
+        "security",
+        "keycloak",
+        "oauth",
+        "jwt",
+        "rest"
+    ],
+    "infraServices": [
+        "keycloak"
+    ],
+    "requiresDocker": true,
+    "bundled": false,
+    "hasCitrusTests": false
+}

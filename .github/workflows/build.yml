@@ -77,9 +77,9 @@ jobs:
           - name: File processing
             path: connect/file-processing
           - name: OpenAPI server
-            path: rest/openapi-server
+            path: contracts/openapi-server
           - name: OpenAPI client
-            path: rest/openapi-client
+            path: contracts/openapi-client
           - name: AWS SQS
             path: cloud/aws-sqs
           - name: EDI X12 AS2
