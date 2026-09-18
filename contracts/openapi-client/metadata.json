@@ -1,0 +1,34 @@
+{
+    "title": "OpenAPI client",
+    "description": "The picking desk reserves stock for every order line by calling the stock API by contract: rest-openapi turns the operationId reserveStock into the HTTP call from stock-api.json; the log shows each reservation and one 409 for the cap that is out of stock. Needs the openapi-server example running.",
+    "level": "contracts",
+    "teaches": {
+        "components": [
+            "rest-openapi",
+            "http",
+            "file",
+            "log"
+        ],
+        "eips": [
+            "split",
+            "onException",
+            "setProperty",
+            "setHeader",
+            "unmarshal"
+        ],
+        "languages": [
+            "simple"
+        ],
+        "dataformats": [
+            "json"
+        ]
+    },
+    "tags": [
+        "shop",
+        "openapi",
+        "rest",
+        "client",
+        "contract"
+    ],
+    "bundled": false
+}

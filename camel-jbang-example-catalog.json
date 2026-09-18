@@ -698,6 +698,139 @@
         ]
     },
     {
+        "name": "contracts/keycloak-security-rest",
+        "title": "Keycloak security",
+        "description": "Two HTTP endpoints on port 8081: the public one answers everyone, the protected one requires a bearer token from a Keycloak started with camel infra whose user has the admin role, otherwise 403; the realm, client and users are created in the Keycloak console as the README describes.",
+        "level": "contracts",
+        "teaches": {
+            "components": [
+                "platform-http",
+                "keycloak",
+                "log"
+            ],
+            "eips": [
+                "policy",
+                "onException",
+                "setHeader",
+                "setBody"
+            ],
+            "languages": [
+                "simple"
+            ]
+        },
+        "tags": [
+            "security",
+            "keycloak",
+            "oauth",
+            "jwt",
+            "rest"
+        ],
+        "bundled": false,
+        "requiresDocker": true,
+        "hasCitrusTests": false,
+        "files": [
+            "README.md",
+            "application.properties",
+            "rest-api.camel.yaml"
+        ],
+        "infraServices": [
+            "keycloak"
+        ]
+    },
+    {
+        "name": "contracts/openapi-client",
+        "title": "OpenAPI client",
+        "description": "The picking desk reserves stock for every order line by calling the stock API by contract: rest-openapi turns the operationId reserveStock into the HTTP call from stock-api.json; the log shows each reservation and one 409 for the cap that is out of stock. Needs the openapi-server example running.",
+        "level": "contracts",
+        "teaches": {
+            "components": [
+                "rest-openapi",
+                "http",
+                "file",
+                "log"
+            ],
+            "eips": [
+                "split",
+                "onException",
+                "setProperty",
+                "setHeader",
+                "unmarshal"
+            ],
+            "languages": [
+                "simple"
+            ],
+            "dataformats": [
+                "json"
+            ]
+        },
+        "tags": [
+            "shop",
+            "openapi",
+            "rest",
+            "client",
+            "contract"
+        ],
+        "bundled": false,
+        "requiresDocker": false,
+        "hasCitrusTests": true,
+        "files": [
+            "README.md",
+            "application.properties",
+            "openapi-client.camel.yaml",
+            "orders/order-1001.json",
+            "orders/order-1002.json",
+            "orders/order-1003.json",
+            "stock-api.json"
+        ]
+    },
+    {
+        "name": "contracts/openapi-server",
+        "title": "OpenAPI server",
+        "description": "The stock API contract first: stock-api.json is the OpenAPI contract, the REST DSL serves its three operations on port 8080 with request validation, GET /stock/{sku} answers from a file or 404, POST /stock/{sku}/reserve answers 200, 409 when the stock is short or 400 for a bad reservation, and /openapi serves the contract.",
+        "level": "contracts",
+        "teaches": {
+            "components": [
+                "rest",
+                "rest-openapi",
+                "platform-http",
+                "direct",
+                "log"
+            ],
+            "eips": [
+                "choice",
+                "validate",
+                "onException",
+                "marshal",
+                "unmarshal",
+                "setProperty"
+            ],
+            "languages": [
+                "simple",
+                "jsonpath",
+                "constant"
+            ],
+            "dataformats": [
+                "json"
+            ]
+        },
+        "tags": [
+            "shop",
+            "openapi",
+            "rest",
+            "contract"
+        ],
+        "bundled": false,
+        "requiresDocker": false,
+        "hasCitrusTests": true,
+        "files": [
+            "README.md",
+            "application.properties",
+            "openapi-server.camel.yaml",
+            "stock-api.json",
+            "stock.json"
+        ]
+    },
+    {
         "name": "eip/splitter",
         "title": "Splitter",
         "description": "A timer creates a comma-separated batch of items, the splitter turns it into one message per item, and each item is logged on its own line.",
@@ -867,74 +1000,6 @@
         "files": [
             "README.md",
             "orders.camel.yaml"
-        ]
-    },
-    {
-        "name": "rest/openapi-client",
-        "title": "OpenAPI Client",
-        "description": "Each JSON file in the examples directory is sent as an addPet request to the petstore service described by petstore-api.json, running on localhost:8080 (see openapi-server); the request and response are logged.",
-        "level": "contracts",
-        "teaches": {
-            "components": [
-                "file",
-                "kamelet",
-                "log"
-            ],
-            "eips": [
-                "setHeader",
-                "convertBodyTo"
-            ],
-            "languages": [
-                "simple",
-                "constant"
-            ]
-        },
-        "tags": [
-            "rest",
-            "openapi",
-            "client"
-        ],
-        "bundled": false,
-        "requiresDocker": false,
-        "hasCitrusTests": true,
-        "files": [
-            "README.md",
-            "application.properties",
-            "examples/1001.json",
-            "petstore-api.json",
-            "petstore-client.camel.yaml"
-        ]
-    },
-    {
-        "name": "rest/openapi-server",
-        "title": "OpenAPI Server",
-        "description": "A REST service generated from petstore-api.json answers under the base path /petstore on port 8080; GET /petstore/pet/1000 returns the mocked pet from the examples directory and /openapi serves the specification.",
-        "level": "contracts",
-        "teaches": {
-            "components": [
-                "platform-http",
-                "direct",
-                "log"
-            ],
-            "eips": [
-                "rest",
-                "restConfiguration"
-            ]
-        },
-        "tags": [
-            "rest",
-            "openapi",
-            "server"
-        ],
-        "bundled": false,
-        "requiresDocker": false,
-        "hasCitrusTests": true,
-        "files": [
-            "README.md",
-            "application.properties",
-            "examples/pet/1000.json",
-            "petstore-api.json",
-            "petstore.camel.yaml"
         ]
     },
     {
@@ -1198,41 +1263,6 @@
             "application-prod.properties",
             "application.properties",
             "properties-and-profiles.camel.yaml"
-        ]
-    },
-    {
-        "name": "security/keycloak-security-rest",
-        "title": "Keycloak Security REST API",
-        "description": "A REST API on platform-http is protected by a running Keycloak: a request without a valid bearer token is refused with 401, a token with the right role reaches the route and is logged.",
-        "level": "contracts",
-        "teaches": {
-            "components": [
-                "platform-http",
-                "log"
-            ],
-            "eips": [
-                "policy",
-                "onException",
-                "setHeader",
-                "setBody"
-            ]
-        },
-        "tags": [
-            "security",
-            "keycloak",
-            "rest",
-            "oauth"
-        ],
-        "bundled": false,
-        "requiresDocker": true,
-        "hasCitrusTests": false,
-        "files": [
-            "README.md",
-            "application.properties",
-            "rest-api.camel.yaml"
-        ],
-        "infraServices": [
-            "keycloak"
         ]
     },
     {

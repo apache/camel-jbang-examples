@@ -1,0 +1,37 @@
+{
+    "title": "OpenAPI server",
+    "description": "The stock API contract first: stock-api.json is the OpenAPI contract, the REST DSL serves its three operations on port 8080 with request validation, GET /stock/{sku} answers from a file or 404, POST /stock/{sku}/reserve answers 200, 409 when the stock is short or 400 for a bad reservation, and /openapi serves the contract.",
+    "level": "contracts",
+    "teaches": {
+        "components": [
+            "rest",
+            "rest-openapi",
+            "platform-http",
+            "direct",
+            "log"
+        ],
+        "eips": [
+            "choice",
+            "validate",
+            "onException",
+            "marshal",
+            "unmarshal",
+            "setProperty"
+        ],
+        "languages": [
+            "simple",
+            "jsonpath",
+            "constant"
+        ],
+        "dataformats": [
+            "json"
+        ]
+    },
+    "tags": [
+        "shop",
+        "openapi",
+        "rest",
+        "contract"
+    ],
+    "bundled": false
+}
