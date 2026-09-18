@@ -1,0 +1,38 @@
+# Orders go on a queue on an ActiveMQ Artemis broker and a consumer takes
+# them off; the queue keeps the two sides apart. Start the broker with:
+# camel infra run artemis
+- route:
+    id: order-intake
+    from:
+      uri: file
+      parameters:
+        directoryName: orders
+        noop: true
+        sortBy: "file:name"
+      steps:
+        - setHeader:
+            name: orderId
+            expression:
+              jsonpath:
+                expression: "$.orderId"
+        - to:
+            uri: jms
+            parameters:
+              destinationType: queue
+              destinationName: orders
+        - log:
+            message: "Order ${header.orderId} put on the queue"
+
+- route:
+    id: order-processing
+    from:
+      uri: jms
+      parameters:
+        destinationType: queue
+        destinationName: orders
+      steps:
+        - unmarshal:
+            json:
+              library: Jackson
+        - log:
+            message: "Took ${body[orderId]} off the queue: ${body[lines].size()} line(s) for customer ${body[customer]} in ${body[country]}"

@@ -1,0 +1,26 @@
+name: camel-1-tribute-test
+description: The camel-1-tribute example logs what its README promises
+actions:
+  - camel:
+      infra:
+        run:
+          service: artemis
+          fixedPort: true
+  - camel:
+      jbang:
+        run:
+          integration:
+            name: "camel-1-tribute"
+            file: "../jms-to-file.camel.yaml"
+            systemProperties:
+              file: "../application.properties"
+  - camel:
+      jbang:
+        verify:
+          integration: "camel-1-tribute"
+          logMessage: "Sending: Test Message: 10"
+  - camel:
+      jbang:
+        verify:
+          integration: "camel-1-tribute"
+          logMessage: "Received: Test Message: 10"

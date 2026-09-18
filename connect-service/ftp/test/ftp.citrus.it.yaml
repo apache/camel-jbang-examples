@@ -1,0 +1,35 @@
+name: ftp-test
+description: The ftp example logs what its README promises
+actions:
+  - camel:
+      infra:
+        run:
+          service: artemis
+          fixedPort: true
+  - camel:
+      infra:
+        run:
+          service: ftp
+          fixedPort: true
+  - camel:
+      jbang:
+        run:
+          integration:
+            name: "ftp"
+            file: "../ftp.camel.yaml"
+            systemProperties:
+              file: "../application.properties"
+          resources:
+            - "orders/order-1001.json"
+            - "orders/order-1002.json"
+            - "orders/order-1003.json"
+  - camel:
+      jbang:
+        verify:
+          integration: "ftp"
+          logMessage: "Shipment ORD-1001 uploaded to the courier as courier/shipment-ORD-1001.json"
+  - camel:
+      jbang:
+        verify:
+          integration: "ftp"
+          logMessage: "Shipment ORD-1003 uploaded to the courier"

@@ -1,0 +1,62 @@
+# The shop's customers in a Postgres table: one row per customer with the
+# number of orders they placed. Start the database with: camel infra run postgres
+- route:
+    id: create-table
+    from:
+      uri: timer
+      parameters:
+        timerName: setup
+        repeatCount: 1
+        delay: 0
+      steps:
+        - to:
+            uri: sql
+            parameters:
+              query: "CREATE TABLE IF NOT EXISTS customers (id varchar(10) PRIMARY KEY, country varchar(2), orders integer)"
+        - log:
+            message: "Table customers is ready"
+
+- route:
+    id: register-customers
+    from:
+      uri: file
+      parameters:
+        directoryName: orders
+        noop: true
+        sortBy: "file:name"
+        initialDelay: 2000
+      steps:
+        - unmarshal:
+            json:
+              library: Jackson
+        # named parameters come from the message with :#, noop keeps the body
+        - to:
+            uri: sql
+            parameters:
+              query: "INSERT INTO customers (id, country, orders) VALUES (:#${body[customer]}, :#${body[country]}, 1) ON CONFLICT (id) DO UPDATE SET orders = customers.orders + 1"
+              noop: true
+        - log:
+            message: "Customer ${body[customer]} from ${body[country]} registered with order ${body[orderId]}"
+
+- route:
+    id: customer-report
+    from:
+      uri: timer
+      parameters:
+        timerName: report
+        delay: 5000
+        period: 10000
+      steps:
+        - to:
+            uri: sql
+            parameters:
+              query: "SELECT id, country, orders FROM customers ORDER BY id"
+        - log:
+            message: "${body.size()} customer(s) in the table"
+        - split:
+            expression:
+              simple:
+                expression: "${body}"
+            steps:
+              - log:
+                  message: "  ${body[id]} (${body[country]}): ${body[orders]} order(s)"

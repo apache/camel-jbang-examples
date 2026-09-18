@@ -1,0 +1,33 @@
+name: mqtt-test
+description: The mqtt example raises an alert for a warm reading
+actions:
+  - camel:
+      infra:
+        run:
+          service: mosquitto
+          fixedPort: true
+  - camel:
+      jbang:
+        run:
+          integration:
+            name: "mqtt"
+            file: "../mqtt.camel.yaml"
+            systemProperties:
+              file: "../application.properties"
+  - camel:
+      jbang:
+        verify:
+          integration: "mqtt"
+          logMessage: "°C, ok"
+  - camel:
+      startContext: {}
+  - send:
+      endpoint: "camel:paho-mqtt5:warehouse/temperature?brokerUrl=tcp://localhost:1883&clientId=citrus-sensor"
+      message:
+        body:
+          data: '{"sensor": "cold-room-9", "value": 14}'
+  - camel:
+      jbang:
+        verify:
+          integration: "mqtt"
+          logMessage: "cold-room-9: 14 °C, too warm, alert the warehouse"

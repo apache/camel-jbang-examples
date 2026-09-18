@@ -1,0 +1,45 @@
+# Temperature sensors in the warehouse's cold rooms publish readings over
+# MQTT; the shop watches the topic and raises an alert when a room gets too
+# warm. Start the broker with: camel infra run mosquitto
+- route:
+    id: sensors
+    from:
+      uri: timer
+      parameters:
+        timerName: sensors
+        period: 2000
+      steps:
+        - setBody:
+            expression:
+              simple:
+                expression: '{"sensor": "cold-room-${random(1,4)}", "value": ${random(2,12)}}'
+        - to:
+            uri: paho-mqtt5
+            parameters:
+              topic: warehouse/temperature
+              brokerUrl: "{{mqtt.broker.url}}"
+
+- route:
+    id: cold-rooms
+    from:
+      uri: paho-mqtt5
+      parameters:
+        topic: warehouse/temperature
+        brokerUrl: "{{mqtt.broker.url}}"
+      steps:
+        - unmarshal:
+            json:
+              library: Jackson
+        - choice:
+            when:
+              - expression:
+                  simple:
+                    expression: "${body[value]} > 8"
+                steps:
+                  - log:
+                      loggingLevel: WARN
+                      message: "${body[sensor]}: ${body[value]} °C, too warm, alert the warehouse"
+            otherwise:
+              steps:
+                - log:
+                    message: "${body[sensor]}: ${body[value]} °C, ok"

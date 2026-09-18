@@ -1,9 +1,0 @@
-services:
-  mosquitto:
-    image: mirror.gcr.io/eclipse-mosquitto
-    ports:
-      - '1883:1883'
-    volumes:
-      - ./infra:/mosquitto/config
-      - ./data:/mosquitto/data
-      - ./log:/mosquitto/log

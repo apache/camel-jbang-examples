@@ -1,0 +1,30 @@
+name: artemis-test
+description: The artemis example logs what its README promises
+actions:
+  - camel:
+      infra:
+        run:
+          service: artemis
+          fixedPort: true
+  - camel:
+      jbang:
+        run:
+          integration:
+            name: "artemis"
+            file: "../artemis.camel.yaml"
+            systemProperties:
+              file: "../application.properties"
+          resources:
+            - "orders/order-1001.json"
+            - "orders/order-1002.json"
+            - "orders/order-1003.json"
+  - camel:
+      jbang:
+        verify:
+          integration: "artemis"
+          logMessage: "Order ORD-1001 put on the queue"
+  - camel:
+      jbang:
+        verify:
+          integration: "artemis"
+          logMessage: "Took ORD-1003 off the queue: 3 line(s) for customer C-134 in US"

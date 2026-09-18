@@ -1,0 +1,30 @@
+{
+    "title": "Camel 1.0 tribute",
+    "description": "The very first Camel example of 2007, JMS to file: a timer sends ten messages to a queue on an Artemis broker started with camel infra, and the consumer writes each message to a file in outbox; the log shows both sides.",
+    "level": "connect-service",
+    "teaches": {
+        "components": [
+            "jms",
+            "file",
+            "timer",
+            "log"
+        ],
+        "eips": [
+            "setBody"
+        ],
+        "languages": [
+            "simple"
+        ]
+    },
+    "tags": [
+        "history",
+        "jms",
+        "artemis",
+        "file"
+    ],
+    "infraServices": [
+        "artemis"
+    ],
+    "requiresDocker": true,
+    "bundled": false
+}

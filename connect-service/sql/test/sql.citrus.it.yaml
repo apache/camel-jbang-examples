@@ -1,0 +1,35 @@
+name: sql-test
+description: The sql example logs what its README promises
+actions:
+  - camel:
+      infra:
+        run:
+          service: postgres
+          fixedPort: true
+  - camel:
+      jbang:
+        run:
+          integration:
+            name: "sql"
+            file: "../sql.camel.yaml"
+            systemProperties:
+              file: "../application.properties"
+          resources:
+            - "orders/order-1001.json"
+            - "orders/order-1002.json"
+            - "orders/order-1003.json"
+  - camel:
+      jbang:
+        verify:
+          integration: "sql"
+          logMessage: "Customer C-482 from DK registered with order ORD-1001"
+  - camel:
+      jbang:
+        verify:
+          integration: "sql"
+          logMessage: "3 customer(s) in the table"
+  - camel:
+      jbang:
+        verify:
+          integration: "sql"
+          logMessage: "C-207 (DE): 1 order(s)"

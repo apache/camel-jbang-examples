@@ -1,0 +1,35 @@
+name: kafka-orders-test
+description: The kafka-orders example logs what its README promises
+actions:
+  - camel:
+      infra:
+        run:
+          service: kafka
+          fixedPort: true
+  - camel:
+      jbang:
+        run:
+          integration:
+            name: "kafka-orders"
+            file: "../kafka-orders.camel.yaml"
+            systemProperties:
+              file: "../application.properties"
+          resources:
+            - "orders/order-1001.json"
+            - "orders/order-1002.json"
+            - "orders/order-1003.json"
+  - camel:
+      jbang:
+        verify:
+          integration: "kafka-orders"
+          logMessage: "Order ORD-1003 is pending, not published"
+  - camel:
+      jbang:
+        verify:
+          integration: "kafka-orders"
+          logMessage: "Fulfilment: 2 line(s) of ORD-1001 to the warehouse"
+  - camel:
+      jbang:
+        verify:
+          integration: "kafka-orders"
+          logMessage: "Notification: email to customer C-207 about ORD-1002"
