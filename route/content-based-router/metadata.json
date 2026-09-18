@@ -1,0 +1,28 @@
+{
+    "title": "Content-based router",
+    "description": "Three orders from three countries are read from the orders directory and a choice routes each by its country: the Danish order to local delivery, the German order to EU shipping without customs, the US order to export with a customs declaration; each branch logs what it did.",
+    "level": "route",
+    "teaches": {
+        "components": [
+            "file",
+            "log"
+        ],
+        "eips": [
+            "choice",
+            "unmarshal"
+        ],
+        "languages": [
+            "simple"
+        ],
+        "dataformats": [
+            "json"
+        ]
+    },
+    "tags": [
+        "shop",
+        "eip",
+        "choice",
+        "routing"
+    ],
+    "bundled": false
+}

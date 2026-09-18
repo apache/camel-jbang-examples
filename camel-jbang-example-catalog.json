@@ -374,38 +374,6 @@
         ]
     },
     {
-        "name": "eip/aggregator",
-        "title": "Aggregator",
-        "description": "A timer sends individual messages that the aggregator collects into a batch of three by a correlation key, and one log line shows each completed batch.",
-        "level": "route",
-        "teaches": {
-            "components": [
-                "timer",
-                "direct",
-                "log"
-            ],
-            "eips": [
-                "aggregate",
-                "bean"
-            ],
-            "languages": [
-                "simple"
-            ]
-        },
-        "tags": [
-            "eip",
-            "aggregator",
-            "batch"
-        ],
-        "bundled": true,
-        "requiresDocker": false,
-        "hasCitrusTests": false,
-        "files": [
-            "README.md",
-            "aggregator.camel.yaml"
-        ]
-    },
-    {
         "name": "eip/circuit-breaker",
         "title": "Circuit Breaker",
         "description": "A timer route calls a step that fails at random inside a Resilience4j circuit breaker; the log shows the failures being absorbed and the breaker opening after ten calls with too many failures.",
@@ -437,38 +405,6 @@
         "files": [
             "README.md",
             "route.camel.yaml"
-        ]
-    },
-    {
-        "name": "eip/content-based-router",
-        "title": "Content Based Router",
-        "description": "A timer produces messages with different content and a choice routes each to a different branch by its content, so the log shows which branch handled which message.",
-        "level": "route",
-        "teaches": {
-            "components": [
-                "timer",
-                "log"
-            ],
-            "eips": [
-                "choice",
-                "setHeader",
-                "convertBodyTo"
-            ],
-            "languages": [
-                "simple"
-            ]
-        },
-        "tags": [
-            "eip",
-            "choice",
-            "routing"
-        ],
-        "bundled": true,
-        "requiresDocker": false,
-        "hasCitrusTests": false,
-        "files": [
-            "README.md",
-            "content-based-router.camel.yaml"
         ]
     },
     {
@@ -773,6 +709,169 @@
         ]
     },
     {
+        "name": "route/aggregator",
+        "title": "Aggregator",
+        "description": "The warehouse reports each picked line on its own and the aggregator collects the lines of one order back into a shipment, correlated by the order id and complete when as many lines are in as the order had; each shipment is logged as JSON.",
+        "level": "route",
+        "teaches": {
+            "components": [
+                "file",
+                "direct",
+                "log"
+            ],
+            "eips": [
+                "aggregate",
+                "split",
+                "setHeader",
+                "marshal",
+                "unmarshal"
+            ],
+            "languages": [
+                "simple"
+            ],
+            "dataformats": [
+                "json"
+            ]
+        },
+        "tags": [
+            "shop",
+            "eip",
+            "aggregator",
+            "batch"
+        ],
+        "bundled": false,
+        "requiresDocker": false,
+        "hasCitrusTests": true,
+        "files": [
+            "README.md",
+            "aggregator.camel.yaml",
+            "application.properties",
+            "orders/order-1001.json",
+            "orders/order-1002.json",
+            "orders/order-1003.json"
+        ]
+    },
+    {
+        "name": "route/content-based-router",
+        "title": "Content-based router",
+        "description": "Three orders from three countries are read from the orders directory and a choice routes each by its country: the Danish order to local delivery, the German order to EU shipping without customs, the US order to export with a customs declaration; each branch logs what it did.",
+        "level": "route",
+        "teaches": {
+            "components": [
+                "file",
+                "log"
+            ],
+            "eips": [
+                "choice",
+                "unmarshal"
+            ],
+            "languages": [
+                "simple"
+            ],
+            "dataformats": [
+                "json"
+            ]
+        },
+        "tags": [
+            "shop",
+            "eip",
+            "choice",
+            "routing"
+        ],
+        "bundled": false,
+        "requiresDocker": false,
+        "hasCitrusTests": true,
+        "files": [
+            "README.md",
+            "application.properties",
+            "content-based-router.camel.yaml",
+            "orders/order-1001.json",
+            "orders/order-1002.json",
+            "orders/order-1003.json"
+        ]
+    },
+    {
+        "name": "route/filter-and-multicast",
+        "title": "Filter and multicast",
+        "description": "Three orders are read from the orders directory; a filter lets only the paid ones through and a multicast sends each paid order to both the warehouse route and the invoicing route, which log their part; the pending order is logged as received and goes no further.",
+        "level": "route",
+        "teaches": {
+            "components": [
+                "file",
+                "direct",
+                "log"
+            ],
+            "eips": [
+                "filter",
+                "multicast",
+                "unmarshal"
+            ],
+            "languages": [
+                "simple"
+            ],
+            "dataformats": [
+                "json"
+            ]
+        },
+        "tags": [
+            "shop",
+            "eip",
+            "filter",
+            "multicast"
+        ],
+        "bundled": false,
+        "requiresDocker": false,
+        "hasCitrusTests": true,
+        "files": [
+            "README.md",
+            "application.properties",
+            "filter-and-multicast.camel.yaml",
+            "orders/order-1001.json",
+            "orders/order-1002.json",
+            "orders/order-1003.json"
+        ]
+    },
+    {
+        "name": "route/order-lines",
+        "title": "Order lines",
+        "description": "Each order read from the orders directory is split into one message per line, the order id travels along in a header, and the log shows the order, one pick line per line, and the parent's confirmation that all lines went to picking.",
+        "level": "route",
+        "teaches": {
+            "components": [
+                "file",
+                "log"
+            ],
+            "eips": [
+                "split",
+                "setHeader",
+                "unmarshal"
+            ],
+            "languages": [
+                "simple"
+            ],
+            "dataformats": [
+                "json"
+            ]
+        },
+        "tags": [
+            "shop",
+            "eip",
+            "splitter",
+            "split"
+        ],
+        "bundled": false,
+        "requiresDocker": false,
+        "hasCitrusTests": true,
+        "files": [
+            "README.md",
+            "application.properties",
+            "order-lines.camel.yaml",
+            "orders/order-1001.json",
+            "orders/order-1002.json",
+            "orders/order-1003.json"
+        ]
+    },
+    {
         "name": "run/nightly-report",
         "title": "Nightly report",
         "description": "A cron schedule runs the shop's inventory report, every ten seconds in the demo and nightly with a one-line change, and each run logs the stock counts with a timestamp.",
@@ -944,10 +1043,7 @@
             "README.md",
             "application.properties",
             "csv-to-json.camel.yaml",
-            "inbox/invoices.csv",
-            "outbox/INV-2001.json",
-            "outbox/INV-2002.json",
-            "outbox/INV-2003.json"
+            "inbox/invoices.csv"
         ]
     },
     {
@@ -1022,7 +1118,7 @@
         ],
         "bundled": false,
         "requiresDocker": false,
-        "hasCitrusTests": false,
+        "hasCitrusTests": true,
         "files": [
             "README.md",
             "application.properties",
@@ -1129,7 +1225,7 @@
         ],
         "bundled": false,
         "requiresDocker": false,
-        "hasCitrusTests": false,
+        "hasCitrusTests": true,
         "files": [
             "README.md",
             "application.properties",
