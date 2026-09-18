@@ -805,6 +805,106 @@
         ]
     },
     {
+        "name": "run/nightly-report",
+        "title": "Nightly report",
+        "description": "A cron schedule runs the shop's inventory report, every ten seconds in the demo and nightly with a one-line change, and each run logs the stock counts with a timestamp.",
+        "level": "run",
+        "teaches": {
+            "components": [
+                "cron",
+                "log"
+            ],
+            "eips": [
+                "setBody"
+            ],
+            "languages": [
+                "simple"
+            ]
+        },
+        "tags": [
+            "shop",
+            "cron",
+            "schedule"
+        ],
+        "bundled": false,
+        "requiresDocker": false,
+        "hasCitrusTests": true,
+        "files": [
+            "README.md",
+            "application.properties",
+            "nightly-report.camel.yaml"
+        ]
+    },
+    {
+        "name": "run/order-generator",
+        "title": "Order generator",
+        "description": "A timer creates a shop order every five seconds: a Java bean hands out the order number, the body is the order as JSON, and the log shows each new order. The order feed every later example starts from.",
+        "level": "run",
+        "teaches": {
+            "components": [
+                "timer",
+                "log"
+            ],
+            "eips": [
+                "setHeader",
+                "setBody"
+            ],
+            "languages": [
+                "simple",
+                "method"
+            ]
+        },
+        "tags": [
+            "shop",
+            "timer",
+            "bean",
+            "json"
+        ],
+        "bundled": false,
+        "requiresDocker": false,
+        "hasCitrusTests": true,
+        "files": [
+            "OrderNumber.java",
+            "README.md",
+            "application.properties",
+            "beans.yaml",
+            "order-generator.camel.yaml"
+        ]
+    },
+    {
+        "name": "run/properties-and-profiles",
+        "title": "Properties and profiles",
+        "description": "A timer logs a welcome with the shop name and currency from application.properties; run with --profile=prod and application-prod.properties overrides both, so the same route greets with the production values.",
+        "level": "run",
+        "teaches": {
+            "components": [
+                "timer",
+                "log"
+            ],
+            "eips": [
+                "setBody"
+            ],
+            "languages": [
+                "simple"
+            ]
+        },
+        "tags": [
+            "shop",
+            "properties",
+            "profiles",
+            "configuration"
+        ],
+        "bundled": false,
+        "requiresDocker": false,
+        "hasCitrusTests": true,
+        "files": [
+            "README.md",
+            "application-prod.properties",
+            "application.properties",
+            "properties-and-profiles.camel.yaml"
+        ]
+    },
+    {
         "name": "security/keycloak-security-rest",
         "title": "Keycloak Security REST API",
         "description": "A REST API on platform-http is protected by a running Keycloak: a request without a valid bearer token is refused with 401, a token with the right role reaches the route and is logged.",
