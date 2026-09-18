@@ -1,12 +1,21 @@
 {
     "title": "Memory Leak",
-    "description": "Simulates a memory leak for testing JFR Old Object Sample diagnostics",
+    "description": "Three timer routes run side by side: two leak memory into a cache and a buffer, one is healthy, so a JFR Old Object Sample recording and the CLI's heap tools show which route leaks.",
+    "level": "showcase",
+    "teaches": {
+        "components": [
+            "timer",
+            "log"
+        ],
+        "eips": [
+            "process"
+        ]
+    },
     "tags": [
         "observability",
         "jfr",
         "diagnostics",
         "tui"
     ],
-    "bundled": true,
-    "level": "beginner"
+    "bundled": true
 }

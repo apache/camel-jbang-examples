@@ -1,13 +1,23 @@
 {
     "title": "SQL Database",
-    "description": "Use a SQL database with Camel and Postgres",
+    "description": "Against a running Postgres, a table is created and a row inserted on startup, and every five seconds a select logs the rows; the datasource comes from application.properties.",
+    "level": "connect-service",
+    "teaches": {
+        "components": [
+            "timer",
+            "sql",
+            "log"
+        ],
+        "languages": [
+            "simple"
+        ]
+    },
     "tags": [
         "database",
         "sql",
         "postgres"
     ],
     "bundled": true,
-    "level": "intermediate",
     "infraServices": [
         "postgres"
     ]

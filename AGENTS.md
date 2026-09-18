@@ -51,7 +51,7 @@ essentials and adds what is specific to this examples repository.
 | `README.md` | What it does, how to run, expected output, how to test |
 | `<name>.camel.yaml` | The route(s) in Camel YAML DSL |
 | `application.properties` | Runtime properties (ASF license header required) |
-| `metadata.json` | Catalog entry: `name`, `title`, `description`, `tags`, `level` (`beginner`/`intermediate`/`advanced`), `infraServices`, `hasCitrusTests` |
+| `metadata.json` | Catalog entry: `name`, `title`, `description` (the behaviour you observe when it runs), `level` (the group: `quick-start`, then the ladder rungs `run`, `transform`, `route`, `fail-well`, `connect`, `connect-service`, `contracts`, `ai`, `cloud`, or `showcase` for tooling demos), `teaches` (the `components`, `eips`, `languages` and `dataformats` it introduces), `tags`, `infraServices`, `hasCitrusTests` |
 | `compose.yaml` | Optional Docker Compose for required infra |
 | `beans.yaml` / `*.java` | Optional beans/processors (package `camel.example.*`) |
 | `test/<name>.citrus.it.yaml` | Optional Citrus integration test |

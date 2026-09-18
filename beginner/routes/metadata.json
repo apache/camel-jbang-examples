@@ -1,11 +1,20 @@
 {
     "title": "Routes",
-    "description": "Define routes in YAML with Java beans",
+    "description": "A timer route in YAML calls a Java bean, Greeter, that builds the message, and logs what the bean returned; the first step from YAML into your own code.",
+    "level": "quick-start",
+    "teaches": {
+        "components": [
+            "timer",
+            "log"
+        ],
+        "eips": [
+            "bean"
+        ]
+    },
     "tags": [
         "beginner",
         "yaml",
         "bean"
     ],
-    "bundled": true,
-    "level": "beginner"
+    "bundled": true
 }

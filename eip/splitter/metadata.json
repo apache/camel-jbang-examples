@@ -1,11 +1,24 @@
 {
     "title": "Splitter",
-    "description": "Split a batch of items into individual messages for processing",
+    "description": "A timer creates a comma-separated batch of items, the splitter turns it into one message per item, and each item is logged on its own line.",
+    "level": "quick-start",
+    "teaches": {
+        "components": [
+            "timer",
+            "log"
+        ],
+        "eips": [
+            "split"
+        ],
+        "languages": [
+            "tokenize",
+            "simple"
+        ]
+    },
     "tags": [
         "eip",
         "splitter",
         "batch"
     ],
-    "bundled": true,
-    "level": "beginner"
+    "bundled": true
 }

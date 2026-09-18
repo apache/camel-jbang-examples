@@ -1,12 +1,19 @@
 {
     "title": "OpenAI PII Redaction",
-    "description": "Redact personal identifiable information from text using OpenAI-compatible LLMs",
+    "description": "Text typed on standard input is sent to an OpenAI-compatible model with a JSON schema that asks for the personal identifiers redacted, and the redacted text is printed on standard output.",
+    "level": "ai",
+    "teaches": {
+        "components": [
+            "stream",
+            "direct",
+            "openai"
+        ]
+    },
     "tags": [
         "ai",
         "openai",
         "privacy",
         "security"
     ],
-    "bundled": false,
-    "level": "advanced"
+    "bundled": false
 }

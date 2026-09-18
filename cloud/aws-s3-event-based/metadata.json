@@ -1,6 +1,12 @@
 {
     "title": "AWS S3 CDC",
-    "description": "Consume S3 events using EventBridge and SQS for change data capture",
+    "description": "Object events from an S3 bucket, delivered through EventBridge to an SQS queue, are consumed with the aws-s3-cdc-source Kamelet and logged; a change data capture feed for a bucket.",
+    "level": "cloud",
+    "teaches": {
+        "components": [
+            "kamelet"
+        ]
+    },
     "tags": [
         "aws",
         "s3",
@@ -8,6 +14,5 @@
         "eventbridge",
         "cloud"
     ],
-    "bundled": false,
-    "level": "advanced"
+    "bundled": false
 }

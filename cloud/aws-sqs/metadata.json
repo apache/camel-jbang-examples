@@ -1,12 +1,18 @@
 {
     "title": "AWS SQS Sink",
-    "description": "Push messages to AWS SQS queue via HTTP service",
+    "description": "A POST to /news on port 8080 pushes the request body as a message to an AWS SQS queue through the aws-sqs-sink Kamelet; credentials, region and queue come from application.properties.",
+    "level": "cloud",
+    "teaches": {
+        "components": [
+            "platform-http",
+            "kamelet"
+        ]
+    },
     "tags": [
         "aws",
         "sqs",
         "http",
         "cloud"
     ],
-    "bundled": false,
-    "level": "advanced"
+    "bundled": false
 }

@@ -1,10 +1,27 @@
 {
     "title": "Circuit Breaker",
-    "description": "Use the circuit breaker EIP for fault tolerance",
+    "description": "A timer route calls a step that fails at random inside a Resilience4j circuit breaker; the log shows the failures being absorbed and the breaker opening after ten calls with too many failures.",
+    "level": "fail-well",
+    "teaches": {
+        "components": [
+            "timer",
+            "log"
+        ],
+        "eips": [
+            "circuitBreaker",
+            "filter",
+            "throwException",
+            "setVariable",
+            "setProperty",
+            "setHeader"
+        ],
+        "languages": [
+            "simple"
+        ]
+    },
     "tags": [
         "eip",
         "resilience"
     ],
-    "bundled": true,
-    "level": "beginner"
+    "bundled": true
 }

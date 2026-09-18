@@ -1,11 +1,25 @@
 {
     "title": "Aggregator",
-    "description": "Collect individual messages into a batch using the Aggregator EIP",
+    "description": "A timer sends individual messages that the aggregator collects into a batch of three by a correlation key, and one log line shows each completed batch.",
+    "level": "route",
+    "teaches": {
+        "components": [
+            "timer",
+            "direct",
+            "log"
+        ],
+        "eips": [
+            "aggregate",
+            "bean"
+        ],
+        "languages": [
+            "simple"
+        ]
+    },
     "tags": [
         "eip",
         "aggregator",
         "batch"
     ],
-    "bundled": true,
-    "level": "beginner"
+    "bundled": true
 }

@@ -1,12 +1,18 @@
 {
     "title": "Cron Log",
-    "description": "Scheduled task that logs every 5 seconds",
+    "description": "A cron trigger fires every five seconds and logs the message from application.properties.",
+    "level": "run",
+    "teaches": {
+        "components": [
+            "cron",
+            "log"
+        ]
+    },
     "tags": [
         "beginner",
         "timer",
         "cron",
         "log"
     ],
-    "bundled": true,
-    "level": "beginner"
+    "bundled": true
 }

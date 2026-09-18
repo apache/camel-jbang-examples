@@ -107,6 +107,7 @@ for dirpath, dirnames, filenames in sorted(os.walk(repo_root)):
         "title": meta["title"],
         "description": meta["description"],
         "level": meta.get("level", "intermediate"),
+        "teaches": meta.get("teaches", {}),
         "tags": meta.get("tags", []),
         "bundled": meta.get("bundled", False),
         "requiresDocker": requires_docker,

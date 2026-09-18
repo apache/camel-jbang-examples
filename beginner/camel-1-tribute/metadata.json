@@ -1,6 +1,18 @@
 {
     "title": "Camel 1.0 Tribute",
-    "description": "A tribute to the very first Apache Camel example from 2007 - JMS to File",
+    "description": "The very first Camel example of 2007, JMS to file: a timer sends a message to a queue on a running Artemis broker and the consumer writes each message to a file; the log shows both sides.",
+    "level": "connect-service",
+    "teaches": {
+        "components": [
+            "timer",
+            "jms",
+            "file",
+            "log"
+        ],
+        "languages": [
+            "simple"
+        ]
+    },
     "tags": [
         "beginner",
         "jms",
@@ -9,7 +21,6 @@
         "tribute"
     ],
     "bundled": true,
-    "level": "beginner",
     "infraServices": [
         "artemis"
     ]

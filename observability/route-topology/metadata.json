@@ -1,6 +1,22 @@
 {
     "title": "Route Topology",
-    "description": "Demonstrates inter-route topology with triggers, shared routes, and external systems",
+    "description": "A timer generates an order every five seconds and an HTTP endpoint accepts orders too; both flow through a shared validation route to Kafka, where consumers dispatch, fulfil and notify, each logging the order. camel cmd route-topology draws how the routes connect.",
+    "level": "connect-service",
+    "teaches": {
+        "components": [
+            "timer",
+            "platform-http",
+            "direct",
+            "kafka",
+            "log"
+        ],
+        "eips": [
+            "multicast"
+        ],
+        "languages": [
+            "simple"
+        ]
+    },
     "tags": [
         "topology",
         "direct",
@@ -8,7 +24,6 @@
         "timer"
     ],
     "bundled": true,
-    "level": "intermediate",
     "infraServices": [
         "kafka"
     ]

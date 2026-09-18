@@ -1,6 +1,14 @@
 {
     "title": "GenAI Observability",
-    "description": "Observe LangChain4j LLM calls with OpenTelemetry gen_ai spans, Micrometer metrics, and the Camel TUI",
+    "description": "A timer sends a prompt to a local Ollama model through langchain4j-chat every fifteen seconds and logs the reply and the model name; with --observe, OpenTelemetry gen_ai spans and Micrometer metrics show token usage per call.",
+    "level": "ai",
+    "teaches": {
+        "components": [
+            "timer",
+            "langchain4j-chat",
+            "log"
+        ]
+    },
     "tags": [
         "ai",
         "observability",
@@ -10,7 +18,6 @@
         "tui"
     ],
     "bundled": false,
-    "level": "intermediate",
     "infraServices": [
         "ollama"
     ]

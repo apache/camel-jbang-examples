@@ -1,13 +1,23 @@
 {
     "title": "ActiveMQ to FTP",
-    "description": "Integrate ActiveMQ messaging with an FTP server",
+    "description": "Each message arriving on the JMS queue cheese of a running Artemis broker is logged and uploaded as a file to a running FTP server.",
+    "level": "connect-service",
+    "teaches": {
+        "components": [
+            "jms",
+            "ftp",
+            "log"
+        ],
+        "languages": [
+            "simple"
+        ]
+    },
     "tags": [
         "messaging",
         "ftp",
         "activemq"
     ],
     "bundled": false,
-    "level": "intermediate",
     "infraServices": [
         "artemis",
         "ftp"

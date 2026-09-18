@@ -1,6 +1,21 @@
 {
     "title": "Financial Document Analyzer",
-    "description": "Automated financial document analysis with Docling, LangChain4j, and market data",
+    "description": "Financial documents dropped in a directory are converted by Docling, analysed by a local Ollama model, enriched with market data over HTTP, and the analysis is written out and served over HTTP.",
+    "level": "ai",
+    "teaches": {
+        "components": [
+            "file",
+            "docling",
+            "langchain4j-chat",
+            "http",
+            "platform-http"
+        ],
+        "eips": [
+            "choice",
+            "script",
+            "toD"
+        ]
+    },
     "tags": [
         "ai",
         "langchain4j",
@@ -8,7 +23,6 @@
         "finance"
     ],
     "bundled": false,
-    "level": "advanced",
     "infraServices": [
         "docling",
         "ollama"

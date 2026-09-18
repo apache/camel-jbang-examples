@@ -1,13 +1,23 @@
 {
     "title": "Apache ActiveMQ Artemis",
-    "description": "Setup connection factory to a remote Apache ActiveMQ Artemis messaging broker",
+    "description": "A producer route sends a JSON order to the queue numbers on a running Artemis broker every second and a consumer route logs each one; the connection factory is declared in application.properties.",
+    "level": "connect-service",
+    "teaches": {
+        "components": [
+            "timer",
+            "jms",
+            "log"
+        ],
+        "languages": [
+            "simple"
+        ]
+    },
     "tags": [
         "messaging",
         "jms",
         "artemis"
     ],
     "bundled": false,
-    "level": "intermediate",
     "infraServices": [
         "artemis"
     ]

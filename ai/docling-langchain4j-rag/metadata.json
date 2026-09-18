@@ -1,6 +1,26 @@
 {
     "title": "Document Analysis with Docling and LangChain4j RAG",
-    "description": "RAG workflow combining Docling document conversion with LangChain4j and Ollama",
+    "description": "Documents dropped in a directory are converted by a running Docling service, chunked and summarised by a local Ollama model through langchain4j-chat, and written to an output directory; an HTTP endpoint answers questions against the converted documents.",
+    "level": "ai",
+    "teaches": {
+        "components": [
+            "file",
+            "docling",
+            "langchain4j-chat",
+            "platform-http",
+            "timer"
+        ],
+        "eips": [
+            "split",
+            "choice",
+            "script",
+            "setProperty",
+            "setHeader"
+        ],
+        "languages": [
+            "simple"
+        ]
+    },
     "tags": [
         "ai",
         "rag",
@@ -8,7 +28,6 @@
         "docling"
     ],
     "bundled": false,
-    "level": "advanced",
     "infraServices": [
         "docling",
         "ollama"
