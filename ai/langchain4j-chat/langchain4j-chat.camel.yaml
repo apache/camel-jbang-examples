@@ -1,0 +1,46 @@
+# A local model writes the shipping notification for each order. The chat
+# model is a bean built from application.properties; the route builds the
+# prompt from the order and logs the reply. Start the model with:
+# camel infra run ollama
+- beans:
+    - name: chatModel
+      type: dev.langchain4j.model.ollama.OllamaChatModel
+      builderClass: dev.langchain4j.model.ollama.OllamaChatModel$OllamaChatModelBuilder
+      builderMethod: build
+      properties:
+        baseUrl: "{{ollama.base.url}}"
+        modelName: "{{ollama.model}}"
+        temperature: 0.2
+
+- route:
+    id: shipping-notifications
+    from:
+      uri: file
+      parameters:
+        directoryName: orders
+        noop: true
+        sortBy: "file:name"
+      steps:
+        - unmarshal:
+            json:
+              library: Jackson
+        - setProperty:
+            name: orderId
+            expression:
+              simple:
+                expression: "${body[orderId]}"
+        - setBody:
+            expression:
+              simple:
+                expression: >-
+                  You write short, friendly emails for a web shop that sells Apache Camel merchandise.
+                  Write the shipping notification for order ${body[orderId]}, shipped today to customer ${body[customer]} in ${body[country]}.
+                  The order has ${body[lines].size()} line(s): ${body[lines]}.
+                  Two sentences, no subject line, no placeholders, plain text.
+        - to:
+            uri: langchain4j-chat
+            parameters:
+              chatId: notifications
+              chatModel: "#chatModel"
+        - log:
+            message: "Notification for ${exchangeProperty.orderId} (${header.CamelLangChain4jChatInputTokenCount} in, ${header.CamelLangChain4jChatOutputTokenCount} out): ${body}"

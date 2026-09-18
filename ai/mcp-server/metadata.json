@@ -1,0 +1,33 @@
+{
+    "title": "MCP server",
+    "description": "Two routes are exposed as MCP tools, stock_level by SKU and order_status by order id, on http://localhost:8080/mcp with nothing but properties to switch the server on; any MCP client, a coding agent included, can list and call them, and the log shows each call.",
+    "level": "ai",
+    "teaches": {
+        "components": [
+            "ai-tool",
+            "file",
+            "log"
+        ],
+        "eips": [
+            "pollEnrich",
+            "choice",
+            "unmarshal"
+        ],
+        "languages": [
+            "simple",
+            "jsonpath",
+            "constant"
+        ],
+        "dataformats": [
+            "json"
+        ]
+    },
+    "tags": [
+        "shop",
+        "ai",
+        "mcp",
+        "agent",
+        "tools"
+    ],
+    "bundled": false
+}

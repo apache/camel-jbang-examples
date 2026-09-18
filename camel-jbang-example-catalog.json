@@ -44,35 +44,93 @@
         ]
     },
     {
-        "name": "ai/genai-observability",
-        "title": "GenAI Observability",
-        "description": "A timer sends a prompt to a local Ollama model through langchain4j-chat every fifteen seconds and logs the reply and the model name; with --observe, OpenTelemetry gen_ai spans and Micrometer metrics show token usage per call.",
+        "name": "ai/langchain4j-chat",
+        "title": "LangChain4j chat",
+        "description": "A local Ollama model started with camel infra writes the shipping notification for each of the three orders; the chat model is a bean built from properties, the prompt comes from the order, and the log shows the reply with its token counts.",
         "level": "ai",
         "teaches": {
             "components": [
-                "timer",
                 "langchain4j-chat",
+                "file",
                 "log"
+            ],
+            "eips": [
+                "setBody",
+                "setProperty",
+                "unmarshal"
+            ],
+            "languages": [
+                "simple"
+            ],
+            "dataformats": [
+                "json"
             ]
         },
         "tags": [
+            "shop",
             "ai",
-            "observability",
-            "langchain4j",
-            "opentelemetry",
-            "genai",
-            "tui"
+            "llm",
+            "ollama",
+            "langchain4j"
         ],
         "bundled": false,
         "requiresDocker": true,
-        "hasCitrusTests": false,
+        "hasCitrusTests": true,
         "files": [
-            "GenAiObservabilityRoute.java",
             "README.md",
-            "application.properties"
+            "application.properties",
+            "langchain4j-chat.camel.yaml",
+            "orders/order-1001.json",
+            "orders/order-1002.json",
+            "orders/order-1003.json"
         ],
         "infraServices": [
             "ollama"
+        ]
+    },
+    {
+        "name": "ai/mcp-server",
+        "title": "MCP server",
+        "description": "Two routes are exposed as MCP tools, stock_level by SKU and order_status by order id, on http://localhost:8080/mcp with nothing but properties to switch the server on; any MCP client, a coding agent included, can list and call them, and the log shows each call.",
+        "level": "ai",
+        "teaches": {
+            "components": [
+                "ai-tool",
+                "file",
+                "log"
+            ],
+            "eips": [
+                "pollEnrich",
+                "choice",
+                "unmarshal"
+            ],
+            "languages": [
+                "simple",
+                "jsonpath",
+                "constant"
+            ],
+            "dataformats": [
+                "json"
+            ]
+        },
+        "tags": [
+            "shop",
+            "ai",
+            "mcp",
+            "agent",
+            "tools"
+        ],
+        "bundled": false,
+        "requiresDocker": false,
+        "hasCitrusTests": true,
+        "files": [
+            "README.md",
+            "application.properties",
+            "mcp-server.camel.yaml",
+            "orders/order-1001.json",
+            "orders/order-1002.json",
+            "orders/order-1003.json",
+            "stock.json"
         ]
     },
     {
