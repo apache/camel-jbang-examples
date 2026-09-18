@@ -1,0 +1,12 @@
+{
+    "title": "JSON transform",
+    "description": "The shop's order in order.json is reshaped for the warehouse: jsonpath reads the order id and the number of lines into headers, jq builds the pick list with only sku and quantity per line, and both the order and the pick list are logged.",
+    "level": "transform",
+    "teaches": {
+        "components": ["timer", "log"],
+        "eips": ["transform", "setHeader", "setBody"],
+        "languages": ["jq", "jsonpath", "constant", "simple"]
+    },
+    "tags": ["shop", "json", "jq", "jsonpath", "transformation"],
+    "bundled": false
+}

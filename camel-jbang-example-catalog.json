@@ -503,38 +503,6 @@
         ]
     },
     {
-        "name": "language/groovy",
-        "title": "Groovy",
-        "description": "A message with an email address in a header is checked once by a Groovy expression using Apache Commons Validator, a third-party library declared with camel.jbang.dependencies, and logged as a valid or invalid contact.",
-        "level": "transform",
-        "teaches": {
-            "components": [
-                "once",
-                "log"
-            ],
-            "eips": [
-                "choice"
-            ],
-            "languages": [
-                "groovy",
-                "simple"
-            ]
-        },
-        "tags": [
-            "language",
-            "groovy",
-            "eip"
-        ],
-        "bundled": true,
-        "requiresDocker": false,
-        "hasCitrusTests": false,
-        "files": [
-            "README.md",
-            "application.properties",
-            "groovy.camel.yaml"
-        ]
-    },
-    {
         "name": "messaging/artemis",
         "title": "Apache ActiveMQ Artemis",
         "description": "A producer route sends a JSON order to the queue numbers on a running Artemis broker every second and a consumer route logs each one; the connection factory is declared in application.properties.",
@@ -940,30 +908,234 @@
         ]
     },
     {
-        "name": "transformation/xslt",
-        "title": "XSLT Transformation",
-        "description": "Every XML file dropped in the input directory is transformed by stylesheet.xsl and the transformed document is logged.",
+        "name": "transform/csv-to-json",
+        "title": "CSV to JSON",
+        "description": "A CSV of invoices dropped in the inbox directory is read with the CSV data format, its header line naming the fields, split into one message per invoice, and each invoice is logged as JSON and written to the outbox directory as its own file.",
+        "level": "transform",
+        "teaches": {
+            "components": [
+                "file",
+                "log"
+            ],
+            "eips": [
+                "unmarshal",
+                "split",
+                "marshal"
+            ],
+            "dataformats": [
+                "csv",
+                "json"
+            ],
+            "languages": [
+                "simple"
+            ]
+        },
+        "tags": [
+            "shop",
+            "csv",
+            "json",
+            "file",
+            "transformation"
+        ],
+        "bundled": false,
+        "requiresDocker": false,
+        "hasCitrusTests": true,
+        "files": [
+            "README.md",
+            "application.properties",
+            "csv-to-json.camel.yaml",
+            "inbox/invoices.csv",
+            "outbox/INV-2001.json",
+            "outbox/INV-2002.json",
+            "outbox/INV-2003.json"
+        ]
+    },
+    {
+        "name": "transform/data-mapping",
+        "title": "Data mapping",
+        "description": "The shop's order in order.json is mapped field by field to the courier's shipment format, with renamed fields, a nested recipient, one parcel per line, a computed total and a service chosen from the country; the order is parsed to a map, the script shipment-mapping.groovy builds the shipment, and it is logged as JSON.",
+        "level": "transform",
+        "teaches": {
+            "components": [
+                "timer",
+                "log"
+            ],
+            "eips": [
+                "unmarshal",
+                "setBody",
+                "marshal"
+            ],
+            "languages": [
+                "groovy",
+                "constant"
+            ],
+            "dataformats": [
+                "json"
+            ]
+        },
+        "tags": [
+            "shop",
+            "mapping",
+            "groovy",
+            "json",
+            "transformation"
+        ],
+        "bundled": false,
+        "requiresDocker": false,
+        "hasCitrusTests": true,
+        "files": [
+            "README.md",
+            "application.properties",
+            "data-mapping.camel.yaml",
+            "order.json",
+            "shipment-mapping.groovy"
+        ]
+    },
+    {
+        "name": "transform/groovy",
+        "title": "Groovy",
+        "description": "Two orders come in, one with a valid customer email and one with a bad one; a Groovy expression checks the address with Apache Commons Validator, a third-party library declared in application.properties, and the log shows one order accepted and one rejected.",
+        "level": "transform",
+        "teaches": {
+            "components": [
+                "timer",
+                "log"
+            ],
+            "eips": [
+                "choice",
+                "unmarshal",
+                "setBody"
+            ],
+            "languages": [
+                "groovy",
+                "simple"
+            ],
+            "dataformats": [
+                "json"
+            ]
+        },
+        "tags": [
+            "shop",
+            "groovy",
+            "validation",
+            "dependencies"
+        ],
+        "bundled": false,
+        "requiresDocker": false,
+        "hasCitrusTests": false,
+        "files": [
+            "README.md",
+            "application.properties",
+            "groovy.camel.yaml",
+            "order-bad-email.json",
+            "order.json"
+        ]
+    },
+    {
+        "name": "transform/json-transform",
+        "title": "JSON transform",
+        "description": "The shop's order in order.json is reshaped for the warehouse: jsonpath reads the order id and the number of lines into headers, jq builds the pick list with only sku and quantity per line, and both the order and the pick list are logged.",
+        "level": "transform",
+        "teaches": {
+            "components": [
+                "timer",
+                "log"
+            ],
+            "eips": [
+                "transform",
+                "setHeader",
+                "setBody"
+            ],
+            "languages": [
+                "jq",
+                "jsonpath",
+                "constant",
+                "simple"
+            ]
+        },
+        "tags": [
+            "shop",
+            "json",
+            "jq",
+            "jsonpath",
+            "transformation"
+        ],
+        "bundled": false,
+        "requiresDocker": false,
+        "hasCitrusTests": true,
+        "files": [
+            "README.md",
+            "application.properties",
+            "json-transform.camel.yaml",
+            "order.json"
+        ]
+    },
+    {
+        "name": "transform/xml-to-json",
+        "title": "XML to JSON",
+        "description": "A supplier's XML order dropped in the inbox directory is read with the Jackson XML data format and written out as the shop's JSON with the Jackson JSON data format, both logged; no mapping code, the XML elements and attributes become JSON fields.",
+        "level": "transform",
+        "teaches": {
+            "components": [
+                "file",
+                "log"
+            ],
+            "eips": [
+                "unmarshal",
+                "marshal"
+            ],
+            "dataformats": [
+                "jacksonXml",
+                "json"
+            ]
+        },
+        "tags": [
+            "shop",
+            "xml",
+            "json",
+            "jackson",
+            "transformation"
+        ],
+        "bundled": false,
+        "requiresDocker": false,
+        "hasCitrusTests": true,
+        "files": [
+            "README.md",
+            "application.properties",
+            "inbox/supplier-order.xml",
+            "xml-to-json.camel.yaml"
+        ]
+    },
+    {
+        "name": "transform/xslt",
+        "title": "XSLT",
+        "description": "A supplier's XML order dropped in the inbox directory is transformed by the stylesheet packing-slip.xsl into the packing slip the warehouse prints, one item per line and the total pieces to pick, and the slip is logged.",
         "level": "transform",
         "teaches": {
             "components": [
                 "file",
                 "xslt",
                 "log"
+            ],
+            "languages": [
+                "simple"
             ]
         },
         "tags": [
-            "transformation",
+            "shop",
             "xml",
-            "xslt"
+            "xslt",
+            "transformation"
         ],
-        "bundled": true,
+        "bundled": false,
         "requiresDocker": false,
         "hasCitrusTests": false,
         "files": [
             "README.md",
-            "consumer.camel.yaml",
-            "input/account.xml",
-            "stylesheet.xsl"
+            "application.properties",
+            "inbox/supplier-order.xml",
+            "packing-slip.xsl",
+            "xslt.camel.yaml"
         ]
     }
 ]

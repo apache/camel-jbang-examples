@@ -6,3 +6,5 @@ target/
 camel-runner.jar
 *.i??
 .citrus-jbang/
+# written by the csv-to-json example at runtime
+outbox/

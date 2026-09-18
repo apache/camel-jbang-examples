@@ -38,6 +38,18 @@ jobs:
             path: run/nightly-report
           - name: Properties and profiles
             path: run/properties-and-profiles
+          - name: JSON transform
+            path: transform/json-transform
+          - name: XML to JSON
+            path: transform/xml-to-json
+          - name: CSV to JSON
+            path: transform/csv-to-json
+          - name: Data mapping
+            path: transform/data-mapping
+          - name: Groovy
+            path: transform/groovy
+          - name: XSLT
+            path: transform/xslt
           - name: OpenAPI server
             path: rest/openapi-server
           - name: OpenAPI client
