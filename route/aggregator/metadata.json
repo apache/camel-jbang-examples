@@ -1,0 +1,32 @@
+{
+    "title": "Aggregator",
+    "description": "The warehouse reports each picked line on its own and the aggregator collects the lines of one order back into a shipment, correlated by the order id and complete when as many lines are in as the order had; each shipment is logged as JSON.",
+    "level": "route",
+    "teaches": {
+        "components": [
+            "file",
+            "direct",
+            "log"
+        ],
+        "eips": [
+            "aggregate",
+            "split",
+            "setHeader",
+            "marshal",
+            "unmarshal"
+        ],
+        "languages": [
+            "simple"
+        ],
+        "dataformats": [
+            "json"
+        ]
+    },
+    "tags": [
+        "shop",
+        "eip",
+        "aggregator",
+        "batch"
+    ],
+    "bundled": false
+}

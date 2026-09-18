@@ -1,0 +1,30 @@
+{
+    "title": "Filter and multicast",
+    "description": "Three orders are read from the orders directory; a filter lets only the paid ones through and a multicast sends each paid order to both the warehouse route and the invoicing route, which log their part; the pending order is logged as received and goes no further.",
+    "level": "route",
+    "teaches": {
+        "components": [
+            "file",
+            "direct",
+            "log"
+        ],
+        "eips": [
+            "filter",
+            "multicast",
+            "unmarshal"
+        ],
+        "languages": [
+            "simple"
+        ],
+        "dataformats": [
+            "json"
+        ]
+    },
+    "tags": [
+        "shop",
+        "eip",
+        "filter",
+        "multicast"
+    ],
+    "bundled": false
+}

@@ -50,6 +50,14 @@ jobs:
             path: transform/groovy
           - name: XSLT
             path: transform/xslt
+          - name: Content-based router
+            path: route/content-based-router
+          - name: Order lines
+            path: route/order-lines
+          - name: Aggregator
+            path: route/aggregator
+          - name: Filter and multicast
+            path: route/filter-and-multicast
           - name: OpenAPI server
             path: rest/openapi-server
           - name: OpenAPI client
