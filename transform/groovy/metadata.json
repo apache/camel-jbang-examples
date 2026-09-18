@@ -2,12 +2,30 @@
     "title": "Groovy",
     "description": "Two orders come in, one with a valid customer email and one with a bad one; a Groovy expression checks the address with Apache Commons Validator, a third-party library declared in application.properties, and the log shows one order accepted and one rejected.",
     "level": "transform",
+    "order": 5,
     "teaches": {
-        "components": ["timer", "log"],
-        "eips": ["choice", "unmarshal", "setBody"],
-        "languages": ["groovy", "simple"],
-        "dataformats": ["json"]
+        "components": [
+            "timer",
+            "log"
+        ],
+        "eips": [
+            "choice",
+            "unmarshal",
+            "setBody"
+        ],
+        "languages": [
+            "groovy",
+            "simple"
+        ],
+        "dataformats": [
+            "json"
+        ]
     },
-    "tags": ["shop", "groovy", "validation", "dependencies"],
+    "tags": [
+        "shop",
+        "groovy",
+        "validation",
+        "dependencies"
+    ],
     "bundled": false
 }

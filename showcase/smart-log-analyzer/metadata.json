@@ -2,6 +2,7 @@
     "title": "Smart Log Analyzer",
     "description": "A multi-part showcase: a load generator produces logs and traces, a correlator maps OpenTelemetry logs to traces, an LLM analyses the correlated records, and a small web console with a REST API shows the results.",
     "level": "showcase",
+    "order": 4,
     "teaches": {
         "components": [
             "platform-http",

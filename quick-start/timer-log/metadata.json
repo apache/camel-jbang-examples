@@ -2,6 +2,7 @@
     "title": "Timer Log",
     "description": "A timer fires every second and a log line prints the greeting from application.properties; the hello of Camel in one file.",
     "level": "quick-start",
+    "order": 1,
     "teaches": {
         "components": [
             "timer",

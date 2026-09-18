@@ -2,6 +2,7 @@
     "title": "SQL database",
     "description": "Against a Postgres started with camel infra, a customers table is created, the three orders register their customers with an insert that counts orders on conflict, and every ten seconds a select lists the customers; run it twice and the order counts go up.",
     "level": "connect-service",
+    "order": 1,
     "teaches": {
         "components": [
             "sql",

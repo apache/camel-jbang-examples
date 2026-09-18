@@ -2,6 +2,7 @@
     "title": "Stock API",
     "description": "The shop's stock service on port 8080: GET /stock returns the stock file, GET /stock/{sku} returns one SKU as JSON and a 404 with an error message for an unknown SKU.",
     "level": "connect",
+    "order": 2,
     "teaches": {
         "components": [
             "rest",

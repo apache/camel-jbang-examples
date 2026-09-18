@@ -2,6 +2,7 @@
     "title": "FTP courier",
     "description": "Each order on the shipments queue of an Artemis broker becomes a file on the courier's FTP server, both started with camel infra; the log shows each shipment uploaded and camel infra get ftp shows where the files landed.",
     "level": "connect-service",
+    "order": 5,
     "teaches": {
         "components": [
             "ftp",

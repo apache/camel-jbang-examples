@@ -2,6 +2,7 @@
     "title": "Memory Leak",
     "description": "Three timer routes run side by side: two leak memory into a cache and a buffer, one is healthy, so a JFR Old Object Sample recording and the CLI's heap tools show which route leaks.",
     "level": "showcase",
+    "order": 2,
     "teaches": {
         "components": [
             "timer",

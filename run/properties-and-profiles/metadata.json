@@ -2,11 +2,24 @@
     "title": "Properties and profiles",
     "description": "A timer logs a welcome with the shop name and currency from application.properties; run with --profile=prod and application-prod.properties overrides both, so the same route greets with the production values.",
     "level": "run",
+    "order": 3,
     "teaches": {
-        "components": ["timer", "log"],
-        "eips": ["setBody"],
-        "languages": ["simple"]
+        "components": [
+            "timer",
+            "log"
+        ],
+        "eips": [
+            "setBody"
+        ],
+        "languages": [
+            "simple"
+        ]
     },
-    "tags": ["shop", "properties", "profiles", "configuration"],
+    "tags": [
+        "shop",
+        "properties",
+        "profiles",
+        "configuration"
+    ],
     "bundled": false
 }

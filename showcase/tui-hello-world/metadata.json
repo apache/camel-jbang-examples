@@ -2,6 +2,7 @@
     "title": "TUI Hello World",
     "description": "A one-shot timer prints an invitation; the route direct:greet then logs and greets any message sent to it from the CLI (camel cmd send --endpoint=direct:greet --body=...) or from a tool that can send messages.",
     "level": "showcase",
+    "order": 1,
     "teaches": {
         "components": [
             "timer",

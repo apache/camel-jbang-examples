@@ -2,6 +2,7 @@
     "title": "REST API",
     "description": "A REST API on port 8080: GET /api/hello answers the greeting from application.properties and GET /api/hello/{name} answers a greeting with the name.",
     "level": "quick-start",
+    "order": 4,
     "teaches": {
         "components": [
             "platform-http",

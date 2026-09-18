@@ -2,6 +2,7 @@
     "title": "HTTP client",
     "description": "Every line of the three orders is checked against the stock service over HTTP, served by the same example; the log shows each line as ok, or back-order when the stock is short, with the stock level from the response.",
     "level": "connect",
+    "order": 3,
     "teaches": {
         "components": [
             "file",

@@ -2,6 +2,7 @@
     "title": "Artemis queue",
     "description": "The three orders are put on the orders queue of an ActiveMQ Artemis broker started with camel infra, and a consumer route takes them off and logs the customer and line count; the connection factory is declared in application.properties.",
     "level": "connect-service",
+    "order": 2,
     "teaches": {
         "components": [
             "jms",

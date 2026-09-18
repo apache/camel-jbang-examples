@@ -2,6 +2,7 @@
     "title": "Routes",
     "description": "A timer route in YAML calls a Java bean, Greeter, that builds the message, and logs what the bean returned; the first step from YAML into your own code.",
     "level": "quick-start",
+    "order": 2,
     "teaches": {
         "components": [
             "timer",

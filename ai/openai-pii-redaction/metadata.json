@@ -2,6 +2,7 @@
     "title": "OpenAI PII Redaction",
     "description": "Text typed on standard input is sent to an OpenAI-compatible model with a JSON schema that asks for the personal identifiers redacted, and the redacted text is printed on standard output.",
     "level": "ai",
+    "order": 3,
     "teaches": {
         "components": [
             "stream",

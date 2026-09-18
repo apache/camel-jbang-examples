@@ -2,10 +2,22 @@
     "title": "XSLT",
     "description": "A supplier's XML order dropped in the inbox directory is transformed by the stylesheet packing-slip.xsl into the packing slip the warehouse prints, one item per line and the total pieces to pick, and the slip is logged.",
     "level": "transform",
+    "order": 6,
     "teaches": {
-        "components": ["file", "xslt", "log"],
-        "languages": ["simple"]
+        "components": [
+            "file",
+            "xslt",
+            "log"
+        ],
+        "languages": [
+            "simple"
+        ]
     },
-    "tags": ["shop", "xml", "xslt", "transformation"],
+    "tags": [
+        "shop",
+        "xml",
+        "xslt",
+        "transformation"
+    ],
     "bundled": false
 }
