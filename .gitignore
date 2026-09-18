@@ -10,3 +10,6 @@ camel-runner.jar
 outbox/
 # written by the error-handling example at runtime
 parked/
+# written by the file-processing example at runtime
+inbox/
+archive/

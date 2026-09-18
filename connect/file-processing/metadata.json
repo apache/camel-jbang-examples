@@ -1,0 +1,30 @@
+{
+    "title": "File processing",
+    "description": "A courier route copies five files into an inbox; the invoices are checked, archived under a month directory and moved to done, the invoice with a negative amount is rejected with a warning and moved to failed, and the driver's note is left alone because only .json files are picked up.",
+    "level": "connect",
+    "teaches": {
+        "components": [
+            "file",
+            "log"
+        ],
+        "eips": [
+            "validate",
+            "onException",
+            "unmarshal",
+            "marshal"
+        ],
+        "languages": [
+            "simple"
+        ],
+        "dataformats": [
+            "json"
+        ]
+    },
+    "tags": [
+        "shop",
+        "file",
+        "inbox",
+        "archive"
+    ],
+    "bundled": false
+}
