@@ -1,18 +1,35 @@
 {
-    "title": "AWS SQS Sink",
-    "description": "A POST to /news on port 8080 pushes the request body as a message to an AWS SQS queue through the aws-sqs-sink Kamelet; credentials, region and queue come from application.properties.",
+    "title": "AWS SQS",
+    "description": "Each of the three orders is put on an Amazon SQS queue called shipments and a courier route takes it off and logs the order, country and line count; locally the queue lives on the LocalStack that camel infra run aws sqs starts, and the same properties point at real AWS.",
     "level": "cloud",
     "teaches": {
         "components": [
-            "platform-http",
-            "kamelet"
+            "aws2-sqs",
+            "file",
+            "log"
+        ],
+        "eips": [
+            "setHeader",
+            "unmarshal"
+        ],
+        "languages": [
+            "simple",
+            "jsonpath"
+        ],
+        "dataformats": [
+            "json"
         ]
     },
     "tags": [
+        "shop",
         "aws",
         "sqs",
-        "http",
-        "cloud"
+        "cloud",
+        "messaging"
     ],
+    "infraServices": [
+        "aws"
+    ],
+    "requiresDocker": true,
     "bundled": false
 }

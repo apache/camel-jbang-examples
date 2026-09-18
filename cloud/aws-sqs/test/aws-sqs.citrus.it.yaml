@@ -1,0 +1,45 @@
+# deps: software.amazon.awssdk:sqs:2.50.2
+name: aws-sqs-test
+description: The courier picks up every order from the shipments queue
+actions:
+  # LocalStack with SQS, started by Citrus; the properties file would win over
+  # inline properties, so the connection settings are all given here
+  - testcontainers:
+      start:
+        localstack:
+          services:
+            - "SQS"
+  - camel:
+      jbang:
+        run:
+          integration:
+            name: "aws-sqs"
+            file: "../aws-sqs.camel.yaml"
+            systemProperties:
+              properties:
+                - name: camel.component.aws2-sqs.access-key
+                  value: "${CITRUS_TESTCONTAINERS_LOCALSTACK_ACCESS_KEY}"
+                - name: camel.component.aws2-sqs.secret-key
+                  value: "${CITRUS_TESTCONTAINERS_LOCALSTACK_SECRET_KEY}"
+                - name: camel.component.aws2-sqs.region
+                  value: "${CITRUS_TESTCONTAINERS_LOCALSTACK_REGION}"
+                - name: camel.component.aws2-sqs.override-endpoint
+                  value: "true"
+                - name: camel.component.aws2-sqs.uri-endpoint-override
+                  value: "${CITRUS_TESTCONTAINERS_LOCALSTACK_SERVICE_URL}"
+                - name: camel.component.aws2-sqs.auto-create-queue
+                  value: "true"
+          resources:
+            - "orders/order-1001.json"
+            - "orders/order-1002.json"
+            - "orders/order-1003.json"
+  - camel:
+      jbang:
+        verify:
+          integration: "aws-sqs"
+          logMessage: "Order ORD-1003 handed over on the shipments queue"
+  - camel:
+      jbang:
+        verify:
+          integration: "aws-sqs"
+          logMessage: "Courier picked up ORD-1003 for US: 3 line(s)"
