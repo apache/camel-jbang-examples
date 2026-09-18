@@ -53,15 +53,16 @@ Ask your assistant, or type it yourself, one step at a time, and run after each:
 
 ## Integration testing
 
-The example provides an automated integration test (`order-generator.citrus.it.yaml`) that you can run
-with the [Citrus](https://citrusframework.org/) test framework. Please make sure to install Citrus as a
-JBang application (see [Citrus installation guide](../../install-citrus.adoc)).
+The example comes with a [Citrus](https://citrusframework.org/) test written in Citrus's YAML DSL,
+`test/order-generator.citrus.it.yaml`. The Camel CLI runs it through its test plugin (installed on first use):
 
 ```shell
-citrus run test/order-generator.citrus.it.yaml
+camel test run test/order-generator.citrus.it.yaml
 ```
 
-The test starts the route via JBang and verifies that an order with a number and a JSON body is logged.
+The test starts the route with JBang and verifies the logged line. Citrus can also be installed as its
+own JBang application (see the [Citrus installation guide](../../install-citrus.adoc)) and run the same
+file with `citrus run test/order-generator.citrus.it.yaml`.
 
 ## Help and contributions
 
