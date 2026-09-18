@@ -43,16 +43,14 @@ camel run *
 
 ## Integration testing
 
-The example comes with a [Citrus](https://citrusframework.org/) test written in Citrus's YAML DSL,
-`test/nightly-report.citrus.it.yaml`. The Camel CLI runs it through its test plugin (installed on first use):
+The example comes with a test in the [Citrus](https://citrusframework.org/) YAML DSL,
+`test/nightly-report.citrus.it.yaml`, which the Camel CLI runs:
 
 ```shell
 camel test run test/nightly-report.citrus.it.yaml
 ```
 
-The test starts the route with JBang and verifies the logged line. Citrus can also be installed as its
-own JBang application (see the [Citrus installation guide](../../install-citrus.adoc)) and run the same
-file with `citrus run test/nightly-report.citrus.it.yaml`.
+The test starts the route and verifies the logged line.
 
 ## Help and contributions
 
