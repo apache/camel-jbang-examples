@@ -374,40 +374,6 @@
         ]
     },
     {
-        "name": "eip/circuit-breaker",
-        "title": "Circuit Breaker",
-        "description": "A timer route calls a step that fails at random inside a Resilience4j circuit breaker; the log shows the failures being absorbed and the breaker opening after ten calls with too many failures.",
-        "level": "fail-well",
-        "teaches": {
-            "components": [
-                "timer",
-                "log"
-            ],
-            "eips": [
-                "circuitBreaker",
-                "filter",
-                "throwException",
-                "setVariable",
-                "setProperty",
-                "setHeader"
-            ],
-            "languages": [
-                "simple"
-            ]
-        },
-        "tags": [
-            "eip",
-            "resilience"
-        ],
-        "bundled": true,
-        "requiresDocker": false,
-        "hasCitrusTests": false,
-        "files": [
-            "README.md",
-            "route.camel.yaml"
-        ]
-    },
-    {
         "name": "eip/splitter",
         "title": "Splitter",
         "description": "A timer creates a comma-separated batch of items, the splitter turns it into one message per item, and each item is logged on its own line.",
@@ -436,6 +402,88 @@
         "files": [
             "README.md",
             "splitter.camel.yaml"
+        ]
+    },
+    {
+        "name": "fail-well/circuit-breaker",
+        "title": "Circuit breaker",
+        "description": "A stock check calls the supplier every second; the supplier goes down for nine calls, the breaker opens after two failures in its window of four, answers from the fallback while open, tries the supplier again after five seconds and closes once a call succeeds; each line logs the breaker state.",
+        "level": "fail-well",
+        "teaches": {
+            "components": [
+                "timer",
+                "direct",
+                "log"
+            ],
+            "eips": [
+                "circuitBreaker",
+                "onFallback",
+                "throwException",
+                "choice"
+            ],
+            "languages": [
+                "simple"
+            ]
+        },
+        "tags": [
+            "shop",
+            "resilience",
+            "circuit-breaker"
+        ],
+        "bundled": true,
+        "requiresDocker": false,
+        "hasCitrusTests": true,
+        "files": [
+            "README.md",
+            "application.properties",
+            "circuit-breaker.camel.yaml"
+        ]
+    },
+    {
+        "name": "fail-well/error-handling",
+        "title": "Error handling",
+        "description": "The three orders go to a payment provider: the first is charged at once, the second gets no answer twice and is charged on the third attempt after two retries logged as warnings, and the third is declined, logged as such and parked as a file for manual review.",
+        "level": "fail-well",
+        "teaches": {
+            "components": [
+                "file",
+                "direct",
+                "log"
+            ],
+            "eips": [
+                "errorHandler",
+                "deadLetterChannel",
+                "redeliveryPolicy",
+                "onException",
+                "throwException",
+                "choice",
+                "unmarshal",
+                "marshal"
+            ],
+            "languages": [
+                "simple"
+            ],
+            "dataformats": [
+                "json"
+            ]
+        },
+        "tags": [
+            "shop",
+            "error-handling",
+            "retry",
+            "dead-letter"
+        ],
+        "bundled": false,
+        "requiresDocker": false,
+        "hasCitrusTests": true,
+        "files": [
+            "README.md",
+            "application.properties",
+            "error-handling.camel.yaml",
+            "orders/order-1001.json",
+            "orders/order-1002.json",
+            "orders/order-1003.json",
+            "parked/order-1003.json"
         ]
     },
     {
