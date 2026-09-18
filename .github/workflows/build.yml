@@ -36,8 +36,6 @@ jobs:
             path: rest/openapi-server
           - name: OpenAPI client
             path: rest/openapi-client
-          - name: AWS S3 event-based
-            path: cloud/aws-s3-event-based
           - name: AWS SQS
             path: cloud/aws-sqs
           - name: EDI X12 AS2

@@ -1,11 +1,24 @@
 {
     "title": "Message Size",
-    "description": "Track message body and header sizes per endpoint",
+    "description": "Timer routes send messages of small, medium and large sizes to seda queues with a Content-Length header, so camel cmd and the CLI's message-size views show sizes per endpoint.",
+    "level": "showcase",
+    "teaches": {
+        "components": [
+            "timer",
+            "seda",
+            "log"
+        ],
+        "eips": [
+            "setHeader"
+        ],
+        "languages": [
+            "simple"
+        ]
+    },
     "tags": [
         "observability",
         "monitoring",
         "seda"
     ],
-    "bundled": true,
-    "level": "beginner"
+    "bundled": true
 }

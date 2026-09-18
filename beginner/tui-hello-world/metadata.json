@@ -1,12 +1,23 @@
 {
     "title": "TUI Hello World",
-    "description": "Say hello via TUI Send Message (F2) or CLI",
+    "description": "A one-shot timer prints an invitation; the route direct:greet then logs and greets any message sent to it from the CLI (camel cmd send --endpoint=direct:greet --body=...) or from a tool that can send messages.",
+    "level": "showcase",
+    "teaches": {
+        "components": [
+            "timer",
+            "direct",
+            "log"
+        ],
+        "languages": [
+            "simple",
+            "constant"
+        ]
+    },
     "tags": [
         "beginner",
         "direct",
         "send",
         "tui"
     ],
-    "bundled": true,
-    "level": "beginner"
+    "bundled": true
 }

@@ -1,11 +1,18 @@
 {
     "title": "XSLT Transformation",
-    "description": "Basic XML transformation using XSLT style sheets",
+    "description": "Every XML file dropped in the input directory is transformed by stylesheet.xsl and the transformed document is logged.",
+    "level": "transform",
+    "teaches": {
+        "components": [
+            "file",
+            "xslt",
+            "log"
+        ]
+    },
     "tags": [
         "transformation",
         "xml",
         "xslt"
     ],
-    "bundled": true,
-    "level": "beginner"
+    "bundled": true
 }

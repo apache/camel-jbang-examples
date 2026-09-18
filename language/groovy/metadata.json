@@ -1,11 +1,24 @@
 {
     "title": "Groovy",
-    "description": "Use Groovy with extra dependencies and content-based routing",
+    "description": "A message with an email address in a header is checked once by a Groovy expression using Apache Commons Validator, a third-party library declared with camel.jbang.dependencies, and logged as a valid or invalid contact.",
+    "level": "transform",
+    "teaches": {
+        "components": [
+            "once",
+            "log"
+        ],
+        "eips": [
+            "choice"
+        ],
+        "languages": [
+            "groovy",
+            "simple"
+        ]
+    },
     "tags": [
         "language",
         "groovy",
         "eip"
     ],
-    "bundled": true,
-    "level": "beginner"
+    "bundled": true
 }

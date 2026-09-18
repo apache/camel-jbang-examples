@@ -1,11 +1,25 @@
 {
     "title": "Content Based Router",
-    "description": "Route messages to different destinations based on message content using the Choice EIP",
+    "description": "A timer produces messages with different content and a choice routes each to a different branch by its content, so the log shows which branch handled which message.",
+    "level": "route",
+    "teaches": {
+        "components": [
+            "timer",
+            "log"
+        ],
+        "eips": [
+            "choice",
+            "setHeader",
+            "convertBodyTo"
+        ],
+        "languages": [
+            "simple"
+        ]
+    },
     "tags": [
         "eip",
         "choice",
         "routing"
     ],
-    "bundled": true,
-    "level": "beginner"
+    "bundled": true
 }

@@ -1,6 +1,19 @@
 {
     "title": "Keycloak Security REST API",
-    "description": "Secure REST APIs with Keycloak authentication and authorization",
+    "description": "A REST API on platform-http is protected by a running Keycloak: a request without a valid bearer token is refused with 401, a token with the right role reaches the route and is logged.",
+    "level": "contracts",
+    "teaches": {
+        "components": [
+            "platform-http",
+            "log"
+        ],
+        "eips": [
+            "policy",
+            "onException",
+            "setHeader",
+            "setBody"
+        ]
+    },
     "tags": [
         "security",
         "keycloak",
@@ -8,7 +21,6 @@
         "oauth"
     ],
     "bundled": false,
-    "level": "advanced",
     "infraServices": [
         "keycloak"
     ]

@@ -1,12 +1,23 @@
 {
     "title": "Smart Log Analyzer",
-    "description": "Intelligent observability correlating OpenTelemetry logs and traces with LLM analysis",
+    "description": "A multi-part showcase: a load generator produces logs and traces, a correlator maps OpenTelemetry logs to traces, an LLM analyses the correlated records, and a small web console with a REST API shows the results.",
+    "level": "showcase",
+    "teaches": {
+        "components": [
+            "platform-http",
+            "jms",
+            "file",
+            "langchain4j-chat"
+        ],
+        "eips": [
+            "rest"
+        ]
+    },
     "tags": [
         "ai",
         "observability",
         "opentelemetry",
         "logging"
     ],
-    "bundled": false,
-    "level": "advanced"
+    "bundled": false
 }
