@@ -1,0 +1,35 @@
+{
+    "title": "Error handling",
+    "description": "The three orders go to a payment provider: the first is charged at once, the second gets no answer twice and is charged on the third attempt after two retries logged as warnings, and the third is declined, logged as such and parked as a file for manual review.",
+    "level": "fail-well",
+    "teaches": {
+        "components": [
+            "file",
+            "direct",
+            "log"
+        ],
+        "eips": [
+            "errorHandler",
+            "deadLetterChannel",
+            "redeliveryPolicy",
+            "onException",
+            "throwException",
+            "choice",
+            "unmarshal",
+            "marshal"
+        ],
+        "languages": [
+            "simple"
+        ],
+        "dataformats": [
+            "json"
+        ]
+    },
+    "tags": [
+        "shop",
+        "error-handling",
+        "retry",
+        "dead-letter"
+    ],
+    "bundled": false
+}

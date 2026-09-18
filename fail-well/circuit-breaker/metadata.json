@@ -1,0 +1,27 @@
+{
+    "title": "Circuit breaker",
+    "description": "A stock check calls the supplier every second; the supplier goes down for nine calls, the breaker opens after two failures in its window of four, answers from the fallback while open, tries the supplier again after five seconds and closes once a call succeeds; each line logs the breaker state.",
+    "level": "fail-well",
+    "teaches": {
+        "components": [
+            "timer",
+            "direct",
+            "log"
+        ],
+        "eips": [
+            "circuitBreaker",
+            "onFallback",
+            "throwException",
+            "choice"
+        ],
+        "languages": [
+            "simple"
+        ]
+    },
+    "tags": [
+        "shop",
+        "resilience",
+        "circuit-breaker"
+    ],
+    "bundled": true
+}

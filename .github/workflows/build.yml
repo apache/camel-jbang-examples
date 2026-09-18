@@ -58,6 +58,10 @@ jobs:
             path: route/aggregator
           - name: Filter and multicast
             path: route/filter-and-multicast
+          - name: Error handling
+            path: fail-well/error-handling
+          - name: Circuit breaker
+            path: fail-well/circuit-breaker
           - name: OpenAPI server
             path: rest/openapi-server
           - name: OpenAPI client
