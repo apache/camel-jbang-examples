@@ -1,0 +1,12 @@
+{
+    "title": "Nightly report",
+    "description": "A cron schedule runs the shop's inventory report, every ten seconds in the demo and nightly with a one-line change, and each run logs the stock counts with a timestamp.",
+    "level": "run",
+    "teaches": {
+        "components": ["cron", "log"],
+        "eips": ["setBody"],
+        "languages": ["simple"]
+    },
+    "tags": ["shop", "cron", "schedule"],
+    "bundled": false
+}

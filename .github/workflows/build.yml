@@ -32,6 +32,12 @@ jobs:
             path: messaging/ftp
           - name: MQTT messaging
             path: messaging/mqtt
+          - name: Order generator
+            path: run/order-generator
+          - name: Nightly report
+            path: run/nightly-report
+          - name: Properties and profiles
+            path: run/properties-and-profiles
           - name: OpenAPI server
             path: rest/openapi-server
           - name: OpenAPI client
