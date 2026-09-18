@@ -63,6 +63,8 @@
       uri: kafka
       parameters:
         topic: orders
+        # start from the beginning the first time this group joins, so nothing published before is missed
+        autoOffsetReset: earliest
       steps:
         - log:
             message: "Dispatching ${header.orderId} from partition ${header.CamelKafkaPartition} offset ${header.CamelKafkaOffset}"
@@ -83,6 +85,7 @@
       uri: kafka
       parameters:
         topic: fulfilment
+        autoOffsetReset: earliest
       steps:
         - unmarshal:
             json:
@@ -96,6 +99,7 @@
       uri: kafka
       parameters:
         topic: notifications
+        autoOffsetReset: earliest
       steps:
         - unmarshal:
             json:

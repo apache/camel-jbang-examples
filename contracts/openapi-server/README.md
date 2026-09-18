@@ -7,17 +7,17 @@ against it and hands each operation to a `direct` route named after its `operati
 ## What you will see
 
 ```text
-$ curl localhost:8080/stock/CAMEL-MUG
+$ curl localhost:8080/api/stock/CAMEL-MUG
 {"sku":"CAMEL-MUG","qty":42}
 
-$ curl -X POST -H 'Content-Type: application/json' -d '{"orderId": "ORD-1001", "qty": 2}' localhost:8080/stock/CAMEL-MUG/reserve
+$ curl -X POST -H 'Content-Type: application/json' -d '{"orderId": "ORD-1001", "qty": 2}' localhost:8080/api/stock/CAMEL-MUG/reserve
 {"sku": "CAMEL-MUG", "reserved": 2, "remaining": 42}
 
-$ curl -i -X POST -H 'Content-Type: application/json' -d '{"orderId": "ORD-1003", "qty": 1}' localhost:8080/stock/CAMEL-CAP/reserve
+$ curl -i -X POST -H 'Content-Type: application/json' -d '{"orderId": "ORD-1003", "qty": 1}' localhost:8080/api/stock/CAMEL-CAP/reserve
 HTTP/1.1 409 Conflict
 {"error": "only 0 CAMEL-CAP in stock, 1 wanted for ORD-1003"}
 
-$ curl -i -X POST -H 'Content-Type: application/json' localhost:8080/stock/CAMEL-MUG/reserve
+$ curl -i -X POST -H 'Content-Type: application/json' localhost:8080/api/stock/CAMEL-MUG/reserve
 HTTP/1.1 400 Bad Request
 
 INFO ... openapi-server.camel.yaml:123 : Reserved 2 x CAMEL-MUG for ORD-1001
@@ -33,14 +33,16 @@ INFO ... openapi-server.camel.yaml:123 : Reserved 2 x CAMEL-MUG for ORD-1001
 camel run *
 ```
 
-The base path is `/stock` and the contract itself is served at http://localhost:8080/openapi. Call the
+The contract's `servers` entry gives the base path, `/api`, so the operations are under http://localhost:8080/api/stock
+and the contract itself is served at http://localhost:8080/openapi. Call the
 operations with `curl` as above from another terminal, or run the `openapi-client` example against it.
 Stop it with `ctrl` + `c`.
 
 ## How it works
 
 - `rest` with `openApi: specification: stock-api.json` is the whole API definition: paths, verbs and parameters
-  come from the contract, not from the route file. `restConfiguration` switches on `clientRequestValidation`,
+  come from the contract, not from the route file, and the base path `/api` from its `servers` entry, which
+  must have a path. `restConfiguration` switches on `clientRequestValidation`,
   which rejects a request without the body or content type the contract requires with 400, and
   `apiContextPath: openapi` serves the contract.
 - Each operation is a `direct` route named after its `operationId`: `listStock`, `getStock`, `reserveStock`.

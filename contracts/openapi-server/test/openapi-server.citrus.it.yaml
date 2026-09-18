@@ -21,7 +21,7 @@ actions:
       client: "http://localhost:8080"
       sendRequest:
         GET:
-          path: "/stock/CAMEL-MUG"
+          path: "/api/stock/CAMEL-MUG"
   - http:
       client: "http://localhost:8080"
       receiveResponse:
@@ -35,7 +35,7 @@ actions:
       client: "http://localhost:8080"
       sendRequest:
         POST:
-          path: "/stock/CAMEL-MUG/reserve"
+          path: "/api/stock/CAMEL-MUG/reserve"
           contentType: "application/json"
           body:
             data: '{"orderId": "ORD-1001", "qty": 2}'
@@ -52,7 +52,7 @@ actions:
       client: "http://localhost:8080"
       sendRequest:
         POST:
-          path: "/stock/CAMEL-CAP/reserve"
+          path: "/api/stock/CAMEL-CAP/reserve"
           contentType: "application/json"
           body:
             data: '{"orderId": "ORD-1003", "qty": 1}'
@@ -65,7 +65,7 @@ actions:
       client: "http://localhost:8080"
       sendRequest:
         POST:
-          path: "/stock/CAMEL-MUG/reserve"
+          path: "/api/stock/CAMEL-MUG/reserve"
           contentType: "application/json"
           body:
             data: '{"orderId": "ORD-1001"}'

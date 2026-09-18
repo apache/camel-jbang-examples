@@ -40,7 +40,7 @@ can be repeated. `stock.api.url` in `application.properties` says where the serv
 
 - `rest-openapi` with `specificationUri: stock-api.json` and `operationId: reserveStock` is the call: the
   component reads the verb, the path and the parameters from the contract, so the route never spells out
-  `POST /stock/{sku}/reserve`. `host` is the server; `componentName: http` picks the HTTP client to use.
+  `POST /api/stock/{sku}/reserve`. `host` is the server; `componentName: http` picks the HTTP client to use.
 - The path parameter `sku` is taken from the header of the same name; the request body is the message body,
   built here as the JSON the contract's `Reservation` schema describes.
 - The order id and SKU are also kept in exchange properties for the log, since the response replaces the body
