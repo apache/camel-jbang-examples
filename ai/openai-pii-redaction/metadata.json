@@ -16,5 +16,7 @@
         "privacy",
         "security"
     ],
-    "bundled": false
+    "bundled": false,
+    "needs": "an OpenAI-compatible API",
+    "ciSkip": true
 }

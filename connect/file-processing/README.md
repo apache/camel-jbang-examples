@@ -17,7 +17,8 @@ INFO ... file-processing.camel.yaml:47 : Invoice INV-2004 for ORD-1003: 53.45 EU
 
 ## Install Camel CLI
 
-<!-- see installation instructions in ../../install.adoc -->
+Install [JBang](https://www.jbang.dev/download/) and the Camel CLI as described in the
+[root README](../../README.md#install-the-camel-cli); `camel --version` confirms the install.
 
 ## Run it
 

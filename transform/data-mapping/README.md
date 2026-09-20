@@ -11,7 +11,8 @@ INFO ... data-mapping.camel.yaml:27 : Shipment for the courier: {"shipmentRef":"
 
 ## Install Camel CLI
 
-<!-- see installation instructions in ../../install.adoc -->
+Install [JBang](https://www.jbang.dev/download/) and the Camel CLI as described in the
+[root README](../../README.md#install-the-camel-cli); `camel --version` confirms the install.
 
 ## Run it
 

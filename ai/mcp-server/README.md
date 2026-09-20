@@ -21,7 +21,8 @@ INFO ... mcp-server.camel.yaml:81 : Tool order_status(ORD-1003): Order ORD-1003 
 
 ## Install Camel CLI
 
-<!-- see installation instructions in ../../install.adoc -->
+Install [JBang](https://www.jbang.dev/download/) and the Camel CLI as described in the
+[root README](../../README.md#install-the-camel-cli); `camel --version` confirms the install.
 
 ## Run it
 

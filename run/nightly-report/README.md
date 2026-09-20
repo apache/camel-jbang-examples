@@ -12,7 +12,8 @@ INFO ... nightly-report.camel.yaml:15 : Inventory report 2026-09-18 15:04:20: 12
 
 ## Install Camel CLI
 
-<!-- see installation instructions in ../../install.adoc -->
+Install [JBang](https://www.jbang.dev/download/) and the Camel CLI as described in the
+[root README](../../README.md#install-the-camel-cli); `camel --version` confirms the install.
 
 ## Run it
 

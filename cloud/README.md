@@ -9,5 +9,5 @@ A cloud service, run locally through LocalStack and switched to the real thing b
 
 Start with [AWS SQS](aws-sqs/).
 
-Every example has a README that says what you will see, how it works, how to build it step by step, what to try changing, and how to run its test with `camel test run`.
+Every example has a README that says what you will see, how it works, how to build it step by step and what to try changing, and how to run its test with `camel test run`.
 <!-- group:end -->

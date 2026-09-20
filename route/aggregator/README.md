@@ -17,7 +17,8 @@ INFO ... aggregator.camel.yaml:51 : Shipment for ORD-1002 complete: [{"sku":"CAM
 
 ## Install Camel CLI
 
-<!-- see installation instructions in ../../install.adoc -->
+Install [JBang](https://www.jbang.dev/download/) and the Camel CLI as described in the
+[root README](../../README.md#install-the-camel-cli); `camel --version` confirms the install.
 
 ## Run it
 
