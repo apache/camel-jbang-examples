@@ -13,7 +13,8 @@ INFO ... groovy.camel.yaml:32 : Order ORD-1002 rejected: not-an-address is not a
 
 ## Install Camel CLI
 
-<!-- see installation instructions in ../../install.adoc -->
+Install [JBang](https://www.jbang.dev/download/) and the Camel CLI as described in the
+[root README](../../README.md#install-the-camel-cli); `camel --version` confirms the install.
 
 ## Run it
 

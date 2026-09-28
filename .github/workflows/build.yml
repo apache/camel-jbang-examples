@@ -28,6 +28,14 @@ jobs:
     strategy:
       matrix:
         include:
+          - name: Timer log
+            path: quick-start/timer-log
+          - name: Routes
+            path: quick-start/routes
+          - name: Splitter
+            path: quick-start/splitter
+          - name: REST API
+            path: quick-start/rest-api
           - name: SQL database
             path: connect-service/sql
           - name: MQTT sensors

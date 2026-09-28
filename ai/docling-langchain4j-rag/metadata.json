@@ -1,6 +1,6 @@
 {
     "title": "Document Analysis with Docling and LangChain4j RAG",
-    "description": "Documents dropped in a directory are converted by a running Docling service, chunked and summarised by a local Ollama model through langchain4j-chat, and written to an output directory; an HTTP endpoint answers questions against the converted documents.",
+    "description": "Documents dropped in a directory are converted to Markdown by a Docling service, analysed by a local Ollama model through langchain4j-chat, and written as a report to an output directory; an HTTP endpoint answers questions against the latest document.",
     "level": "ai",
     "order": 4,
     "teaches": {
@@ -33,5 +33,7 @@
         "docling",
         "ollama"
     ],
-    "requiresDocker": true
+    "requiresDocker": true,
+    "needs": "a local model",
+    "ciSkip": true
 }

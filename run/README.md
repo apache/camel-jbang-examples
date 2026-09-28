@@ -11,5 +11,5 @@ Running Camel: timers and cron schedules, a bean in a route, properties and prof
 
 Start with [Order generator](order-generator/); the examples read best in the order above, each one building on what the one before it set up.
 
-Every example has a README that says what you will see, how it works, how to build it step by step, what to try changing, and how to run its test with `camel test run`.
+Every example has a README that says what you will see, how it works, how to build it step by step and what to try changing, and how to run its test with `camel test run`.
 <!-- group:end -->

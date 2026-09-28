@@ -116,6 +116,8 @@ for dirpath, dirnames, filenames in sorted(os.walk(repo_root)):
     }
     if "infraServices" in meta:
         entry["infraServices"] = meta["infraServices"]
+    if "needs" in meta:
+        entry["needs"] = meta["needs"]
     if meta.get("ciSkip", False):
         entry["ciSkip"] = True
     if "order" in meta:
@@ -161,8 +163,8 @@ def needs(e):
     parts = []
     if e.get("infraServices"):
         parts.append("`camel infra run " + " ".join(e["infraServices"]) + "`")
-    if e.get("ciSkip"):
-        parts.append("a local model")
+    if e.get("needs"):
+        parts.append(e["needs"])
     return ", ".join(parts) if parts else "nothing"
 
 lines = []
@@ -194,8 +196,10 @@ for level, title, intro in GROUPS:
         body.append(f"Start with [{first['title']}]({first_short}/); the examples read best in the order above, "
                     f"each one building on what the one before it set up.")
     body.append("")
-    body.append("Every example has a README that says what you will see, how it works, how to build it step by step, "
-                "what to try changing, and how to run its test with `camel test run`.")
+    body.append("Every example has a README that says what you will see, how it works, how to build it step by step "
+                "and what to try changing"
+                + (", and how to run its test with `camel test run`." if all(e["hasCitrusTests"] for e in entries)
+                   else "; the ones with a `test/` directory also say how to run their test with `camel test run`."))
     if os.path.exists(group_readme):
         g = open(group_readme).read()
         if gstart in g and gend in g:

@@ -1,573 +1,113 @@
 # Document Analysis with Docling and LangChain4j RAG
 
-This example demonstrates a complete RAG (Retrieval Augmented Generation) workflow using Apache Camel, combining:
+Documents dropped in a directory are converted to Markdown by a Docling service, analysed by a local Ollama
+model through `langchain4j-chat`, and written as a report to an output directory; an HTTP endpoint answers
+questions against the latest document. Both services are started with `camel infra`.
 
-* **Docling** - AI-powered document conversion (PDF, Word, PowerPoint -> Markdown/JSON)
-* **LangChain4j** - Integration with Large Language Models
-* **Ollama** - Local LLM inference
-
-## Overview
-
-This application provides intelligent document processing capabilities:
-
-* **Automatic Document Conversion** - Convert various document formats to Markdown using Docling
-* **AI-Powered Analysis** - Analyze documents using LLMs via LangChain4j
-* **Interactive Q&A** - Ask questions about your documents through REST API
-* **Batch Processing** - Summarize multiple documents automatically
-* **Structured Data Extraction** - Extract tables and structured information from documents
-
-## Architecture
-
-### Components
+## What you will see
 
 ```text
-Documents -> Docling (Convert) -> Markdown -> LangChain4j -> Ollama (LLM) -> Analysis
+$ cp sample.md documents/
+
+INFO ... docling-langchain4j-rag.yaml:27  : Processing document: sample.md
+INFO ... docling-langchain4j-rag.yaml:38  : Converting document to Markdown with Docling...
+INFO ... docling-langchain4j-rag.yaml:47  : Document converted to Markdown successfully
+INFO ... docling-langchain4j-rag.yaml:77  : Analyzing document with AI model...
+INFO ... docling-langchain4j-rag.yaml:89  : AI analysis completed
+INFO ... docling-langchain4j-rag.yaml:120 : Analysis report saved: sample.md_analysis.md
+INFO ... docling-langchain4j-rag.yaml:137 : Processing complete for: sample.md
 ```
 
-**Docling-Serve**: Python-based document conversion service running in Docker
-
-**Ollama**: Local LLM server running models like Llama 3.2
-
-**Camel Routes**: Orchestrate the workflow between components
-
-### Features
-
-* **Document Format Support**: PDF, DOCX, PPTX, HTML, Markdown
-* **Multiple Operations**: Analysis, Q&A, Summarization, Data Extraction
-* **Docker-based**: All services run in containers
-* **REST API**: HTTP endpoints for interaction
-* **Automatic Processing**: File watcher for automatic document processing
-
-## Prerequisites
-
-* JBang installed (https://www.jbang.dev)
-* Java 11 or later
-* Docker and Docker Compose
-
-## Project Structure
+and `output/sample.md_analysis.md` holds the report: the file name and date, the model's summary, key topics
+and findings, then the full document as Markdown. The wording of the analysis differs from run to run; the
+first one also takes a while, because the model is loaded.
 
 ```text
-docling-langchain4j-rag/
-├── docling-langchain4j-rag.yaml   # Main YAML configuration
-├── application.properties          # Configuration settings
-├── sample.md                       # Sample document (copy to documents/ for testing)
-├── README.md                       # This file
-├── documents/                      # Input directory (files auto-deleted after processing)
-└── output/                         # Analysis reports output
+$ curl -X POST localhost:8080/api/ask -H "Content-Type: text/plain" -d "What DSLs does Camel support?"
+The document lists four DSLs: Java, XML, YAML and Groovy.
 ```
 
-## Setup
+## Install Camel CLI
 
-### Step 1: Start Required Services
+Install [JBang](https://www.jbang.dev/download/) and the Camel CLI as described in the
+[root README](../../README.md#install-the-camel-cli); `camel --version` confirms the install.
 
-The Camel CLI starts both services in containers (Docker or Podman must be running):
+## Run it
 
-```sh
-$ camel infra run docling ollama
+The example needs a running Docling and a running Ollama, which the Camel CLI starts for you in containers
+(Docker or Podman must be running). In one terminal:
+
+```shell
+camel infra run docling ollama
 ```
 
 Docling serves on http://localhost:5001 and Ollama on http://localhost:11434, where the container pulls the
-`granite4:3b` model on first start; both match `application.properties`. Stop them later with
-`camel infra stop docling` and `camel infra stop ollama`.
+`granite4:3b` model on first start, a download of a couple of gigabytes; both match `application.properties`.
+In another terminal:
 
-### Step 2: Create Required Directories
-
-The `documents/` and `output/` directories will be created automatically when needed, but you can create them manually:
-
-```sh
-$ mkdir -p documents output
+```shell
+camel run *
 ```
 
-> **Note:** Files placed in `documents/` will be automatically processed and then **deleted** after analysis is complete.
-
-### Step 3: Run the Camel Application
-
-```sh
-$ camel run *
-  --dep=camel:docling \
-  --dep=camel:langchain4j-chat \
-  --dep=camel:platform-http \
-  --dep=dev.langchain4j:langchain4j:1.6.0 \
-  --dep=dev.langchain4j:langchain4j-ollama:1.6.0 \
-  --properties=application.properties \
-  docling-langchain4j-rag.yaml
-```
-
-The application will start and listen on port 8080.
-
-## Usage
-
-### 1. Automatic Document Analysis
-
-Copy a document to the `documents/` directory for processing:
-
-```sh
-# Using the provided sample
-$ cp sample.md documents/
-
-# Or use your own document
-$ cp /path/to/your/document.pdf documents/
-```
-
-The system will:
-
-1. Detect the new file
-2. Convert it to Markdown using Docling
-3. Analyze it with the LLM
-4. Generate a comprehensive analysis report in `output/`
-5. **Automatically delete the source file** from `documents/` after processing
-
-**Example Output** (`output/sample.md_analysis.md`):
-
-```markdown
-# Document Analysis Report
-
-**File:** document.pdf
-**Date:** 2025-10-14 12:30:45
-
----
-
-## AI Analysis
-
-**Summary:** This document discusses the implementation of RAG systems...
-
-**Key Topics:**
-- Document processing pipelines
-- LLM integration patterns
-- Vector embeddings and similarity search
-
-**Important Findings:**
-- RAG improves LLM accuracy by 40%
-- Hybrid search outperforms pure vector search
-...
-
----
-
-## Full Document Content (Markdown)
-
-[Full converted markdown content here]
-```
-
-### 2. Interactive Q&A
-
-Ask questions about your documents via HTTP API:
-
-```sh
-$ curl -X POST http://localhost:8080/api/ask \
-  -H "Content-Type: text/plain" \
-  -d "What are the main topics discussed in the document?"
-```
-
-**Response:**
-
-```text
-The document discusses three main topics:
-1. RAG (Retrieval Augmented Generation) architecture
-2. Document processing with Docling
-3. Integration with LangChain4j for LLM orchestration
-```
-
-### 3. Structured Data Extraction
-
-Extract tables and structured data:
-
-```sh
-$ curl -X POST http://localhost:8080/api/extract \
-  -H "Content-Type: application/octet-stream" \
-  --data-binary "@documents/report.pdf"
-```
-
-**Response:**
-
-```text
-**Document Type:** Financial Report
-
-**Key Data Fields:**
-- Revenue: $1.2M (Table 1, Row 3)
-- Expenses: $800K (Table 1, Row 5)
-- Net Profit: $400K (calculated)
-
-**Tables Identified:**
-1. Quarterly Financial Summary (5 rows, 4 columns)
-2. Department Breakdown (8 rows, 3 columns)
-...
-```
-
-### 4. Health Check
-
-Check system status:
-
-```sh
-$ curl http://localhost:8080/api/health
-```
-
-**Response:**
-
-```json
-{
-  "status": "healthy",
-  "components": {
-    "docling": {
-      "url": "http://localhost:5001",
-      "status": "configured"
-    },
-    "ollama": {
-      "url": "http://localhost:11434",
-      "model": "llama3.2",
-      "status": "configured"
-    }
-  },
-  "directories": {
-    "documents": "documents",
-    "output": "output"
-  }
-}
-```
-
-## Configuration
-
-### application.properties
-
-```properties
-# Directories
-documents.directory=documents
-output.directory=output
-
-# Docling-Serve URL
-docling.serve.url=http://localhost:5001
-
-# Ollama Configuration
-ollama.base.url=http://localhost:11434
-ollama.model.name=llama3.2
-
-# Server Port
-camel.server.port=8080
-```
-
-### Using Different Ollama Models
-
-Available models:
-
-* **llama3.2** (default) - Latest Llama model, good balance of speed and quality
-* **llama3.2:1b** - Smaller, faster model
-* **mistral** - Alternative high-quality model
-* **phi3** - Microsoft's efficient model
-* **gemma2** - Google's Gemma model
-
-To use a different model:
-
-1. Pull the model:
-
-```sh
-$ docker exec -it ollama ollama pull mistral
-```
-
-2. Update `application.properties`:
-
-```properties
-ollama.model.name=mistral
-```
-
-3. Restart the Camel application
-
-### Using Remote Ollama Instance
-
-To use Ollama running on a different machine:
-
-```properties
-ollama.base.url=http://remote-server:11434
-```
-
-## Routes Explanation
-
-### Route 1: document-analysis-workflow
-
-**Trigger:** New file in `documents/` directory
-
-**Flow:**
-
-1. Detect new document
-2. Convert to Markdown via Docling
-3. Send to LLM for analysis
-4. Generate comprehensive report
-5. Save to `output/` directory
-
-**Supported Formats:** PDF, DOCX, PPTX, HTML, MD
-
-### Route 2: document-qa-api
-
-**Endpoint:** `POST /api/ask`
-
-**Description:** Answer questions about the most recent document
-
-**Input:** Plain text question
-
-**Output:** AI-generated answer based on document content
-
-### Route 3: batch-summarization
-
-**Trigger:** Timer (configurable)
-
-**Description:** Process all documents in batch and generate summaries
-
-**Configuration:** Set `batch.delay` in application.properties (default: disabled)
-
-### Route 4: health-check
-
-**Endpoint:** `GET /api/health`
-
-**Description:** System health and configuration status
-
-### Route 5: extract-structured-data
-
-**Endpoint:** `POST /api/extract`
-
-**Description:** Extract tables and structured data from uploaded documents
-
-**Input:** Binary document data
-
-**Output:** AI analysis of extracted structured data
-
-## Advanced Usage
-
-### Batch Processing
-
-Enable automatic batch summarization:
-
-```properties
-# Run every 1 hour (3600000 ms)
-batch.delay=3600000
-```
-
-All documents in the `documents/` directory will be summarized periodically.
-
-### Custom Document Processing
-
-You can extend the routes to add custom processing logic:
-
-```yaml
-- route:
-    id: custom-processing
-    from:
-      uri: file:documents
-      parameters:
-        include: ".*\\.pdf"
-    steps:
-      # Your custom processing here
-      - to: docling:CONVERT_TO_HTML
-      - to: langchain4j-chat:custom
-```
-
-### Integration with Vector Stores
-
-For production RAG, consider adding vector embeddings:
-
-```yaml
-# Add after document conversion
-- to: langchain4j-embeddings:embed
-- to: your-vector-store
-```
-
-## Troubleshooting
-
-### Docling Not Responding
-
-**Check Docling service:**
-
-```sh
-$ docker logs docling-serve
-$ curl http://localhost:5001/
-```
-
-**Restart service:**
-
-```sh
-$ docker restart docling-serve
-```
-
-### Ollama Model Not Found
-
-**Pull the model:**
-
-```sh
-$ docker exec -it ollama ollama pull llama3.2
-```
-
-**Check available models:**
-
-```sh
-$ docker exec -it ollama ollama list
-```
-
-### Slow Document Processing
-
-**Causes:**
-
-* Large documents (>100 pages)
-* Complex layouts with many images
-* Limited CPU/memory
-
-**Solutions:**
-
-* Increase timeout in `application.properties`:
-
-```properties
-ollama.timeout=300
-```
-
-* Use a smaller/faster model (llama3.2:1b)
-* Process smaller documents first
-
-### Out of Memory
-
-**Increase Docker memory:**
-
-```sh
-# In Docker Desktop: Settings -> Resources -> Memory
-# Recommended: 8GB or more for LLMs
-```
-
-## Performance Considerations
-
-### Document Conversion
-
-* **PDF**: 1-5 seconds per page (depends on complexity)
-* **DOCX**: 0.5-2 seconds per page
-* **OCR-required**: 5-10 seconds per page (scanned PDFs)
-
-### LLM Inference
-
-* **llama3.2 (3B)**: 5-15 seconds per response
-* **llama3.2:1b**: 2-5 seconds per response
-* **Speed depends on**: Prompt length, context size, hardware
-
-### Recommended Hardware
-
-* **Minimum**: 8GB RAM, 4 CPU cores
-* **Recommended**: 16GB RAM, 8 CPU cores, GPU (optional)
-
-## Security Considerations
-
-### Current Implementation
-
-* **Development Setup** - Not production-ready
-* **No Authentication** - Open HTTP endpoints
-* **Local Processing** - Data stays on your machine
-
-### Production Recommendations
-
-**1. Authentication & Authorization**
-
-```yaml
-# Add to routes
-- setHeader:
-    name: Authorization
-    expression:
-      constant:
-        expression: "Bearer ${env:API_TOKEN}"
-```
-
-**2. Input Validation**
-
-* Validate file sizes
-* Check file types
-* Scan for malware
-
-**3. Rate Limiting**
-
-* Implement request throttling
-* Add queue management
-
-**4. Data Privacy**
-
-* Encrypt sensitive documents
-* Secure API endpoints with TLS
-* Implement access logging
-
-## Production Deployment
-
-### Using Kubernetes
-
-```yaml
-# See k8s-deployment.yaml (example)
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: docling-langchain4j-rag
-spec:
-  replicas: 3
-  ...
-```
-
-### Scaling Considerations
-
-* **Horizontal**: Multiple Camel instances with load balancer
-* **Vertical**: Increase memory/CPU for Ollama container
-* **Caching**: Cache frequent document conversions
-
-## Cleanup
-
-Stop all services:
-
-```sh
-# Docker Compose
-$ camel infra stop docling
-$ camel infra stop ollama
-
-# Or manual cleanup
-$ docker stop docling-serve ollama
-$ docker rm docling-serve ollama
-```
-
-Remove volumes (optional):
-
-```sh
-$ docker volume rm docling-langchain4j-rag_ollama_data
-```
-
-## Alternative Configurations
-
-### Using OpenAI Instead of Ollama
-
-```properties
-# application.properties
-openai.api.key=sk-your-api-key-here
-```
-
-```yaml
-# Update bean configuration
-- name: chatModel
-  type: dev.langchain4j.model.chat.ChatLanguageModel
-  scriptLanguage: groovy
-  script: |
-    import dev.langchain4j.model.openai.OpenAiChatModel
-
-    return OpenAiChatModel.builder()
-      .apiKey(context.resolvePropertyPlaceholders("{{openai.api.key}}"))
-      .modelName("gpt-4")
-      .temperature(0.3)
-      .build()
-```
-
-### Using Cloud Docling Service
-
-If you have a cloud-hosted Docling service:
-
-```properties
-docling.serve.url=https://your-docling-service.com
-docling.auth.token=your-auth-token
-```
-
-## References
-
-* **Docling**: https://github.com/DS4SD/docling
-* **LangChain4j**: https://github.com/langchain4j/langchain4j
-* **Ollama**: https://ollama.ai
-* **Apache Camel**: https://camel.apache.org
-* **Camel Docling Component**: /home/oscerd/workspace/apache-camel/camel/components/camel-ai/camel-docling/
-* **Camel LangChain4j Components**: /home/oscerd/workspace/apache-camel/camel/components/camel-ai/
-
-## Help and Contributions
+Then drop a document in the `documents` directory, the sample or one of your own (PDF, Word, PowerPoint,
+HTML or Markdown), and watch the log; the report lands in `output` and the source file is deleted once it is
+processed. Ask about the latest document with the `curl` above.
+
+Stop the example with `ctrl` + `c` and the services with `camel infra stop docling ollama`.
+
+## How it works
+
+- `docling-langchain4j-rag.yaml` starts with the bean `chatModel`, an `OllamaChatModel` built through its
+  LangChain4j builder from the URL and model name in `application.properties`; the `langchain4j-chat`
+  component picks it up as the one chat model in the registry.
+- `document-analysis-workflow` is the main route: a `file` consumer on `documents` with `include` for the
+  supported extensions. The body becomes the file's absolute path, the `docling` endpoint with
+  `CONVERT_TO_MARKDOWN` sends it to the Docling service and returns the Markdown, which is kept in an
+  exchange property. A `setBody` builds the prompt around it, `langchain4j-chat` sends it to the model, a
+  Groovy `script` assembles the report from the answer and the Markdown, and a `file` producer writes it to
+  `output` under the source name plus `_analysis.md`. A last script deletes the source file.
+- `document-qa-api` is `platform-http` on `POST /api/ask`: a script finds the newest file in `documents`,
+  Docling converts it, and the question and the Markdown go to the model in one prompt. That is retrieval
+  augmented generation in its simplest form, the whole document as context; with no document the route
+  answers an error text.
+- `batch-summarization` is a `timer` route, first after `batch.delay` and then every `batch.period`, that
+  converts and summarises every file in `documents` in a `split`, and logs each summary.
+- `health-check` on `GET /api/health` answers the configuration as JSON, and `extract-structured-data` on
+  `POST /api/extract` takes a document in the request body, asks Docling for its structured data with
+  `EXTRACT_STRUCTURED_DATA` and asks the model to describe the tables and fields in it.
+- `application.properties` holds the directories, the two service URLs, the model name, the batch timing and
+  the HTTP port.
+
+## Build it step by step
+
+Ask your assistant, or type it yourself, one step at a time, and run after each, with the two services running:
+
+1. A route from `file:documents` that logs the file name.
+2. Set the body to the file's absolute path and send it to `docling` with `CONVERT_TO_MARKDOWN` against the
+   Docling URL; log the Markdown.
+3. The `chatModel` bean from properties, a prompt around the Markdown, and a `langchain4j-chat` step; log the
+   answer.
+4. Write the answer and the Markdown to `output` as `<name>_analysis.md` with a `file` producer.
+5. A `platform-http` route on `/api/ask` that converts the newest document and asks the model the question in
+   the request body.
+
+## Try changing
+
+- `ollama.model.name=llama3.2` after `docker exec -it ollama ollama pull llama3.2`, or any other model Ollama
+  serves, and compare the analyses.
+- Change the prompt in `document-analysis-workflow` to ask for the summary in your language, or as five
+  bullet points.
+- `batch.period=60000` and drop three documents in `documents` to see the batch route summarise them
+  together every minute; the analysis route deletes them after its own run, so be quick.
+- For real retrieval, cut the Markdown into chunks with `langchain4j-tokenizer`, embed them with
+  `langchain4j-embeddings` into a vector store, and put only the chunks nearest the question in the prompt.
+
+## Integration testing
+
+The example has no Citrus test: it needs the Docling service and a language model, which take minutes to
+pull and load on a first run. Verify it with the steps under *Run it*.
+
+## Help and contributions
 
 If you hit any problem using Camel or have some feedback, then please
 [let us know](https://camel.apache.org/community/support/).

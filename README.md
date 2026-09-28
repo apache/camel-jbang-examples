@@ -124,8 +124,8 @@ A local model writing text, routes exposed as MCP tools, RAG over documents, PII
 |---|---|---|
 | [LangChain4j chat](ai/langchain4j-chat/) | A local Ollama model started with camel infra writes the shipping notification for each of the three orders; the chat model is a bean built from properties, the prompt comes from the order, and the log shows the reply with its token counts. | `camel infra run ollama`, a local model |
 | [MCP server](ai/mcp-server/) | Two routes are exposed as MCP tools, stock_level by SKU and order_status by order id, on http://localhost:8080/mcp with nothing but properties to switch the server on; any MCP client, a coding agent included, can list and call them, and the log shows each call. | nothing |
-| [OpenAI PII Redaction](ai/openai-pii-redaction/) | Text typed on standard input is sent to an OpenAI-compatible model with a JSON schema that asks for the personal identifiers redacted, and the redacted text is printed on standard output. | nothing |
-| [Document Analysis with Docling and LangChain4j RAG](ai/docling-langchain4j-rag/) | Documents dropped in a directory are converted by a running Docling service, chunked and summarised by a local Ollama model through langchain4j-chat, and written to an output directory; an HTTP endpoint answers questions against the converted documents. | `camel infra run docling ollama` |
+| [OpenAI PII Redaction](ai/openai-pii-redaction/) | Text typed on standard input is sent to an OpenAI-compatible model with a JSON schema that asks for the personal identifiers redacted, and the redacted text is printed on standard output. | an OpenAI-compatible API |
+| [Document Analysis with Docling and LangChain4j RAG](ai/docling-langchain4j-rag/) | Documents dropped in a directory are converted to Markdown by a Docling service, analysed by a local Ollama model through langchain4j-chat, and written as a report to an output directory; an HTTP endpoint answers questions against the latest document. | `camel infra run docling ollama`, a local model |
 
 ### [Cloud](cloud/)
 
@@ -186,7 +186,7 @@ camel test run test/aggregator.citrus.it.yaml
 ```
 
 The test plugin installs on first use. The `build.yml` workflow runs every test on every pull request; the few
-examples marked `ciSkip` in their metadata, the ones that need a language model, are run by hand.
+examples marked `ciSkip` in their metadata, the ones that need a language model or an API key, are run by hand.
 
 ## Add an example
 

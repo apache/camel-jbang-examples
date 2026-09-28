@@ -14,7 +14,8 @@ WARN ... mqtt.camel.yaml:39 : cold-room-1: 9 °C, too warm, alert the warehouse
 
 ## Install Camel CLI
 
-<!-- see installation instructions in ../../install.adoc -->
+Install [JBang](https://www.jbang.dev/download/) and the Camel CLI as described in the
+[root README](../../README.md#install-the-camel-cli); `camel --version` confirms the install.
 
 ## Run it
 

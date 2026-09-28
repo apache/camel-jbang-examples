@@ -12,5 +12,5 @@ Tooling demos outside the ladder: the TUI, a memory leak, message sizes, log ana
 
 Start with [TUI Hello World](tui-hello-world/); the others stand on their own, in any order.
 
-Every example has a README that says what you will see, how it works, how to build it step by step, what to try changing, and how to run its test with `camel test run`.
+Every example has a README that says what you will see, how it works, how to build it step by step and what to try changing; the ones with a `test/` directory also say how to run their test with `camel test run`.
 <!-- group:end -->

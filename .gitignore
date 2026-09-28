@@ -13,3 +13,6 @@ parked/
 # written by the file-processing example at runtime
 inbox/
 archive/
+# written by the docling-langchain4j-rag example at runtime
+documents/
+output/

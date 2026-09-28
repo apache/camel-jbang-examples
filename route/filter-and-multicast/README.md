@@ -16,7 +16,8 @@ INFO ... filter-and-multicast.camel.yaml:16 : Order ORD-1003 received, status pe
 
 ## Install Camel CLI
 
-<!-- see installation instructions in ../../install.adoc -->
+Install [JBang](https://www.jbang.dev/download/) and the Camel CLI as described in the
+[root README](../../README.md#install-the-camel-cli); `camel --version` confirms the install.
 
 ## Run it
 

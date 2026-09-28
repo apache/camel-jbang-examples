@@ -15,7 +15,8 @@ INFO ... artemis.camel.yaml:37 : Took ORD-1002 off the queue: 1 line(s) for cust
 
 ## Install Camel CLI
 
-<!-- see installation instructions in ../../install.adoc -->
+Install [JBang](https://www.jbang.dev/download/) and the Camel CLI as described in the
+[root README](../../README.md#install-the-camel-cli); `camel --version` confirms the install.
 
 ## Run it
 

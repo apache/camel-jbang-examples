@@ -12,5 +12,5 @@ The first ten minutes: generic examples with no story and no service, each runni
 
 Start with [Timer Log](timer-log/); the others stand on their own, in any order.
 
-Every example has a README that says what you will see, how it works, how to build it step by step, what to try changing, and how to run its test with `camel test run`.
+Every example has a README that says what you will see, how it works, how to build it step by step and what to try changing, and how to run its test with `camel test run`.
 <!-- group:end -->

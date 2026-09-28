@@ -33,5 +33,6 @@
     ],
     "requiresDocker": true,
     "bundled": false,
-    "ciSkip": true
+    "ciSkip": true,
+    "needs": "a local model"
 }

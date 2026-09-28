@@ -15,7 +15,7 @@ essentials and adds what is specific to this examples repository.
 ## Project Info
 
 - Run with: Camel CLI (`jbang app install camel@apache/camel`) + JBang
-- Java: 17+ (CI uses Temurin 17)
+- Java: 17+ (CI uses Temurin 21)
 - Tests: [Citrus](https://citrusframework.org/) YAML tests
 - JIRA project: `CAMEL` (https://issues.apache.org/jira/projects/CAMEL)
 - Merge strategy (`.asf.yaml`): squash or rebase; protected `main`
@@ -38,11 +38,23 @@ essentials and adds what is specific to this examples repository.
 
 ## Repository structure
 
-- One example per top-level directory, lowercase and hyphenated
-  (e.g. `mqtt/`, `timer-log/`, `ftp/`). Related examples may be grouped under a
-  category directory (e.g. `aws/aws-sqs/`, `openapi/server/`).
+The examples form a ladder: one directory per group, one directory per example
+inside it, both lowercase and hyphenated (e.g. `route/aggregator/`,
+`connect-service/mqtt/`). The groups, in reading order, are `quick-start`, then
+the rungs `run`, `transform`, `route`, `fail-well`, `connect`, `connect-service`,
+`contracts`, `ai`, `cloud`, and `showcase` for tooling demos outside the ladder.
+The `README.md` at the root explains the ladder; `generate-catalog.sh` holds the
+group order and intros.
+
+- From the `run` rung onwards the examples share one fictional web shop and the
+  order shape that `run/order-generator` defines; a new example on the ladder
+  reuses that story and that JSON rather than inventing its own domain.
 - Each example carries a `metadata.json` that feeds the generated
-  `camel-jbang-example-catalog.json`. Do not hand-edit the catalog.
+  `camel-jbang-example-catalog.json` and the example tables in the root and group
+  READMEs. Do not hand-edit the catalog or those tables; run
+  `./generate-catalog.sh` after adding or changing a `metadata.json`.
+- `security/`, `transformation/` and the non-ladder examples in `cloud/` are
+  larger reference examples marked `"exclude": true`; they are not on the ladder.
 
 ## Anatomy of an example
 
@@ -51,10 +63,10 @@ essentials and adds what is specific to this examples repository.
 | `README.md` | What it does, how to run, expected output, how to test |
 | `<name>.camel.yaml` | The route(s) in Camel YAML DSL |
 | `application.properties` | Runtime properties (ASF license header required) |
-| `metadata.json` | Catalog entry: `name`, `title`, `description` (the behaviour you observe when it runs), `order` (its place in the group, the reading order the group page and the listings use), `level` (the group: `quick-start`, then the ladder rungs `run`, `transform`, `route`, `fail-well`, `connect`, `connect-service`, `contracts`, `ai`, `cloud`, or `showcase` for tooling demos), `teaches` (the `components`, `eips`, `languages` and `dataformats` it introduces), `tags`, `infraServices`, `hasCitrusTests` |
+| `metadata.json` | Catalog entry: `title`, `description` (the behaviour you observe when it runs), `level` (the group), `order` (its place in the group, the reading order the group page and the listings use), `teaches` (the `components`, `eips`, `languages` and `dataformats` it introduces), `tags`, `infraServices` (what `camel infra run` must start), `needs` (anything else the *Needs* column should say, e.g. `a local model`), `ciSkip` (the test cannot run in CI) |
 | `compose.yaml` | Optional Docker Compose for required infra |
 | `beans.yaml` / `*.java` | Optional beans/processors (package `camel.example.*`) |
-| `test/<name>.citrus.it.yaml` | Optional Citrus integration test |
+| `test/<name>.citrus.it.yaml` | The Citrus integration test, run by CI |
 
 ## Build, run and validate
 
@@ -91,19 +103,27 @@ example. If your example ships a `test/`, add it to that workflow.
   `log: "..."`, `- simple:` in a `when` item) is deprecated and `camel run` warns
   about it. Check with `camel validate yaml --canonical <file>` (Camel 4.23+);
   `camel validate normalize` rewrites a file but drops its comments.
-- **README**: follow the existing examples — title, description, install CLI,
-  start infra, how to run, stop/cleanup, integration testing, community footer.
+- **README**: follow the existing examples, `run/order-generator/README.md` is
+  the reference. Title and a two-line description, then these sections in this
+  order: *What you will see* (the literal log output), *Install Camel CLI* (the
+  one-line link to the root README), *Run it* (including how to start the
+  service, if any, and how to stop), *How it works* (one bullet per file),
+  *Build it step by step* (numbered prompts a reader or an assistant can follow,
+  running after each), *Try changing*, *Integration testing*, and the
+  *Help and contributions* footer.
 
 ## Adding a new example (checklist)
 
-1. Create `<name>/` (or `<category>/<name>/`).
+1. Pick the group (rung) it belongs to and create `<group>/<name>/`.
 2. Add `README.md`, `<name>.camel.yaml`, `application.properties` (with header),
-   and a correct `metadata.json`.
-3. Add `compose.yaml` if infra is required; add `test/` Citrus tests where it
-   makes sense and wire them into `.github/workflows/build.yml`.
+   and a `metadata.json` with `level`, `order` and `teaches`.
+3. Add `test/<name>.citrus.it.yaml` and wire it into
+   `.github/workflows/build.yml`; the test starts the route, and the service if
+   it needs one, itself. Set `ciSkip` only when the test truly cannot run in CI.
 4. Run it locally with `camel run` and verify the README's expected output;
    `camel validate yaml --canonical` must report nothing.
-5. Open the PR from your fork, link the JIRA ticket, and request review from
+5. Run `./generate-catalog.sh` to refresh the catalog and the README tables.
+6. Open the PR from your fork, link the JIRA ticket, and request review from
    active committers.
 
 ## Links

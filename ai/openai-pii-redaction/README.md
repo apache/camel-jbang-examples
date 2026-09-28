@@ -1,67 +1,87 @@
-# OpenAI Personal Identifiable Information Redaction
+# OpenAI PII Redaction
 
-This example demonstrates how to use OpenAI-compatible LLM providers with Apache Camel to redact personal identifiable information from text.
+Text typed on standard input is sent to an OpenAI-compatible model with a JSON schema that asks for the
+personal identifiers redacted, and the redacted text is printed on standard output. Works with OpenAI itself
+or with any server that speaks its chat API, such as a local Ollama or llama.cpp.
 
-## Prerequisites
+## What you will see
 
-* Java 17/21
-* A running LLM service with exposed OpenAI-compatible API (for chat completions)
+```text
+$ echo 'Customer John Doe (email: john.doe@example.com) requested a refund for order #998877.' | camel run *
+...
+{
+  "detectedPII": [
+    {"span": "John Doe", "type": "PERSON", "action": "REDACTED"},
+    {"span": "john.doe@example.com", "type": "EMAIL", "action": "REDACTED"}
+  ],
+  "sanitizedText": "Customer [REDACTED] ([REDACTED]) requested a refund for order #998877."
+}
+```
+
+The order number stays: it is not a personal identifier. The exact wording differs from model to model.
 
 ## Install Camel CLI
 
-<!-- see installation instructions in ../install.adoc -->
+Install [JBang](https://www.jbang.dev/download/) and the Camel CLI as described in the
+[root README](../../README.md#install-the-camel-cli); `camel --version` confirms the install.
 
-## Configure OpenAI properties
+## Run it
 
-Edit the `application.properties` file or set the following environment properties:
+The example needs an OpenAI-compatible chat API. Point it at one with three environment variables, which
+`application.properties` reads:
 
-```properties
-export OPENAI_API_KEY=<your-openai-api-key>
-export OPENAI_BASE_URL=http://localhost:8181/v1
-export OPENAI_MODEL=unsloth/Ministral-3-8B-Instruct-2512-GGUF
+```shell
+export OPENAI_API_KEY=<your-api-key>
+export OPENAI_BASE_URL=https://api.openai.com/v1
+export OPENAI_MODEL=gpt-4o-mini
 ```
 
-**Important**: Replace `<your-openai-api-key>` with your actual OpenAI API key.
-
-## Example: Personal Identifiable Information Redaction
-
-This integration identifies personal identifiable information based on the provided schema details and redacts it.
-
-### How to run
+For a local server the key is whatever the server expects, often any non-empty string, and the URL is its
+`/v1` endpoint, for example `http://localhost:11434/v1` for Ollama with `OPENAI_MODEL` set to a model you have
+pulled. Then pipe the text in:
 
 ```shell
 echo 'Customer John Doe (email: john.doe@example.com) requested a refund for order #998877.' | camel run *
 ```
 
-### What it does
+The example stops by itself after the one message, because of `camel.main.durationMaxMessages=1`.
 
-The integration:
-1. Reads the input from the console's standard input
-2. Analyzes analyze the user input and redacts all PII
-4. Returns the results to standard output in the specified JSON format
+## How it works
 
-### Expected Output
+- `pii-redaction.camel.yaml` holds two routes. The second is the plumbing: `from` the `stream` component's
+  standard input, `to` the `direct` route that does the work, `to` standard output.
+- The `direct` route is one `to` on the `openai` component with `operation: chat-completion`. The
+  `systemMessage` tells the model what to redact and what to leave alone, `temperature: 0.15` keeps it
+  predictable, and `jsonSchema` points at `pii.schema.json`, so the model must answer in that shape and the
+  body that comes back is the JSON you see.
+- `pii.schema.json` is the contract with the model: a list of `detectedPII` with the span, its type from a fixed
+  list, and the action, plus the `sanitizedText`.
+- `application.properties` sets the component's key, base URL and model from environment variables, adds the
+  `camel-openai` dependency, and limits the run to one message.
 
-```json
-{
-  "detectedPII": [
-    {
-      "span": "John Doe",
-      "type": "PERSON",
-      "action": "REDACTED"
-    },
-    {
-      "span": "john.doe@example.com",
-      "type": "EMAIL",
-      "action": "REDACTED"
-    }
-  ],
-  "sanitizedText": "Customer [REDACTED] ([REDACTED]) requested a refund for order #998877."
-}
-Analyzing text: I love this product! It's absolutely amazing...
-Sentiment: positive (Score: 0.95)
-Detected Language: en
-```
+## Build it step by step
+
+Ask your assistant, or type it yourself, one step at a time, and run after each, with the environment
+variables set:
+
+1. A route from `stream:in` to `stream:out` that echoes what you pipe in; run it with `echo hello | camel run *`
+   and `camel.main.durationMaxMessages=1`.
+2. Put a `to: openai` with `operation: chat-completion` between them, with the key, URL and model in
+   `application.properties`; the model answers in free text.
+3. Add the `systemMessage` with the redaction rules.
+4. Write `pii.schema.json` and hand it to the endpoint with `jsonSchema`; the answer is now JSON in that shape.
+5. Move the work to a `direct` route so another route could call it.
+
+## Try changing
+
+- Add `"IBAN"` to the `type` enum in the schema and pipe in a bank account.
+- Change the system message to mask instead of redact, `J*** D**`, and see the `action` become `MASKED`.
+- Replace the `stream:in` route with a `file` consumer that redacts every text file dropped in a directory.
+
+## Integration testing
+
+The example has no Citrus test, because it needs a language model behind an API key; the `camel run` above
+is the test.
 
 ## Help and contributions
 
