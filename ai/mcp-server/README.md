@@ -74,7 +74,7 @@ The MCP server is a preview feature since Camel 4.22.
 1. One `ai-tool` route that answers a fixed text, with the four `camel.server.mcp-*` properties; run it and see
    the server line in the log, then `initialize` and `tools/list` with `curl`.
 2. Add a parameter and use `${header.sku}` in the answer; call it with `tools/call`.
-3. Answer from `stock.json` with `jsonpath` and add the unknown case.
+3. Answer from `stock.json`: unmarshal it, find the SKU with Groovy and add the unknown case.
 4. Add the second tool and connect a real agent.
 
 ## Try changing

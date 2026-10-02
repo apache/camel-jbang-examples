@@ -16,7 +16,7 @@
         ],
         "languages": [
             "simple",
-            "jsonpath",
+            "groovy",
             "constant"
         ],
         "dataformats": [
