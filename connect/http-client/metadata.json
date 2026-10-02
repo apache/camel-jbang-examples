@@ -22,7 +22,7 @@
         ],
         "languages": [
             "simple",
-            "jsonpath"
+            "groovy"
         ],
         "dataformats": [
             "json"
