@@ -30,5 +30,5 @@
         "http",
         "platform-http"
     ],
-    "bundled": false
+    "bundled": true
 }

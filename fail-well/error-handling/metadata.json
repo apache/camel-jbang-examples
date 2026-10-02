@@ -32,5 +32,5 @@
         "retry",
         "dead-letter"
     ],
-    "bundled": false
+    "bundled": true
 }

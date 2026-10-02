@@ -27,5 +27,5 @@
         "inbox",
         "archive"
     ],
-    "bundled": false
+    "bundled": true
 }

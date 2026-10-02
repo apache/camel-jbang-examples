@@ -27,5 +27,5 @@
         "jsonpath",
         "transformation"
     ],
-    "bundled": false
+    "bundled": true
 }

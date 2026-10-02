@@ -29,5 +29,5 @@
         "aggregator",
         "batch"
     ],
-    "bundled": false
+    "bundled": true
 }

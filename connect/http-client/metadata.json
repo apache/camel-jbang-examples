@@ -34,5 +34,5 @@
         "rest",
         "client"
     ],
-    "bundled": false
+    "bundled": true
 }
