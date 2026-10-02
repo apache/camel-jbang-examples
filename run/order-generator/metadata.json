@@ -23,5 +23,5 @@
         "bean",
         "json"
     ],
-    "bundled": false
+    "bundled": true
 }

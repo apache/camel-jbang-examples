@@ -20,5 +20,5 @@
         "cron",
         "schedule"
     ],
-    "bundled": false
+    "bundled": true
 }

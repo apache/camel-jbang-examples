@@ -30,6 +30,7 @@ CATALOG_FILE="$SCRIPT_DIR/camel-jbang-example-catalog.json"
 python3 - "$SCRIPT_DIR" "$CATALOG_FILE" << 'PYEOF'
 import json
 import os
+import subprocess
 import sys
 
 repo_root = sys.argv[1]
@@ -44,6 +45,14 @@ SKIP_EXTENSIONS = {
     ".png", ".jpg", ".jpeg", ".gif", ".svg",
     ".excalidraw", ".iml"
 }
+
+# the files git ignores (what an example writes when run locally, such as parked/ or inbox/) are no example files
+try:
+    ignored = set(subprocess.run(
+        ["git", "ls-files", "--others", "--ignored", "--exclude-standard"],
+        cwd=repo_root, capture_output=True, text=True, check=True).stdout.splitlines())
+except (OSError, subprocess.CalledProcessError):
+    ignored = set()
 
 catalog = []
 
@@ -82,7 +91,8 @@ for dirpath, dirnames, filenames in sorted(os.walk(repo_root)):
                     and not f.startswith(".")
                     and os.path.splitext(f)[1].lower() not in SKIP_EXTENSIONS):
                 rel = os.path.relpath(os.path.join(sub_dirpath, f), dirpath)
-                files.append(rel)
+                if os.path.relpath(os.path.join(sub_dirpath, f), repo_root) not in ignored:
+                    files.append(rel)
     files.sort()
 
     requires_docker = ("compose.yaml" in filenames or "docker-compose.yaml" in filenames

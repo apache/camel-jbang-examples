@@ -34,5 +34,5 @@
         "rest",
         "contract"
     ],
-    "bundled": false
+    "bundled": true
 }

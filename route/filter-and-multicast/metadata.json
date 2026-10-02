@@ -27,5 +27,5 @@
         "filter",
         "multicast"
     ],
-    "bundled": false
+    "bundled": true
 }

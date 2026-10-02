@@ -25,5 +25,5 @@
         "choice",
         "routing"
     ],
-    "bundled": false
+    "bundled": true
 }

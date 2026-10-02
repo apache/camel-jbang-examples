@@ -31,5 +31,5 @@
         "client",
         "contract"
     ],
-    "bundled": false
+    "bundled": true
 }

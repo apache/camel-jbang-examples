@@ -28,5 +28,5 @@
         "json",
         "transformation"
     ],
-    "bundled": false
+    "bundled": true
 }

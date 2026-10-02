@@ -26,5 +26,5 @@
         "splitter",
         "split"
     ],
-    "bundled": false
+    "bundled": true
 }
