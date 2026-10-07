@@ -29,7 +29,7 @@
         "messaging"
     ],
     "infraServices": [
-        "aws"
+        "aws sqs"
     ],
     "requiresDocker": true,
     "bundled": false

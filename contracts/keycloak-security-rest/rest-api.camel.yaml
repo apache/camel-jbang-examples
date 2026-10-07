@@ -15,8 +15,6 @@
 ## limitations under the License.
 ## ---------------------------------------------------------------------------
 
-# camel-k: dependency=camel:keycloak
-
 # Global exception handler for authorization failures
 # Handles CamelAuthorizationException to return proper HTTP status codes
 - onException:
