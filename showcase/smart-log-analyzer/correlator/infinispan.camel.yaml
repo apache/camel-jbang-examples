@@ -17,8 +17,7 @@
         - filter:
             expression:
               simple:
-                expression: "${variable.traceId} != null && ${variable.traceId}\
-                  \ != ''"
+                expression: "${variable.traceId} != null && ${variable.traceId} != ''"
             steps:
               - claimCheck:
                   operation: Set
