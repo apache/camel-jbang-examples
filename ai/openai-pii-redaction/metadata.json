@@ -17,6 +17,6 @@
         "security"
     ],
     "bundled": false,
-    "needs": "an OpenAI-compatible API",
+    "needs": "an OpenAI-compatible API: set `OPENAI_API_KEY`",
     "ciSkip": true
 }

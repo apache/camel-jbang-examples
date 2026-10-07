@@ -31,5 +31,6 @@
         "client",
         "contract"
     ],
-    "bundled": true
+    "bundled": true,
+    "needs": "`contracts/openapi-server` running first"
 }

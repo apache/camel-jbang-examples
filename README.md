@@ -113,7 +113,7 @@ An OpenAPI contract served and called, and an API protected by Keycloak.
 | Example | What you will see | Needs |
 |---|---|---|
 | [OpenAPI server](contracts/openapi-server/) | The stock API contract first: stock-api.json is the OpenAPI contract, the REST DSL serves its three operations on port 8080 with request validation, GET /stock/{sku} answers from a file or 404, POST /stock/{sku}/reserve answers 200, 409 when the stock is short or 400 for a bad reservation, and /openapi serves the contract. | nothing |
-| [OpenAPI client](contracts/openapi-client/) | The picking desk reserves stock for every order line by calling the stock API by contract: rest-openapi turns the operationId reserveStock into the HTTP call from stock-api.json; the log shows each reservation and one 409 for the cap that is out of stock. Needs the openapi-server example running. | nothing |
+| [OpenAPI client](contracts/openapi-client/) | The picking desk reserves stock for every order line by calling the stock API by contract: rest-openapi turns the operationId reserveStock into the HTTP call from stock-api.json; the log shows each reservation and one 409 for the cap that is out of stock. Needs the openapi-server example running. | `contracts/openapi-server` running first |
 | [Keycloak security](contracts/keycloak-security-rest/) | Two HTTP endpoints on port 8081: the public one answers everyone, the protected one requires a bearer token from a Keycloak started with camel infra whose user has the admin role, otherwise 403; the realm, client and users are created in the Keycloak console as the README describes. | `camel infra run keycloak` |
 
 ### [AI](ai/)
@@ -122,9 +122,9 @@ A local model writing text, routes exposed as MCP tools, RAG over documents, PII
 
 | Example | What you will see | Needs |
 |---|---|---|
-| [LangChain4j chat](ai/langchain4j-chat/) | A local Ollama model started with camel infra writes the shipping notification for each of the three orders; the chat model is a bean built from properties, the prompt comes from the order, and the log shows the reply with its token counts. | `camel infra run ollama`, a local model |
+| [LangChain4j chat](ai/langchain4j-chat/) | A local Ollama model started with camel infra writes the shipping notification for each of the three orders; the chat model is a bean built from properties, the prompt comes from the order, and the log shows the reply with its token counts. | `camel infra run ollama`, a local model: `ollama pull granite4:3b` |
 | [MCP server](ai/mcp-server/) | Two routes are exposed as MCP tools, stock_level by SKU and order_status by order id, on http://localhost:8080/mcp with nothing but properties to switch the server on; any MCP client, a coding agent included, can list and call them, and the log shows each call. | nothing |
-| [OpenAI PII Redaction](ai/openai-pii-redaction/) | Text typed on standard input is sent to an OpenAI-compatible model with a JSON schema that asks for the personal identifiers redacted, and the redacted text is printed on standard output. | an OpenAI-compatible API |
+| [OpenAI PII Redaction](ai/openai-pii-redaction/) | Text typed on standard input is sent to an OpenAI-compatible model with a JSON schema that asks for the personal identifiers redacted, and the redacted text is printed on standard output. | an OpenAI-compatible API: set `OPENAI_API_KEY` |
 | [Document Analysis with Docling and LangChain4j RAG](ai/docling-langchain4j-rag/) | Documents dropped in a directory are converted to Markdown by a Docling service, analysed by a local Ollama model through langchain4j-chat, and written as a report to an output directory; an HTTP endpoint answers questions against the latest document. | `camel infra run docling ollama`, a local model |
 
 ### [Cloud](cloud/)
