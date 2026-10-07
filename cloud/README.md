@@ -5,7 +5,7 @@ A cloud service, run locally through LocalStack and switched to the real thing b
 
 | Example | What you will see | Needs |
 |---|---|---|
-| [AWS SQS](aws-sqs/) | Each of the three orders is put on an Amazon SQS queue called shipments and a courier route takes it off and logs the order, country and line count; locally the queue lives on the LocalStack that camel infra run aws sqs starts, and the same properties point at real AWS. | `camel infra run aws` |
+| [AWS SQS](aws-sqs/) | Each of the three orders is put on an Amazon SQS queue called shipments and a courier route takes it off and logs the order, country and line count; locally the queue lives on the LocalStack that camel infra run aws sqs starts, and the same properties point at real AWS. | `camel infra run aws sqs` |
 
 Start with [AWS SQS](aws-sqs/).
 
