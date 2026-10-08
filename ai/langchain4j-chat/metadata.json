@@ -34,5 +34,5 @@
     "requiresDocker": true,
     "bundled": false,
     "ciSkip": true,
-    "needs": "a local model"
+    "needs": "a local model: `ollama pull granite4:3b`"
 }
