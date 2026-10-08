@@ -53,8 +53,9 @@ group order and intros.
   `camel-jbang-example-catalog.json` and the example tables in the root and group
   READMEs. Do not hand-edit the catalog or those tables; run
   `./generate-catalog.sh` after adding or changing a `metadata.json`.
-- `security/`, `transformation/` and the non-ladder examples in `cloud/` are
-  larger reference examples marked `"exclude": true`; they are not on the ladder.
+- `security/`, `transformation/`, the non-ladder examples in `cloud/` and
+  `showcase/smart-log-analyzer` (several apps, run one by one as its README says)
+  are larger reference examples marked `"exclude": true`; they are not on the ladder.
 
 ## Anatomy of an example
 
