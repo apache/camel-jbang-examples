@@ -1,13 +1,13 @@
 - rest:
     path: /api/traces
-    steps:
-      - get:
-          id: list-traces
-          produces: application/json
-      - get:
-          id: get-trace-by-id
-          path: "/{id}"
-          produces: application/json
+    get:
+      - id: list-traces
+        produces: application/json
+        to: direct:list-traces
+      - id: get-trace-by-id
+        path: "/{id}"
+        produces: application/json
+        to: direct:get-trace
 - route:
     id: route-list-traces
     from:
