@@ -8,19 +8,13 @@ The example exposes REST endpoints that receive OCSF events as JSON, unmarshal t
 
 The `camel-ocsf` module requires Camel 4.18.0 or later.
 
-If you're working with a SNAPSHOT build:
-
-```shell
-cd /path/to/camel
-mvn clean install -pl components/camel-ocsf -am -DskipTests
-mvn clean install -pl dsl/camel-jbang -am -DskipTests
-```
-
 ## Running the Example
 
 ```shell
-jbang -Dcamel.jbang.version=4.18.0-SNAPSHOT camel@apache/camel run --port 8081 --properties=application.properties --dep camel:ocsf --dep camel:langchain4j-chat --dep=mvn:dev.langchain4j:langchain4j-ollama:1.10.0 ocsf.camel.yaml
+camel run ocsf.camel.yaml application.properties --port 8081
 ```
+
+`camel run` adds the dependencies by itself: camel-ocsf, camel-langchain4j-chat and the LangChain4j Ollama model of the `chatModel` bean.
 
 The server starts on port 8081. Check the health endpoint to verify:
 
