@@ -20,5 +20,6 @@
         "opentelemetry",
         "logging"
     ],
-    "bundled": false
+    "bundled": false,
+    "exclude": true
 }
