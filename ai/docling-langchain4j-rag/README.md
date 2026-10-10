@@ -62,8 +62,8 @@ Stop the example with `ctrl` + `c` and the services with `camel infra stop docli
   component picks it up as the one chat model in the registry.
 - `document-analysis-workflow` is the main route: a `file` consumer on `documents` with `include` for the
   supported extensions. The body becomes the file's absolute path, the `docling` endpoint with
-  `CONVERT_TO_MARKDOWN` sends it to the Docling service and returns the Markdown, which is kept in an
-  exchange property. A `setBody` builds the prompt around it, `langchain4j-chat` sends it to the model, a
+  `CONVERT_TO_MARKDOWN` sends it to the Docling service and returns the Markdown, which is kept in a
+  variable. A `setBody` builds the prompt around it, `langchain4j-chat` sends it to the model, a
   Groovy `script` assembles the report from the answer and the Markdown, and a `file` producer writes it to
   `output` under the source name plus `_analysis.md`. A last script deletes the source file.
 - `document-qa-api` is `platform-http` on `POST /api/ask`: a script finds the newest file in `documents`,

@@ -25,7 +25,7 @@
       steps:
         - log:
             message: "Processing document: ${header.CamelFileName}"
-        - setProperty:
+        - setVariable:
             name: originalFileName
             expression:
               simple:
@@ -45,12 +45,12 @@
               useDoclingServe: true
         - log:
             message: Document converted to Markdown successfully
-        - setProperty:
+        - setVariable:
             name: sourceFilePath
             expression:
               simple:
-                expression: "${exchangeProperty.originalFileName}"
-        - setProperty:
+                expression: "${variable.originalFileName}"
+        - setVariable:
             name: convertedMarkdown
             expression:
               simple:
@@ -59,7 +59,7 @@
             expression:
               groovy:
                 expression: |
-                  def markdown = exchange.getProperty("convertedMarkdown", String.class)
+                  def markdown = exchange.getVariable("convertedMarkdown", String.class)
                   def preview = markdown.length() > 500 ? markdown.substring(0, 500) + "..." : markdown
                   log.info("Converted Markdown preview:\n{}", preview)
         - setBody:
@@ -72,7 +72,7 @@
                   3. Any important findings or conclusions
 
                   Document content:
-                  ${exchangeProperty.convertedMarkdown}
+                  ${variable.convertedMarkdown}
         - log:
             message: Analyzing document with AI model...
         - to:
@@ -80,7 +80,7 @@
             parameters:
               chatId: analysis
               chatModel: "#chatModel"
-        - setProperty:
+        - setVariable:
             name: aiAnalysis
             expression:
               simple:
@@ -91,9 +91,9 @@
             expression:
               groovy:
                 expression: |
-                  def fileName = exchange.getProperty("originalFileName")
-                  def markdown = exchange.getProperty("convertedMarkdown", String.class)
-                  def analysis = exchange.getProperty("aiAnalysis", String.class)
+                  def fileName = exchange.getVariable("originalFileName")
+                  def markdown = exchange.getVariable("convertedMarkdown", String.class)
+                  def analysis = exchange.getVariable("aiAnalysis", String.class)
                   def dateStr = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date())
 
                   def result = "# Document Analysis Report\n\n" +
@@ -111,7 +111,7 @@
             name: CamelFileName
             expression:
               simple:
-                expression: "${exchangeProperty.originalFileName}_analysis.md"
+                expression: "${variable.originalFileName}_analysis.md"
         - to:
             uri: file
             parameters:
@@ -126,7 +126,7 @@
                   import java.nio.file.Paths
 
                   def docDir = camelContext.resolvePropertyPlaceholders("{{documents.directory}}")
-                  def fileName = exchange.getProperty("sourceFilePath")
+                  def fileName = exchange.getVariable("sourceFilePath")
                   def filePath = Paths.get(docDir, fileName)
 
                   if (Files.exists(filePath)) {
@@ -134,7 +134,7 @@
                     log.info("Cleaned up source file: {}", filePath)
                   }
         - log:
-            message: "Processing complete for: ${exchangeProperty.originalFileName}"
+            message: "Processing complete for: ${variable.originalFileName}"
 - route:
     id: document-qa-api
     from:
@@ -144,7 +144,7 @@
       steps:
         - log:
             message: "Received question: ${body}"
-        - setProperty:
+        - setVariable:
             name: userQuestion
             expression:
               simple:
@@ -168,20 +168,20 @@
 
                     if (latestFile != null) {
                       exchange.message.setBody(latestFile.toFile())
-                      exchange.setProperty("documentFound", true)
+                      exchange.setVariable("documentFound", true)
                     } else {
-                      exchange.setProperty("documentFound", false)
+                      exchange.setVariable("documentFound", false)
                       exchange.message.setBody("No documents found in directory")
                     }
                   } else {
-                    exchange.setProperty("documentFound", false)
+                    exchange.setVariable("documentFound", false)
                     exchange.message.setBody("Documents directory does not exist")
                   }
         - choice:
             when:
               - expression:
                   simple:
-                    expression: "${exchangeProperty.documentFound} == true"
+                    expression: "${variable.documentFound} == true"
                 steps:
                   - log:
                       message: Converting document for Q&A...
@@ -192,7 +192,7 @@
                         contentInBody: true
                         doclingServeUrl: "{{docling.serve.url}}"
                         useDoclingServe: true
-                  - setProperty:
+                  - setVariable:
                       name: documentContent
                       expression:
                         simple:
@@ -204,9 +204,9 @@
                             You are a helpful assistant answering questions about documents.
 
                             Document content:
-                            ${exchangeProperty.documentContent}
+                            ${variable.documentContent}
 
-                            Question: ${exchangeProperty.userQuestion}
+                            Question: ${variable.userQuestion}
 
                             Please provide a clear and concise answer based on the document content above.
                   - to:
@@ -267,7 +267,7 @@
             steps:
               - log:
                   message: "Summarizing: ${body}"
-              - setProperty:
+              - setVariable:
                   name: currentFile
                   expression:
                     simple:
@@ -346,7 +346,7 @@
       steps:
         - log:
             message: Extracting structured data from uploaded document
-        - setProperty:
+        - setVariable:
             name: uploadedContent
             expression:
               simple:
@@ -359,7 +359,7 @@
               doclingServeUrl: "{{docling.serve.url}}"
               outputFormat: json
               useDoclingServe: true
-        - setProperty:
+        - setVariable:
             name: structuredData
             expression:
               simple:
@@ -374,7 +374,7 @@
                   3. Any tables or structured information
 
                   Structured data:
-                  ${exchangeProperty.structuredData}
+                  ${variable.structuredData}
         - to:
             uri: langchain4j-chat
             parameters:
