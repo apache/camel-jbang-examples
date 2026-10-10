@@ -15,7 +15,7 @@
             "split",
             "choice",
             "script",
-            "setProperty",
+            "setVariable",
             "setHeader"
         ],
         "languages": [
