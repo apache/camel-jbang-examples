@@ -59,7 +59,7 @@
             ],
             "eips": [
                 "setBody",
-                "setProperty",
+                "setVariable",
                 "unmarshal"
             ],
             "languages": [

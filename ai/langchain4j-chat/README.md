@@ -46,7 +46,7 @@ seconds per reply; a larger model or a GPU is faster. Stop the container with `c
 - `langchain4j-chat` with `chatModel: "#chatModel"` sends the body as a single user message and replaces the
   body with the reply; `CamelLangChain4jChatInputTokenCount` and `...OutputTokenCount` say what it cost.
 - The prompt is built with the Simple language from the order fields; `${body[lines]}` prints the list of lines.
-- The order id is kept in an exchange property because the reply replaces the body.
+- The order id is kept in a variable because the reply replaces the body.
 
 ## Build it step by step
 
