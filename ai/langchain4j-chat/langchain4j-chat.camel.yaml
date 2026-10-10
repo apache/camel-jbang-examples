@@ -24,7 +24,7 @@
         - unmarshal:
             json:
               library: Jackson
-        - setProperty:
+        - setVariable:
             name: orderId
             expression:
               simple:
@@ -43,4 +43,4 @@
               chatId: notifications
               chatModel: "#chatModel"
         - log:
-            message: "Notification for ${exchangeProperty.orderId} (${header.CamelLangChain4jChatInputTokenCount} in, ${header.CamelLangChain4jChatOutputTokenCount} out): ${body}"
+            message: "Notification for ${variable.orderId} (${header.CamelLangChain4jChatInputTokenCount} in, ${header.CamelLangChain4jChatOutputTokenCount} out): ${body}"
