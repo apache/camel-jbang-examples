@@ -726,7 +726,7 @@
                 "onException",
                 "marshal",
                 "unmarshal",
-                "setProperty"
+                "setVariable"
             ],
             "languages": [
                 "simple",
