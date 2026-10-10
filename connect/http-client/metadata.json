@@ -14,7 +14,7 @@
         ],
         "eips": [
             "split",
-            "setProperty",
+            "setVariable",
             "toD",
             "choice",
             "unmarshal",
