@@ -41,6 +41,7 @@
             parameters:
               operationId: CONVERT_TO_MARKDOWN
               contentInBody: true
+              allowFilePathSource: true
               doclingServeUrl: "{{docling.serve.url}}"
               useDoclingServe: true
         - log:
@@ -190,6 +191,7 @@
                       parameters:
                         operationId: CONVERT_TO_MARKDOWN
                         contentInBody: true
+                        allowFilePathSource: true
                         doclingServeUrl: "{{docling.serve.url}}"
                         useDoclingServe: true
                   - setVariable:
@@ -277,6 +279,7 @@
                   parameters:
                     operationId: CONVERT_TO_MARKDOWN
                     contentInBody: true
+                    allowFilePathSource: true
                     doclingServeUrl: "{{docling.serve.url}}"
                     useDoclingServe: true
               - setBody:
@@ -356,6 +359,7 @@
             parameters:
               operationId: EXTRACT_STRUCTURED_DATA
               contentInBody: true
+              allowFilePathSource: true
               doclingServeUrl: "{{docling.serve.url}}"
               outputFormat: json
               useDoclingServe: true
