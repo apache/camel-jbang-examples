@@ -6,6 +6,8 @@ with the Enterprise Integration Patterns and 350+ components. These examples sho
 route needs, sends it a message, and runs its tests. No Maven, no Gradle, no Java project; a route is a YAML
 file and a command.
 
+For AI coding agents: start at [llms.txt](https://camel.apache.org/llms.txt), documentation pages are also available as Markdown (replace `.html` with `.md` in the URL), and the [Camel MCP server](https://camel.apache.org/manual/camel-jbang-mcp.html) looks up components and their options and validates routes.
+
 ## Install the Camel CLI
 
 Install [JBang](https://www.jbang.dev/download/), then the CLI:
