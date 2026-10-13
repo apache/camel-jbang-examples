@@ -1,5 +1,16 @@
 # Apache Camel JBang Examples - AI Agent Guidelines
 
+## Building an integration from these examples
+
+If you are using these examples to build an Apache Camel integration:
+
+- Apache Camel LLM index: https://camel.apache.org/llms.txt
+- Any Apache Camel documentation page is available as LLM-friendly Markdown by replacing `.html` with `.md` in its URL.
+- Prefer the Camel CLI and the [Camel MCP server](https://camel.apache.org/manual/camel-jbang-mcp.html) (linked from the index above) to inspect components, their endpoint options and the catalog. Do not invent component URIs or options — verify them against the catalog or documentation.
+- If your project uses the YAML DSL, write routes in the canonical YAML DSL format, and use the Camel MCP server to validate their structure.
+
+## Contributing examples to this repository
+
 Guidelines for AI agents contributing examples to **apache/camel-jbang-examples**.
 
 This repository hosts low-code Apache Camel integrations that run from the
