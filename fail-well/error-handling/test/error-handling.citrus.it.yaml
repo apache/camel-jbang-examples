@@ -10,6 +10,7 @@ actions:
             systemProperties:
               file: "../application.properties"
           resources:
+            - "parked.camel.yaml"
             - "orders/order-1001.json"
             - "orders/order-1002.json"
             - "orders/order-1003.json"
