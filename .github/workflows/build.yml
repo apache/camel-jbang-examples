@@ -74,6 +74,8 @@ jobs:
             path: route/aggregator
           - name: Filter and multicast
             path: route/filter-and-multicast
+          - name: Enrich and deduplicate
+            path: route/enrich-and-dedupe
           - name: Error handling
             path: fail-well/error-handling
           - name: Circuit breaker

@@ -1048,6 +1048,59 @@
         "order": 1
     },
     {
+        "name": "route/enrich-and-dedupe",
+        "title": "Enrich and deduplicate",
+        "description": "The three orders and a resent copy of ORD-1001 are read; an idempotent consumer accepts each order id once and logs the resent one as a duplicate, each accepted order is enriched with its customer's name and tier from customers/ with pollEnrich, and a wire tap writes a copy to audit/ without holding the order up.",
+        "level": "route",
+        "teaches": {
+            "components": [
+                "file",
+                "direct",
+                "log"
+            ],
+            "eips": [
+                "idempotentConsumer",
+                "pollEnrich",
+                "wireTap",
+                "choice",
+                "setHeader",
+                "unmarshal",
+                "marshal"
+            ],
+            "languages": [
+                "simple"
+            ],
+            "dataformats": [
+                "json"
+            ]
+        },
+        "tags": [
+            "shop",
+            "eip",
+            "idempotent",
+            "duplicates",
+            "enrich",
+            "wire-tap",
+            "audit"
+        ],
+        "bundled": true,
+        "requiresDocker": false,
+        "hasCitrusTests": true,
+        "files": [
+            "README.md",
+            "application.properties",
+            "customers/C-134.json",
+            "customers/C-207.json",
+            "customers/C-482.json",
+            "enrich-and-dedupe.camel.yaml",
+            "orders/order-1001.json",
+            "orders/order-1002.json",
+            "orders/order-1003.json",
+            "orders/resent-order-1001.json"
+        ],
+        "order": 5
+    },
+    {
         "name": "route/filter-and-multicast",
         "title": "Filter and multicast",
         "description": "Three orders are read from the orders directory; a filter lets only the paid ones through and a multicast sends each paid order to both the warehouse route and the invoicing route, which log their part; the pending order is logged as received and goes no further.",
