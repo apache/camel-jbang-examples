@@ -1,0 +1,46 @@
+{
+    "title": "JMS request-reply",
+    "description": "The three orders go on a queue of an ActiveMQ Artemis broker started with camel infra; a consumer asks a stock service over JMS request-reply for each, publishes the reserved ones on a topic that shipping and invoicing both subscribe to, and ORD-1003, which the stock service cannot reserve, is redelivered three times and then moved to a dead letter queue.",
+    "level": "connect-service",
+    "order": 3,
+    "teaches": {
+        "components": [
+            "jms",
+            "file",
+            "log"
+        ],
+        "eips": [
+            "errorHandler",
+            "deadLetterChannel",
+            "redeliveryPolicy",
+            "filter",
+            "throwException",
+            "setVariable",
+            "setHeader",
+            "unmarshal"
+        ],
+        "languages": [
+            "simple",
+            "jsonpath",
+            "groovy"
+        ],
+        "dataformats": [
+            "json"
+        ]
+    },
+    "tags": [
+        "shop",
+        "jms",
+        "artemis",
+        "queue",
+        "topic",
+        "request-reply",
+        "dead-letter",
+        "messaging"
+    ],
+    "infraServices": [
+        "artemis"
+    ],
+    "requiresDocker": true,
+    "bundled": false
+}

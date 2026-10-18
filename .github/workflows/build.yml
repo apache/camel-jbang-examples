@@ -44,6 +44,8 @@ jobs:
             path: connect-service/kafka-orders
           - name: Artemis queue
             path: connect-service/artemis
+          - name: JMS request-reply
+            path: connect-service/jms-request-reply
           - name: FTP courier
             path: connect-service/ftp
           - name: Camel 1.0 tribute

@@ -1,0 +1,41 @@
+name: jms-request-reply-test
+description: The jms-request-reply example logs what its README promises
+actions:
+  - camel:
+      infra:
+        run:
+          service: artemis
+          fixedPort: true
+  - camel:
+      jbang:
+        run:
+          integration:
+            name: "jms-request-reply"
+            file: "../jms-request-reply.camel.yaml"
+            systemProperties:
+              file: "../application.properties"
+          resources:
+            - "orders/order-1001.json"
+            - "orders/order-1002.json"
+            - "orders/order-1003.json"
+            - "stock.json"
+  - camel:
+      jbang:
+        verify:
+          integration: "jms-request-reply"
+          logMessage: "Stock service answered for ORD-1001: reserved"
+  - camel:
+      jbang:
+        verify:
+          integration: "jms-request-reply"
+          logMessage: "Invoicing ORD-1002"
+  - camel:
+      jbang:
+        verify:
+          integration: "jms-request-reply"
+          logMessage: "Stock service answered for ORD-1003: not enough CAMEL-CAP"
+  - camel:
+      jbang:
+        verify:
+          integration: "jms-request-reply"
+          logMessage: "Dead order ORD-1003"

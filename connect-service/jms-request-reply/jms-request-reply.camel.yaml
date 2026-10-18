@@ -1,0 +1,134 @@
+# Each order asks a stock service over JMS request-reply whether its lines can be reserved. An order that cannot be
+# reserved is redelivered and then moved to a dead letter queue; a reserved order is published on a topic, where
+# shipping and invoicing each get a copy. Start the broker with: camel infra run artemis
+- route:
+    id: order-intake
+    from:
+      uri: file
+      parameters:
+        directoryName: orders
+        noop: true
+        sortBy: "file:name"
+      steps:
+        - setHeader:
+            name: orderId
+            expression:
+              jsonpath:
+                expression: "$.orderId"
+        - setHeader:
+            name: customer
+            expression:
+              jsonpath:
+                expression: "$.customer"
+        - to:
+            uri: jms
+            parameters:
+              destinationType: queue
+              destinationName: orders
+        - log:
+            message: "Order ${header.orderId} put on the queue"
+
+# Takes the orders off the queue and asks the stock service; the reply goes to a variable, so the order stays the body
+- route:
+    id: reserve-order
+    errorHandler:
+      deadLetterChannel:
+        deadLetterUri: "jms:queue:orders.dead"
+        useOriginalMessage: true
+        redeliveryPolicy:
+          maximumRedeliveries: 3
+          redeliveryDelay: 1000
+    from:
+      uri: jms
+      parameters:
+        destinationType: queue
+        destinationName: orders
+      steps:
+        - log:
+            message: "Reserving ${header.orderId} for customer ${header.customer}"
+        - to:
+            uri: jms
+            parameters:
+              destinationType: queue
+              destinationName: stock
+              exchangePattern: InOut
+            variableReceive: answer
+        - log:
+            message: "Stock service answered for ${header.orderId}: ${variable.answer}"
+        - filter:
+            expression:
+              simple:
+                expression: "${variable.answer} != 'reserved'"
+            steps:
+              - throwException:
+                  exceptionType: java.lang.IllegalStateException
+                  message: "${variable.answer} for ${header.orderId}"
+        - to:
+            uri: jms
+            parameters:
+              destinationType: topic
+              destinationName: orders.reserved
+
+# Answers "reserved" when stock.json has enough of every line of the order, or "not enough <sku>"
+- route:
+    id: stock-service
+    from:
+      uri: jms
+      parameters:
+        destinationType: queue
+        destinationName: stock
+      steps:
+        - unmarshal:
+            json:
+              library: Jackson
+        - setVariable:
+            name: order
+            expression:
+              simple:
+                expression: "${body}"
+        - setBody:
+            expression:
+              constant:
+                expression: "resource:file:stock.json"
+        - unmarshal:
+            json:
+              library: Jackson
+        - setBody:
+            expression:
+              groovy:
+                expression: "def missing = variables.order.lines.find { line -> (body.find { it.sku == line.sku }?.qty ?: 0) < line.qty }; missing ? 'not enough ' + missing.sku : 'reserved'"
+
+# The orders that could not be reserved, after three redeliveries
+- route:
+    id: dead-orders
+    from:
+      uri: jms
+      parameters:
+        destinationType: queue
+        destinationName: orders.dead
+      steps:
+        - log:
+            message: "Dead order ${header.orderId}"
+
+# Every subscriber of the topic gets each reserved order
+- route:
+    id: shipping
+    from:
+      uri: jms
+      parameters:
+        destinationType: topic
+        destinationName: orders.reserved
+      steps:
+        - log:
+            message: "Shipping ${header.orderId}"
+
+- route:
+    id: invoicing
+    from:
+      uri: jms
+      parameters:
+        destinationType: topic
+        destinationName: orders.reserved
+      steps:
+        - log:
+            message: "Invoicing ${header.orderId}"
