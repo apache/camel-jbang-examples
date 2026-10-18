@@ -1,0 +1,85 @@
+# A local model sorts the support tickets of the shop: it names the category of each ticket, shipping, billing or
+# account, and the ticket is filed in that folder. Any other answer, or no answer in time, files it under unknown.
+# Start the model with: camel infra run ollama
+- beans:
+    - name: chatModel
+      type: dev.langchain4j.model.ollama.OllamaChatModel
+      builderClass: dev.langchain4j.model.ollama.OllamaChatModel$OllamaChatModelBuilder
+      builderMethod: build
+      properties:
+        baseUrl: "{{ollama.base.url}}"
+        modelName: "{{ollama.model}}"
+        temperature: 0.0
+
+- route:
+    id: classify-tickets
+    from:
+      uri: file
+      parameters:
+        directoryName: tickets
+        noop: true
+        sortBy: "file:name"
+      steps:
+        - unmarshal:
+            json:
+              library: Jackson
+        - log:
+            message: "Ticket ${body[ticketId]}: ${body[text]}"
+        # the model call; when the model is slow or down, the fallback files the ticket under unknown
+        - circuitBreaker:
+            resilience4jConfiguration:
+              timeoutEnabled: true
+              timeoutDuration: 60000
+            steps:
+              - setVariable:
+                  name: prompt
+                  expression:
+                    simple:
+                      expression: >-
+                        You sort the support tickets of a web shop. Answer with one word only, the category of the
+                        ticket: shipping, billing or account. Ticket: ${body[text]}
+              # the prompt is sent from a variable and the answer goes to one, so the ticket stays the body
+              - to:
+                  uri: langchain4j-chat
+                  parameters:
+                    chatId: tickets
+                    chatModel: "#chatModel"
+                  variableSend: prompt
+                  variableReceive: answer
+              - setVariable:
+                  name: category
+                  expression:
+                    simple:
+                      expression: "${variable.answer.toLowerCase().replaceAll('[^a-z]', '')}"
+            onFallback:
+              steps:
+                - setVariable:
+                    name: category
+                    expression:
+                      constant:
+                        expression: unknown
+        # the model may answer anything: only the three categories are folders
+        - filter:
+            expression:
+              simple:
+                expression: "${variable.category} not in 'shipping,billing,account'"
+            steps:
+              - setVariable:
+                  name: category
+                  expression:
+                    constant:
+                      expression: unknown
+        - log:
+            message: "Ticket ${body[ticketId]} is ${variable.category}"
+        - setHeader:
+            name: CamelFileName
+            expression:
+              simple:
+                expression: "${variable.category}/${body[ticketId]}.json"
+        - marshal:
+            json:
+              library: Jackson
+        - to:
+            uri: file
+            parameters:
+              directoryName: tickets-out

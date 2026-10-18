@@ -1,0 +1,59 @@
+name: ticket-classifier-test
+description: A local model sorts the support tickets
+actions:
+  - camel:
+      infra:
+        run:
+          service: ollama
+          # a side port, so an Ollama already installed on the machine does not get in the way
+          port: 11435
+  # the container pulls the model after it starts; wait until Ollama lists it
+  - repeatOnError:
+      until: i >= 60
+      index: i
+      autoSleep: 5000
+      actions:
+        - http:
+            client: "http://localhost:11435"
+            sendRequest:
+              GET:
+                path: "/api/tags"
+        - http:
+            client: "http://localhost:11435"
+            receiveResponse:
+              response:
+                status: "200"
+              validate:
+                - jsonPath:
+                    - expression: "$.models[?(@.name=='granite4:3b')].name"
+                      value: "granite4:3b"
+  - camel:
+      jbang:
+        run:
+          integration:
+            name: "ticket-classifier"
+            file: "../ticket-classifier.camel.yaml"
+            # the properties file would win over an inline property, so all of them are given here
+            systemProperties:
+              properties:
+                - name: ollama.base.url
+                  value: http://localhost:11435
+                - name: ollama.model
+                  value: granite4:3b
+                - name: camel.jbang.dataDir
+                  value: tickets-out
+          resources:
+            - "tickets/T-1.json"
+            - "tickets/T-2.json"
+            - "tickets/T-3.json"
+  # the model's answer varies: the test checks that every ticket is filed, not the category
+  - camel:
+      jbang:
+        verify:
+          integration: "ticket-classifier"
+          logMessage: "Ticket T-1 is "
+  - camel:
+      jbang:
+        verify:
+          integration: "ticket-classifier"
+          logMessage: "Ticket T-3 is "

@@ -2,7 +2,7 @@
     "title": "Document Analysis with Docling and LangChain4j RAG",
     "description": "Documents dropped in a directory are converted to Markdown by a Docling service, analysed by a local Ollama model through langchain4j-chat, and written as a report to an output directory; an HTTP endpoint answers questions against the latest document.",
     "level": "ai",
-    "order": 4,
+    "order": 5,
     "teaches": {
         "components": [
             "file",
