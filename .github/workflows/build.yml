@@ -86,6 +86,8 @@ jobs:
             path: connect/file-processing
           - name: MCP server
             path: ai/mcp-server
+          - name: REST code first
+            path: contracts/rest-code-first
           - name: OpenAPI server
             path: contracts/openapi-server
           - name: OpenAPI client

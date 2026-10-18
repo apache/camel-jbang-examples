@@ -657,7 +657,7 @@
         "infraServices": [
             "keycloak"
         ],
-        "order": 3
+        "order": 4
     },
     {
         "name": "contracts/openapi-client",
@@ -705,7 +705,7 @@
             "stock-api.json"
         ],
         "needs": "`contracts/openapi-server` running first",
-        "order": 2
+        "order": 3
     },
     {
         "name": "contracts/openapi-server",
@@ -752,6 +752,54 @@
             "openapi-server.camel.yaml",
             "stock-api.json",
             "stock.json"
+        ],
+        "order": 2
+    },
+    {
+        "name": "contracts/rest-code-first",
+        "title": "REST code first",
+        "description": "The shop's order API written with the REST DSL: GET /orders and GET /orders/{id} answer the orders as JSON (404 for an unknown id), POST /orders binds the JSON of a new order to a Java record and answers 201 (400 without lines), and the API description generated from the operations is served at /openapi.",
+        "level": "contracts",
+        "teaches": {
+            "components": [
+                "rest",
+                "platform-http",
+                "direct",
+                "log"
+            ],
+            "eips": [
+                "restConfiguration",
+                "rest",
+                "choice",
+                "filter",
+                "setHeader",
+                "unmarshal"
+            ],
+            "languages": [
+                "simple",
+                "groovy"
+            ],
+            "dataformats": [
+                "json"
+            ]
+        },
+        "tags": [
+            "shop",
+            "rest",
+            "code-first",
+            "binding",
+            "openapi",
+            "java-record"
+        ],
+        "bundled": true,
+        "requiresDocker": false,
+        "hasCitrusTests": true,
+        "files": [
+            "Order.java",
+            "README.md",
+            "application.properties",
+            "orders.json",
+            "rest-code-first.camel.yaml"
         ],
         "order": 1
     },

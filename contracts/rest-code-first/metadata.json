@@ -1,0 +1,38 @@
+{
+    "title": "REST code first",
+    "description": "The shop's order API written with the REST DSL: GET /orders and GET /orders/{id} answer the orders as JSON (404 for an unknown id), POST /orders binds the JSON of a new order to a Java record and answers 201 (400 without lines), and the API description generated from the operations is served at /openapi.",
+    "level": "contracts",
+    "order": 1,
+    "teaches": {
+        "components": [
+            "rest",
+            "platform-http",
+            "direct",
+            "log"
+        ],
+        "eips": [
+            "restConfiguration",
+            "rest",
+            "choice",
+            "filter",
+            "setHeader",
+            "unmarshal"
+        ],
+        "languages": [
+            "simple",
+            "groovy"
+        ],
+        "dataformats": [
+            "json"
+        ]
+    },
+    "tags": [
+        "shop",
+        "rest",
+        "code-first",
+        "binding",
+        "openapi",
+        "java-record"
+    ],
+    "bundled": true
+}
