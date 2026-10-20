@@ -1,13 +1,3 @@
-- beans:
-    - name: chatModel
-      type: dev.langchain4j.model.ollama.OllamaChatModel
-      builderClass: dev.langchain4j.model.ollama.OllamaChatModel$OllamaChatModelBuilder
-      builderMethod: build
-      properties:
-        baseUrl: "{{ollama.base.url}}"
-        modelName: "{{ollama.model.name}}"
-        temperature: 0.3
-
 - route:
     id: ocsf-detection-finding-receiver
     from:
@@ -471,7 +461,6 @@
             uri: langchain4j-chat
             parameters:
               chatId: security-analyst
-              chatModel: "#chatModel"
         - setProperty:
             name: aiSummary
             expression:

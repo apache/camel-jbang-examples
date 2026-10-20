@@ -1,14 +1,15 @@
 # LangChain4j chat
 
-A local model writes the shipping notification for each order. The chat model is a bean built from
-`application.properties`, the route turns the order into a prompt, and the reply comes back as the body with the
-token counts in headers.
+A local model writes the shipping notification for each order. The chat model is configured by provider on the
+endpoint, the route turns the order into a prompt, and the reply comes back as the body with the token counts in
+headers.
 
 ## What you will see
 
 ```text
-INFO ... langchain4j-chat.camel.yaml:45      : Notification for ORD-1002 (107 in, 35 out): Dear Customer C-207,
-Your order ORD-1002 containing 3 CAMEL-MUGs has been shipped today. We hope you enjoy your new items!
+INFO ... langchain4j-chat.camel.yaml:39      : Notification for ORD-1002 (107 in, 33 out): Dear Customer C-207,
+
+Your order ORD-1002, containing 3 Camel Mugs, has been shipped today. We hope you enjoy your purchase!
 ```
 
 The wording is the model's; `granite4:3b` writes plainly, a larger model writes better.
@@ -40,11 +41,11 @@ seconds per reply; a larger model or a GPU is faster. Stop the container with `c
 
 ## How it works
 
-- The `beans` block builds the chat model: LangChain4j models come from builders, so the bean names the
-  `builderClass`, the `builderMethod` and the builder's properties, with the URL and model name read from
-  `application.properties`. The CLI downloads `langchain4j-ollama` from the class name.
-- `langchain4j-chat` with `chatModel: "#chatModel"` sends the body as a single user message and replaces the
-  body with the reply; `CamelLangChain4jChatInputTokenCount` and `...OutputTokenCount` say what it cost.
+- `langchain4j-chat` creates the chat model itself from `provider: ollama` and the options every provider has:
+  `baseUrl`, `modelName` and `temperature`, with the URL and model name read from `application.properties`. The
+  CLI downloads `langchain4j-ollama` for the provider, so there is no bean of the model class to declare.
+- It sends the body as a single user message and replaces the body with the reply;
+  `CamelLangChain4jChatInputTokenCount` and `...OutputTokenCount` say what it cost.
 - The prompt is built with the Simple language from the order fields; `${body[lines]}` prints the list of lines.
 - The order id is kept in a variable because the reply replaces the body.
 
@@ -61,8 +62,10 @@ seconds per reply; a larger model or a GPU is faster. Stop the container with `c
   `gen_ai.operation.name`, the model and the token usage.
 - Switch to `CHAT_SINGLE_MESSAGE_WITH_PROMPT` with a `CamelLangChain4jChatPromptTemplate` header and pass the
   order fields as variables instead of building the prompt yourself.
-- Point `ollama.base.url` at an OpenAI-compatible server by swapping the bean for `OpenAiChatModel` from
-  `langchain4j-open-ai`.
+- Use another provider: `provider: openai` with an `apiKey` (and `baseUrl` for an OpenAI-compatible server), or
+  `anthropic`, `mistral`, `gemini` and the others; `model.<property>` sets a property of the provider's own
+  builder. The options can also go in `application.properties` for every endpoint, as
+  `camel.component.langchain4j-chat.provider=ollama` and so on.
 
 ## Integration testing
 

@@ -7,12 +7,12 @@ answer in time, files the ticket under `unknown`.
 ## What you will see
 
 ```text
-INFO ... ticket-classifier.camel.yaml:26 : Ticket T-1: My order ORD-1001 has not arrived yet. It is two weeks now, where is my parcel?
-INFO ... ticket-classifier.camel.yaml:72 : Ticket T-1 is shipping
-INFO ... ticket-classifier.camel.yaml:26 : Ticket T-2: I was charged twice for order ORD-1002, please refund one payment.
-INFO ... ticket-classifier.camel.yaml:72 : Ticket T-2 is billing
-INFO ... ticket-classifier.camel.yaml:26 : Ticket T-3: How do I change the email address and the password of my account?
-INFO ... ticket-classifier.camel.yaml:72 : Ticket T-3 is account
+INFO ... ticket-classifier.camel.yaml:16 : Ticket T-1: My order ORD-1001 has not arrived yet. It is two weeks now, where is my parcel?
+INFO ... ticket-classifier.camel.yaml:65 : Ticket T-1 is shipping
+INFO ... ticket-classifier.camel.yaml:16 : Ticket T-2: I was charged twice for order ORD-1002, please refund one payment.
+INFO ... ticket-classifier.camel.yaml:65 : Ticket T-2 is billing
+INFO ... ticket-classifier.camel.yaml:16 : Ticket T-3: How do I change the email address and the password of my account?
+INFO ... ticket-classifier.camel.yaml:65 : Ticket T-3 is account
 ```
 
 and the tickets in `tickets-out/shipping/T-1.json`, `tickets-out/billing/T-2.json` and
@@ -43,8 +43,9 @@ Stop the example with `ctrl` + `c`, and the container with `camel infra stop oll
 
 ## How it works
 
-- The `beans` entry builds the chat model, an `OllamaChatModel`, from `application.properties`. Temperature 0 makes
-  the answers as steady as the model allows.
+- `langchain4j-chat` creates the chat model from `provider: ollama`, with the URL and model name from
+  `application.properties`; the CLI downloads `langchain4j-ollama` for the provider. Temperature 0 makes the
+  answers as steady as the model allows.
 - The route builds the prompt in the variable `prompt` and calls `langchain4j-chat` with `variableSend: prompt` and
   `variableReceive: answer`. The ticket stays the body.
 - The answer is normalized to lower-case letters only, so "Shipping." becomes `shipping`.
