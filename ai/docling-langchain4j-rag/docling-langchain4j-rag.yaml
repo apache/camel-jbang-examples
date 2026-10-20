@@ -1,18 +1,8 @@
 # Documents dropped in a directory are converted by Docling, analysed by a
 # local model and written to an output directory; an HTTP endpoint answers
-# questions against the latest document. The chat model is a bean built from
-# application.properties. Start the services with:
+# questions against the latest document. The chat model is configured by
+# provider in application.properties. Start the services with:
 # camel infra run docling ollama
-- beans:
-    - name: chatModel
-      type: dev.langchain4j.model.ollama.OllamaChatModel
-      builderClass: dev.langchain4j.model.ollama.OllamaChatModel$OllamaChatModelBuilder
-      builderMethod: build
-      properties:
-        baseUrl: "{{ollama.base.url}}"
-        modelName: "{{ollama.model.name}}"
-        temperature: 0.3
-
 - route:
     id: document-analysis-workflow
     from:
@@ -80,7 +70,6 @@
             uri: langchain4j-chat
             parameters:
               chatId: analysis
-              chatModel: "#chatModel"
         - setVariable:
             name: aiAnalysis
             expression:
@@ -215,7 +204,6 @@
                       uri: langchain4j-chat
                       parameters:
                         chatId: qa
-                        chatModel: "#chatModel"
                   - setHeader:
                       name: Content-Type
                       expression:
@@ -293,7 +281,6 @@
                   uri: langchain4j-chat
                   parameters:
                     chatId: summary
-                    chatModel: "#chatModel"
               - log:
                   message: "Summary: ${body}"
 - route:
@@ -383,7 +370,6 @@
             uri: langchain4j-chat
             parameters:
               chatId: extract
-              chatModel: "#chatModel"
         - setHeader:
             name: Content-Type
             expression:

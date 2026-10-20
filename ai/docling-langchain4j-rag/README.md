@@ -9,13 +9,13 @@ questions against the latest document. Both services are started with `camel inf
 ```text
 $ cp sample.md documents/
 
-INFO ... docling-langchain4j-rag.yaml:27  : Processing document: sample.md
-INFO ... docling-langchain4j-rag.yaml:38  : Converting document to Markdown with Docling...
-INFO ... docling-langchain4j-rag.yaml:47  : Document converted to Markdown successfully
-INFO ... docling-langchain4j-rag.yaml:77  : Analyzing document with AI model...
-INFO ... docling-langchain4j-rag.yaml:89  : AI analysis completed
-INFO ... docling-langchain4j-rag.yaml:120 : Analysis report saved: sample.md_analysis.md
-INFO ... docling-langchain4j-rag.yaml:137 : Processing complete for: sample.md
+INFO ... docling-langchain4j-rag.yaml:17  : Processing document: sample.md
+INFO ... docling-langchain4j-rag.yaml:28  : Converting document to Markdown with Docling...
+INFO ... docling-langchain4j-rag.yaml:37  : Document converted to Markdown successfully
+INFO ... docling-langchain4j-rag.yaml:67  : Analyzing document with AI model...
+INFO ... docling-langchain4j-rag.yaml:78  : AI analysis completed
+INFO ... docling-langchain4j-rag.yaml:109 : Analysis report saved: sample.md_analysis.md
+INFO ... docling-langchain4j-rag.yaml:126 : Processing complete for: sample.md
 ```
 
 and `output/sample.md_analysis.md` holds the report: the file name and date, the model's summary, key topics
@@ -57,9 +57,10 @@ Stop the example with `ctrl` + `c` and the services with `camel infra stop docli
 
 ## How it works
 
-- `docling-langchain4j-rag.yaml` starts with the bean `chatModel`, an `OllamaChatModel` built through its
-  LangChain4j builder from the URL and model name in `application.properties`; the `langchain4j-chat`
-  component picks it up as the one chat model in the registry.
+- The chat model is configured by provider in `application.properties`:
+  `camel.component.langchain4j-chat.provider=ollama` with the URL and model name, so every `langchain4j-chat`
+  endpoint creates the same model and the CLI downloads `langchain4j-ollama` for it. For OpenAI, set
+  `provider=openai`, an `api-key` and the `model-name`; `base-url` points it at an OpenAI-compatible server.
 - `document-analysis-workflow` is the main route: a `file` consumer on `documents` with `include` for the
   supported extensions. The body becomes the file's absolute path, the `docling` endpoint with
   `CONVERT_TO_MARKDOWN` (and `allowFilePathSource`, as Docling reads a path in the body only when told to,
@@ -86,8 +87,8 @@ Ask your assistant, or type it yourself, one step at a time, and run after each,
 1. A route from `file:documents` that logs the file name.
 2. Set the body to the file's absolute path and send it to `docling` with `CONVERT_TO_MARKDOWN` against the
    Docling URL; log the Markdown.
-3. The `chatModel` bean from properties, a prompt around the Markdown, and a `langchain4j-chat` step; log the
-   answer.
+3. The `camel.component.langchain4j-chat.*` provider options, a prompt around the Markdown, and a
+   `langchain4j-chat` step; log the answer.
 4. Write the answer and the Markdown to `output` as `<name>_analysis.md` with a `file` producer.
 5. A `platform-http` route on `/api/ask` that converts the newest document and asks the model the question in
    the request body.

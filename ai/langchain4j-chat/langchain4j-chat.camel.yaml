@@ -1,17 +1,8 @@
 # A local model writes the shipping notification for each order. The chat
-# model is a bean built from application.properties; the route builds the
-# prompt from the order and logs the reply. Start the model with:
+# model is configured by provider on the endpoint, with the URL and model name
+# from application.properties; the route builds the prompt from the order and
+# logs the reply. Start the model with:
 # camel infra run ollama
-- beans:
-    - name: chatModel
-      type: dev.langchain4j.model.ollama.OllamaChatModel
-      builderClass: dev.langchain4j.model.ollama.OllamaChatModel$OllamaChatModelBuilder
-      builderMethod: build
-      properties:
-        baseUrl: "{{ollama.base.url}}"
-        modelName: "{{ollama.model}}"
-        temperature: 0.2
-
 - route:
     id: shipping-notifications
     from:
@@ -41,6 +32,9 @@
             uri: langchain4j-chat
             parameters:
               chatId: notifications
-              chatModel: "#chatModel"
+              provider: ollama
+              baseUrl: "{{ollama.base.url}}"
+              modelName: "{{ollama.model}}"
+              temperature: 0.2
         - log:
             message: "Notification for ${variable.orderId} (${header.CamelLangChain4jChatInputTokenCount} in, ${header.CamelLangChain4jChatOutputTokenCount} out): ${body}"

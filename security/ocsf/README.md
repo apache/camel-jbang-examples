@@ -14,7 +14,8 @@ The `camel-ocsf` module requires Camel 4.18.0 or later.
 camel run ocsf.camel.yaml application.properties --port 8081
 ```
 
-`camel run` adds the dependencies by itself: camel-ocsf, camel-langchain4j-chat and the LangChain4j Ollama model of the `chatModel` bean.
+`camel run` adds the dependencies by itself: camel-ocsf, camel-langchain4j-chat and the LangChain4j Ollama module of the
+`ollama` provider set in `application.properties`.
 
 The server starts on port 8081. Check the health endpoint to verify:
 
