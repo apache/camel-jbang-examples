@@ -1,0 +1,43 @@
+{
+    "title": "Ticket classifier",
+    "description": "A local model reads each of three support tickets and names its category, shipping, billing or account; the route checks the answer and files the ticket in tickets-out/<category>/, and an answer outside the three, or no answer within the circuit breaker's timeout, files it under unknown.",
+    "level": "ai",
+    "order": 2,
+    "teaches": {
+        "components": [
+            "langchain4j-chat",
+            "file",
+            "log"
+        ],
+        "eips": [
+            "circuitBreaker",
+            "filter",
+            "setVariable",
+            "setHeader",
+            "unmarshal",
+            "marshal"
+        ],
+        "languages": [
+            "simple",
+            "constant"
+        ],
+        "dataformats": [
+            "json"
+        ]
+    },
+    "tags": [
+        "shop",
+        "ai",
+        "llm",
+        "ollama",
+        "langchain4j",
+        "classification"
+    ],
+    "infraServices": [
+        "ollama"
+    ],
+    "needs": "a local model: `ollama pull granite4:3b`",
+    "ciSkip": true,
+    "requiresDocker": true,
+    "bundled": false
+}
