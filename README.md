@@ -17,7 +17,7 @@ jbang app install camel@apache/camel
 camel --version
 ```
 
-The CLI needs a JDK 17 or later. The examples that start a service need Docker or Podman running.
+The CLI needs a JDK 21 or later. The examples that start a service need Docker or Podman running.
 
 ## How the examples are organised
 

@@ -26,7 +26,7 @@ essentials and adds what is specific to this examples repository.
 ## Project Info
 
 - Run with: Camel CLI (`jbang app install camel@apache/camel`) + JBang
-- Java: 17+ (CI uses Temurin 21)
+- Java: 21+ (CI uses Temurin 21)
 - Tests: [Citrus](https://citrusframework.org/) YAML tests
 - JIRA project: `CAMEL` (https://issues.apache.org/jira/projects/CAMEL)
 - Merge strategy (`.asf.yaml`): squash or rebase; protected `main`
