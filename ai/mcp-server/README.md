@@ -9,14 +9,14 @@ that tag becomes a tool any MCP client can discover and call, a coding agent inc
 ```text
 $ camel run *
 ...
-INFO ... VertxMcpServerEngine : MCP server 'webshop' serving tools on path /mcp
+INFO ... VertxMcpServerEngine : MCP server 'webshop' serving tools and resources on path /mcp
 INFO ... Started stock-level (ai-tool://stock_level)
 INFO ... Started order-status (ai-tool://order_status)
 
 when a client calls the tools:
 
-INFO ... mcp-server.camel.yaml:38 : Tool stock_level(CAMEL-MUG): 42 CAMEL-MUG in stock
-INFO ... mcp-server.camel.yaml:81 : Tool order_status(ORD-1003): Order ORD-1003 for customer C-134 in US is pending with 3 line(s)
+INFO ... mcp-server.camel.yaml:44 : Tool stock_level(CAMEL-MUG): 42 CAMEL-MUG in stock
+INFO ... mcp-server.camel.yaml:84 : Tool order_status(ORD-1003): Order ORD-1003 for customer C-134 in US is pending with 3 line(s)
 ```
 
 ## Install Camel CLI
@@ -62,20 +62,25 @@ The MCP server is a preview feature since Camel 4.22.
   and `readOnlyHint` as an advisory hint. When a client calls the tool, the arguments arrive as headers and the
   route's final body is the tool result.
 - `tags: shop` groups the tools; `camel.server.mcp-tags=shop` in `application.properties` exposes that group.
-  `camel.server.mcp-enabled=true` starts the MCP server on the CLI's HTTP server and `camel.server.mcp-server-name`
-  is what the client shows; Camel 4.23 adds a title, description and instructions next to it.
+  `camel.server.mcp-enabled=true` starts the MCP server on the CLI's HTTP server. `camel.server.mcp-server-name`,
+  `mcp-server-title` and `mcp-server-description` are what the client shows, and `mcp-instructions` is the text
+  the client hands its model with the tool list: when to use which tool and what the ids look like.
 - `order_status` reads the order file with `pollEnrich` and a file name built from the id, `order-1001.json`
   for `ORD-1001`, and answers a sentence; a missing file leaves the body null, which becomes the unknown answer.
+- Next to tools, the server serves MCP resources: an `ai-resource` route with the same tag is content the client
+  reads (`resources/list` and `resources/read`) rather than an action the model calls. This example has tools
+  only; *Try changing* adds a resource.
 - Nothing here is specific to MCP: the same `ai-tool` routes are the tools of a Camel agent built with
   `langchain4j-agent` or `openai`, selected by the same tags.
 
 ## Build it step by step
 
-1. One `ai-tool` route that answers a fixed text, with the four `camel.server.mcp-*` properties; run it and see
-   the server line in the log, then `initialize` and `tools/list` with `curl`.
-2. Add a parameter and use `${header.sku}` in the answer; call it with `tools/call`.
-3. Answer from `stock.json`: unmarshal it, find the SKU with Groovy and add the unknown case.
-4. Add the second tool and connect a real agent.
+1. One `ai-tool` route that answers a fixed text, with `camel.server.mcp-enabled`, `mcp-tags` and
+   `mcp-server-name`; run it and see the server line in the log, then `initialize` and `tools/list` with `curl`.
+2. Add the title, description and instructions, and see them in the `initialize` answer.
+3. Add a parameter and use `${header.sku}` in the answer; call it with `tools/call`.
+4. Answer from `stock.json`: unmarshal it, find the SKU with Groovy and add the unknown case.
+5. Add the second tool and connect a real agent.
 
 ## Try changing
 

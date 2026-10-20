@@ -213,9 +213,6 @@
             "README.md",
             "application.properties",
             "ticket-classifier.camel.yaml",
-            "tickets-out/account/T-3.json",
-            "tickets-out/billing/T-2.json",
-            "tickets-out/shipping/T-1.json",
             "tickets/T-1.json",
             "tickets/T-2.json",
             "tickets/T-3.json"
