@@ -85,7 +85,7 @@
             when:
               - expression:
                   simple:
-                    expression: "${body.lines} == null || ${body.lines.isEmpty()}"
+                    expression: "${body.lines} == null || ${body.lines.isEmpty()} == true"
                 steps:
                   - setHeader:
                       name: CamelHttpResponseCode
