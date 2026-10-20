@@ -13,7 +13,12 @@ actions:
       jbang:
         verify:
           integration: "circuit-breaker"
-          logMessage: "(breaker OPEN): no answer"
+          logMessage: "(breaker OPEN): supplier failed, using last known stock"
+  - camel:
+      jbang:
+        verify:
+          integration: "circuit-breaker"
+          logMessage: "(breaker OPEN): breaker open, supplier not called, using last known stock"
   - camel:
       jbang:
         verify:

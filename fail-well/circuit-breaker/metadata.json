@@ -1,6 +1,6 @@
 {
     "title": "Circuit breaker",
-    "description": "A stock check calls the supplier every second; the supplier goes down for nine calls, the breaker opens after two failures in its window of four, answers from the fallback while open, tries the supplier again after five seconds and closes once a call succeeds; each line logs the breaker state.",
+    "description": "A stock check calls the supplier every second; the supplier goes down for nine calls, the breaker opens after two failures in its window of four, answers from the fallback without calling the supplier while open, tries it again after five seconds and closes once a call succeeds; each line logs the breaker state and whether the supplier failed or was not called.",
     "level": "fail-well",
     "order": 2,
     "teaches": {
