@@ -1,0 +1,38 @@
+{
+    "title": "Dynamic routing",
+    "description": "Each of the three orders goes to the warehouse of its country and to the billing of its status through a recipient list computed from the order; billing a paid order fails over from a primary invoice service that is down to a backup one, the pending order gets no invoice, and the US warehouse is throttled to one order per second.",
+    "level": "route",
+    "order": 6,
+    "teaches": {
+        "components": [
+            "file",
+            "direct",
+            "log"
+        ],
+        "eips": [
+            "recipientList",
+            "loadBalance",
+            "failoverLoadBalancer",
+            "throttle",
+            "throwException",
+            "noErrorHandler",
+            "unmarshal"
+        ],
+        "languages": [
+            "simple",
+            "constant"
+        ],
+        "dataformats": [
+            "json"
+        ]
+    },
+    "tags": [
+        "shop",
+        "eip",
+        "recipient-list",
+        "failover",
+        "load-balancer",
+        "throttle"
+    ],
+    "bundled": true
+}

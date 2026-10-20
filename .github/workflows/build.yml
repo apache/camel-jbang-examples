@@ -85,6 +85,8 @@ jobs:
             path: route/filter-and-multicast
           - name: Enrich and deduplicate
             path: route/enrich-and-dedupe
+          - name: Dynamic routing
+            path: route/dynamic-routing
           - name: Error handling
             path: fail-well/error-handling
           - name: Circuit breaker

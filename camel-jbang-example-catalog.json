@@ -1206,6 +1206,55 @@
         "order": 1
     },
     {
+        "name": "route/dynamic-routing",
+        "title": "Dynamic routing",
+        "description": "Each of the three orders goes to the warehouse of its country and to the billing of its status through a recipient list computed from the order; billing a paid order fails over from a primary invoice service that is down to a backup one, the pending order gets no invoice, and the US warehouse is throttled to one order per second.",
+        "level": "route",
+        "teaches": {
+            "components": [
+                "file",
+                "direct",
+                "log"
+            ],
+            "eips": [
+                "recipientList",
+                "loadBalance",
+                "failoverLoadBalancer",
+                "throttle",
+                "throwException",
+                "noErrorHandler",
+                "unmarshal"
+            ],
+            "languages": [
+                "simple",
+                "constant"
+            ],
+            "dataformats": [
+                "json"
+            ]
+        },
+        "tags": [
+            "shop",
+            "eip",
+            "recipient-list",
+            "failover",
+            "load-balancer",
+            "throttle"
+        ],
+        "bundled": true,
+        "requiresDocker": false,
+        "hasCitrusTests": true,
+        "files": [
+            "README.md",
+            "application.properties",
+            "dynamic-routing.camel.yaml",
+            "orders/order-1001.json",
+            "orders/order-1002.json",
+            "orders/order-1003.json"
+        ],
+        "order": 6
+    },
+    {
         "name": "route/enrich-and-dedupe",
         "title": "Enrich and deduplicate",
         "description": "The three orders and a resent copy of ORD-1001 are read; an idempotent consumer accepts each order id once and logs the resent one as a duplicate, each accepted order is enriched with its customer's name and tier from customers/ with pollEnrich, and a wire tap writes a copy to audit/ without holding the order up.",
