@@ -299,7 +299,7 @@
         "infraServices": [
             "artemis"
         ],
-        "order": 6
+        "order": 7
     },
     {
         "name": "connect-service/ftp",
@@ -343,7 +343,64 @@
             "artemis",
             "ftp"
         ],
-        "order": 5
+        "order": 6
+    },
+    {
+        "name": "connect-service/jms-request-reply",
+        "title": "JMS request-reply",
+        "description": "The three orders go on a queue of an ActiveMQ Artemis broker started with camel infra; a consumer asks a stock service over JMS request-reply for each, publishes the reserved ones on a topic that shipping and invoicing both subscribe to, and ORD-1003, which the stock service cannot reserve, is redelivered three times and then moved to a dead letter queue.",
+        "level": "connect-service",
+        "teaches": {
+            "components": [
+                "jms",
+                "file",
+                "log"
+            ],
+            "eips": [
+                "errorHandler",
+                "deadLetterChannel",
+                "redeliveryPolicy",
+                "filter",
+                "throwException",
+                "setVariable",
+                "setHeader",
+                "unmarshal"
+            ],
+            "languages": [
+                "simple",
+                "jsonpath",
+                "groovy"
+            ],
+            "dataformats": [
+                "json"
+            ]
+        },
+        "tags": [
+            "shop",
+            "jms",
+            "artemis",
+            "queue",
+            "topic",
+            "request-reply",
+            "dead-letter",
+            "messaging"
+        ],
+        "bundled": false,
+        "requiresDocker": true,
+        "hasCitrusTests": true,
+        "files": [
+            "README.md",
+            "application.properties",
+            "jms-request-reply.camel.yaml",
+            "orders/order-1001.json",
+            "orders/order-1002.json",
+            "orders/order-1003.json",
+            "stock.json"
+        ],
+        "infraServices": [
+            "artemis"
+        ],
+        "order": 3
     },
     {
         "name": "connect-service/kafka-orders",
@@ -392,7 +449,7 @@
         "infraServices": [
             "kafka"
         ],
-        "order": 4
+        "order": 5
     },
     {
         "name": "connect-service/mqtt",
@@ -433,7 +490,7 @@
         "infraServices": [
             "mosquitto"
         ],
-        "order": 3
+        "order": 4
     },
     {
         "name": "connect-service/sql",
