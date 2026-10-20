@@ -22,6 +22,13 @@ on:
     branches:
       - main
 
+env:
+  # the Camel release the examples are tested with: camel@apache/camel defaults to the latest LTS release
+  CAMEL_VERSION: 4.23.0
+  # the Camel version of the integrations the Citrus tests start
+  CITRUS_CAMEL_JBANG_VERSION: 4.23.0
+  CITRUS_CAMEL_CLI_VERSION: 4.23.0
+
 jobs:
   integration-tests:
     runs-on: ubuntu-latest
@@ -90,6 +97,8 @@ jobs:
             path: connect/file-processing
           - name: MCP server
             path: ai/mcp-server
+          - name: REST code first
+            path: contracts/rest-code-first
           - name: OpenAPI server
             path: contracts/openapi-server
           - name: OpenAPI client
@@ -135,8 +144,8 @@ jobs:
 
           jbang trust add https://github.com/apache/camel/
 
-          jbang camel@apache/camel --version
-          jbang camel@apache/camel plugin add test
+          jbang -Dcamel.jbang.version=$CAMEL_VERSION camel@apache/camel --version
+          jbang -Dcamel.jbang.version=$CAMEL_VERSION camel@apache/camel plugin add test
       - name: Run tests
         env:
           CITRUS_CAMEL_JBANG_DUMP_INTEGRATION_OUTPUT: "true"
@@ -144,7 +153,7 @@ jobs:
           CITRUS_TESTCONTAINERS_REGISTRY_MIRROR: "mirror.gcr.io"
         run: |
           source "/home/runner/.sdkman/bin/sdkman-init.sh"
-          jbang camel@apache/camel test run ${{ matrix.path }}/test
+          jbang -Dcamel.jbang.version=$CAMEL_VERSION camel@apache/camel test run ${{ matrix.path }}/test
       - uses: actions/upload-artifact@v4
         if: always()
         with:
