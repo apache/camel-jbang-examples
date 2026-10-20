@@ -1,0 +1,38 @@
+{
+    "title": "Enrich and deduplicate",
+    "description": "The three orders and a resent copy of ORD-1001 are read; an idempotent consumer accepts each order id once and logs the resent one as a duplicate, each accepted order is enriched with its customer's name and tier from customers/ with pollEnrich, and a wire tap writes a copy to audit/ without holding the order up.",
+    "level": "route",
+    "order": 5,
+    "teaches": {
+        "components": [
+            "file",
+            "direct",
+            "log"
+        ],
+        "eips": [
+            "idempotentConsumer",
+            "pollEnrich",
+            "wireTap",
+            "choice",
+            "setHeader",
+            "unmarshal",
+            "marshal"
+        ],
+        "languages": [
+            "simple"
+        ],
+        "dataformats": [
+            "json"
+        ]
+    },
+    "tags": [
+        "shop",
+        "eip",
+        "idempotent",
+        "duplicates",
+        "enrich",
+        "wire-tap",
+        "audit"
+    ],
+    "bundled": true
+}
