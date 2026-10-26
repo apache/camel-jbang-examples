@@ -1,6 +1,6 @@
 {
     "title": "JSON transform",
-    "description": "The shop's order in order.json is reshaped for the warehouse: jsonpath reads the order id and the number of lines into headers, jq builds the pick list with only sku and quantity per line, and both the order and the pick list are logged.",
+    "description": "The shop's order in order.json is reshaped for the warehouse: jsonpath reads the order id and the number of lines into variables, jq builds the pick list with only sku and quantity per line, and both the order and the pick list are logged.",
     "level": "transform",
     "order": 1,
     "teaches": {
@@ -10,7 +10,7 @@
         ],
         "eips": [
             "transform",
-            "setHeader",
+            "setVariable",
             "setBody"
         ],
         "languages": [

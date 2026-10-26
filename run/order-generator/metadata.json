@@ -9,7 +9,7 @@
             "log"
         ],
         "eips": [
-            "setHeader",
+            "setVariable",
             "setBody"
         ],
         "languages": [

@@ -12,7 +12,7 @@
         "eips": [
             "aggregate",
             "split",
-            "setHeader",
+            "setVariable",
             "marshal",
             "unmarshal"
         ],
