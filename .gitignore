@@ -16,3 +16,5 @@ archive/
 # written by the docling-langchain4j-rag example at runtime
 documents/
 output/
+# written by the enrich-and-dedupe example at runtime
+audit/
