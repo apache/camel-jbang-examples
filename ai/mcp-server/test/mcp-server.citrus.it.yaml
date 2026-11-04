@@ -2,7 +2,7 @@ name: mcp-server-test
 description: The shop tools answer over MCP
 actions:
   - camel:
-      jbang:
+      cli:
         run:
           integration:
             name: "mcp-server"
@@ -15,7 +15,7 @@ actions:
             - "orders/order-1002.json"
             - "orders/order-1003.json"
   - camel:
-      jbang:
+      cli:
         verify:
           integration: "mcp-server"
           logMessage: "MCP server 'webshop' serving tools"

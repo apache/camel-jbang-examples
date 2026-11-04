@@ -12,7 +12,7 @@ actions:
           service: ftp
           fixedPort: true
   - camel:
-      jbang:
+      cli:
         run:
           integration:
             name: "ftp"
@@ -24,12 +24,12 @@ actions:
             - "orders/order-1002.json"
             - "orders/order-1003.json"
   - camel:
-      jbang:
+      cli:
         verify:
           integration: "ftp"
           logMessage: "Shipment ORD-1001 uploaded to the courier as courier/shipment-ORD-1001.json"
   - camel:
-      jbang:
+      cli:
         verify:
           integration: "ftp"
           logMessage: "Shipment ORD-1003 uploaded to the courier"

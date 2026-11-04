@@ -7,7 +7,7 @@ actions:
           service: artemis
           fixedPort: true
   - camel:
-      jbang:
+      cli:
         run:
           integration:
             name: "camel-1-tribute"
@@ -15,12 +15,12 @@ actions:
             systemProperties:
               file: "../application.properties"
   - camel:
-      jbang:
+      cli:
         verify:
           integration: "camel-1-tribute"
           logMessage: "Sending: Test Message: 10"
   - camel:
-      jbang:
+      cli:
         verify:
           integration: "camel-1-tribute"
           logMessage: "Received: Test Message: 10"

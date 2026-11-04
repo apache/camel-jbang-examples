@@ -28,7 +28,7 @@ actions:
                     - expression: "$.models[?(@.name=='granite4:3b')].name"
                       value: "granite4:3b"
   - camel:
-      jbang:
+      cli:
         run:
           integration:
             name: "ticket-classifier"
@@ -48,12 +48,12 @@ actions:
             - "tickets/T-3.json"
   # the model's answer varies: the test checks that every ticket is filed, not the category
   - camel:
-      jbang:
+      cli:
         verify:
           integration: "ticket-classifier"
           logMessage: "Ticket T-1 is "
   - camel:
-      jbang:
+      cli:
         verify:
           integration: "ticket-classifier"
           logMessage: "Ticket T-3 is "
