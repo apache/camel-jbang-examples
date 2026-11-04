@@ -7,7 +7,7 @@ actions:
           service: mosquitto
           fixedPort: true
   - camel:
-      jbang:
+      cli:
         run:
           integration:
             name: "mqtt"
@@ -15,7 +15,7 @@ actions:
             systemProperties:
               file: "../application.properties"
   - camel:
-      jbang:
+      cli:
         verify:
           integration: "mqtt"
           logMessage: "°C, ok"
@@ -27,7 +27,7 @@ actions:
         body:
           data: '{"sensor": "cold-room-9", "value": 14}'
   - camel:
-      jbang:
+      cli:
         verify:
           integration: "mqtt"
           logMessage: "cold-room-9: 14 °C, too warm, alert the warehouse"

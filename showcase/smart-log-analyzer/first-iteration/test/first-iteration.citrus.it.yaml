@@ -13,7 +13,7 @@ actions:
           fixedPort: true
           port: 9092
   - camel:
-      jbang:
+      cli:
         run:
           stub:
             - "openai:*"
@@ -37,12 +37,12 @@ actions:
           resource:
             file: "payload-error.json"
   - camel:
-      jbang:
+      cli:
         verify:
           integration: "log-analyzer"
           logMessage: "Aggregation completed for traceId"
   - camel:
-      jbang:
+      cli:
         verify:
           integration: "log-analyzer"
           logMessage: "LLM Analysis for traceId test-12345"

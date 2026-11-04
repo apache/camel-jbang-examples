@@ -9,7 +9,7 @@ actions:
         name: "news-secret"
         file: "news-secret.properties"
   - camel:
-      jbang:
+      cli:
         kubernetes:
           run:
             autoRemove: true
@@ -20,7 +20,7 @@ actions:
               - "--config"
               - "secret:news-secret@/etc/camel/secrets/"
   - camel:
-      jbang:
+      cli:
         kubernetes:
           verify:
             integration: news-service

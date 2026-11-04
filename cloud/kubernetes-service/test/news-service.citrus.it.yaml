@@ -2,7 +2,7 @@ name: news-service-test
 description: Sample test in YAML
 actions:
   - camel:
-      jbang:
+      cli:
         kubernetes:
           run:
             autoRemove: true
@@ -10,7 +10,7 @@ actions:
             integration:
               file: "../news-service.camel.yaml"
   - camel:
-      jbang:
+      cli:
         kubernetes:
           verify:
             integration: news-service

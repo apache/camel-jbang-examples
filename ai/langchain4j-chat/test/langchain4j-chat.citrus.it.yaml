@@ -28,7 +28,7 @@ actions:
                     - expression: "$.models[?(@.name=='granite4:3b')].name"
                       value: "granite4:3b"
   - camel:
-      jbang:
+      cli:
         run:
           integration:
             name: "langchain4j-chat"
@@ -45,7 +45,7 @@ actions:
             - "orders/order-1002.json"
             - "orders/order-1003.json"
   - camel:
-      jbang:
+      cli:
         verify:
           integration: "langchain4j-chat"
           logMessage: "Notification for ORD-1001"

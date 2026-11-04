@@ -7,7 +7,7 @@ actions:
           service: artemis
           fixedPort: true
   - camel:
-      jbang:
+      cli:
         run:
           integration:
             name: "artemis"
@@ -19,12 +19,12 @@ actions:
             - "orders/order-1002.json"
             - "orders/order-1003.json"
   - camel:
-      jbang:
+      cli:
         verify:
           integration: "artemis"
           logMessage: "Order ORD-1001 put on the queue"
   - camel:
-      jbang:
+      cli:
         verify:
           integration: "artemis"
           logMessage: "Took ORD-1003 off the queue: 3 line(s) for customer C-134 in US"

@@ -17,7 +17,7 @@ actions:
         up:
           file: "compose.yaml"
   - camel:
-      jbang:
+      cli:
         run:
           resources:
             - "App.java"
@@ -39,7 +39,7 @@ actions:
           resource:
             file: "payload.edi"
   - camel:
-      jbang:
+      cli:
         verify:
           maxAttempts: 20
           integration: "edi-x12-as2-camel"
