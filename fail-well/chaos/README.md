@@ -59,7 +59,7 @@ Stop it with `ctrl` + `c`: when rules were added, the chaos report is logged as 
   to deal with.
 - `parked.camel.yaml` writes an order that could not be charged or shipped to `parked/<order id>.json`. It is in a
   file of its own, with an error handler of its own, as in [Error handling](../error-handling/).
-- `chaos/payment-outage.chaos` is a scenario: chaos rules in a file, one per line, with a seed, so the same
+- `test/chaos/payment-outage.chaos` is a scenario: chaos rules in a file, one per line, with a seed, so the same
   experiment runs again.
 - A chaos rule is one line: what it targets (an `endpoint=`, a `route=`, a `component=` or a `step=`), the fault
   (`error`, `delay`, `drop`, `duplicate`, `corrupt`, `stall`), how often (`rate=`) and for how long (`until=`), and
@@ -159,7 +159,7 @@ camel tui
 
 ## A scenario as a gate
 
-`chaos/payment-outage.chaos` is a bad half minute at the payment service, with an expectation on each rule:
+`test/chaos/payment-outage.chaos` is a bad half minute at the payment service, with an expectation on each rule:
 
 ```text
 seed=42
@@ -175,11 +175,11 @@ route=payment stall duration=10s from=+20s expect=orders:failed<=0 within=15s
 Run the shop with it for 45 seconds:
 
 ```shell
-camel run * --chaos=chaos/payment-outage.chaos --max-seconds=45
+camel run * --chaos=test/chaos/payment-outage.chaos --max-seconds=45
 ```
 
 The report is logged when it stops, and the verdict is the exit code: 0 for PASS, 1 for FAIL, so a build can run it.
-`seed=42` makes the rules fail the same calls each time. `camel cmd chaos-load chaos/payment-outage.chaos` loads the
+`seed=42` makes the rules fail the same calls each time. `camel cmd chaos-load test/chaos/payment-outage.chaos` loads the
 scenario into a shop that runs already.
 
 ## Try changing

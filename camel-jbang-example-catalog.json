@@ -955,8 +955,8 @@
             "README.md",
             "application.properties",
             "chaos.camel.yaml",
-            "chaos/payment-outage.chaos",
-            "parked.camel.yaml"
+            "parked.camel.yaml",
+            "test/chaos/payment-outage.chaos"
         ],
         "needs": "Camel 4.24 or newer",
         "order": 3

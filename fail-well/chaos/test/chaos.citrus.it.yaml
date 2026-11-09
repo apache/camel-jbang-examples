@@ -11,9 +11,9 @@ actions:
               file: "../application.properties"
           resources:
             - "parked.camel.yaml"
-            - "chaos/payment-outage.chaos"
+            - "test/chaos/payment-outage.chaos"
           args:
-            - "--chaos=chaos/payment-outage.chaos"
+            - "--chaos=test/chaos/payment-outage.chaos"
   - camel:
       cli:
         verify:
