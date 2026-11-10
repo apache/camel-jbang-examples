@@ -93,6 +93,14 @@ for dirpath, dirnames, filenames in sorted(os.walk(repo_root)):
                 rel = os.path.relpath(os.path.join(sub_dirpath, f), dirpath)
                 if os.path.relpath(os.path.join(sub_dirpath, f), repo_root) not in ignored:
                     files.append(rel)
+    # the chaos scenarios of test/chaos are files the example runs with (camel run --chaos=test/chaos/name.chaos)
+    chaos_dir = os.path.join(dirpath, "test", "chaos")
+    for sub_dirpath, sub_dirnames, sub_filenames in os.walk(chaos_dir):
+        sub_dirnames[:] = [d for d in sub_dirnames if not d.startswith(".")]
+        for f in sub_filenames:
+            rel = os.path.relpath(os.path.join(sub_dirpath, f), dirpath)
+            if not f.startswith(".") and os.path.relpath(os.path.join(sub_dirpath, f), repo_root) not in ignored:
+                files.append(rel)
     files.sort()
 
     requires_docker = ("compose.yaml" in filenames or "docker-compose.yaml" in filenames
@@ -146,7 +154,7 @@ GROUPS = [
     ("run", "Run", "Running Camel: timers and cron schedules, a bean in a route, properties and profiles."),
     ("transform", "Transform and map", "JSON, XML and CSV in and out, field-by-field mapping, Groovy and XSLT."),
     ("route", "Route", "The routing patterns: content-based router, splitter, aggregator, filter and multicast."),
-    ("fail-well", "Fail well", "Retries, a dead letter channel, and a circuit breaker in front of a flaky service."),
+    ("fail-well", "Fail well", "Retries, a dead letter channel, and a circuit breaker in front of a flaky service, then chaos rules that break the routes on purpose to prove it."),
     ("connect", "Connect without a service", "Files, an HTTP client and a REST server; everything runs inside the example."),
     ("connect-service", "Connect to one service", "SQL, JMS, MQTT, Kafka and FTP against a service the Camel CLI starts for you with `camel infra run`."),
     ("contracts", "Contracts and security", "An OpenAPI contract served and called, and an API protected by Keycloak."),

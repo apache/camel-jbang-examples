@@ -8,7 +8,7 @@ camel-runner.jar
 .citrus-jbang/
 # written by the csv-to-json example at runtime
 outbox/
-# written by the error-handling example at runtime
+# written by the error-handling and chaos examples at runtime
 parked/
 # written by the file-processing example at runtime
 inbox/
