@@ -59,6 +59,10 @@ Stop it with `ctrl` + `c`: when rules were added, the chaos report is logged as 
   to deal with.
 - `parked.camel.yaml` writes an order that could not be charged or shipped to `parked/<order id>.json`. It is in a
   file of its own, with an error handler of its own, as in [Error handling](../error-handling/).
+- `refunds.camel.yaml` pays refunds back at the payment service. They arrive on the Kafka topic `refunds`; the shop
+  needs no broker, as `camel.jbang.stub=kafka` in `application.properties` stubs Kafka, and a refund is sent with
+  `camel cmd send --endpoint=kafka:refunds --body='{"refundId": "R-1"}'`. The route has only the default error
+  handler, on purpose: see [Let there be chaos](#let-there-be-chaos).
 - `test/chaos/payment-outage.chaos` is a scenario: chaos rules in a file, one per line, with a seed, so the same
   experiment runs again.
 - A chaos rule is one line: what it targets (an `endpoint=`, a `route=`, a `component=` or a `step=`), the fault
@@ -182,10 +186,31 @@ The report is logged when it stops, and the verdict is the exit code: 0 for PASS
 `seed=42` makes the rules fail the same calls each time. `camel cmd chaos-load test/chaos/payment-outage.chaos` loads the
 scenario into a shop that runs already.
 
+## Let there be chaos
+
+Instead of choosing the rules yourself, let an AI explore for a time budget. It reads the suggestions, says what it
+expects (a hypothesis), runs an experiment (rules with expectations, and messages for the route it is about), reads the
+verdict and chooses the next one. It needs an LLM; a local model with Ollama is enough:
+
+```shell
+camel cmd chaos-explore --budget=10m
+```
+
+Route `refunds` has a gap on purpose: with only the default error handler, a refund the payment service answers with
+503 fails, and is neither retried nor parked, while route `orders` recovers from the same fault. An exploration finds
+it as a FAIL, and often the loss of step 5 as well: the orders lost when the dead letter channel fails too.
+
+Each experiment ends with a verdict: PASS, FAIL, or INCONCLUSIVE when it cannot tell (the faults never fired, or the
+route had no messages). The exploration saves its report, and a scenario of each experiment that failed, in
+`test/chaos`, so `camel cmd chaos-load` replays it. In the Camel TUI, `l` on the chaos screen shows the exploration:
+the budget as a strip of time with the experiments, and the selected one in detail.
+
 ## Try changing
 
 - Add `endpoint=direct:parked error at=dlq until=10s from=+20s` to the scenario: the parked orders are lost, and the
   verdict is FAIL, exit code 1.
+- Give route `refunds` an `errorHandler` with redeliveries, and let the AI explore again: its refunds experiments
+  pass now.
 - Set `maximumRedeliveries` to 0 in `chaos.camel.yaml` and run the scenario: the first rule parks the orders instead
   of recovering them.
 - Wrap the payment call in a `circuitBreaker` (see [Circuit breaker](../circuit-breaker/)) and ask
