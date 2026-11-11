@@ -1,0 +1,37 @@
+{
+    "title": "Batch file",
+    "description": "Two settlement files of the payment provider, 5000 payments each, are read line by line with a streaming split; each payment of 500 EUR or more is logged, the two lines whose amount is not a number go to rejects/ while the rest of the file goes on, and a summary line is logged when a file is done.",
+    "level": "route",
+    "order": 7,
+    "teaches": {
+        "components": [
+            "file",
+            "log"
+        ],
+        "eips": [
+            "split",
+            "doTry",
+            "filter",
+            "setVariable",
+            "setBody",
+            "unmarshal"
+        ],
+        "languages": [
+            "simple",
+            "tokenize"
+        ],
+        "dataformats": [
+            "csv"
+        ]
+    },
+    "tags": [
+        "shop",
+        "eip",
+        "batch",
+        "csv",
+        "streaming",
+        "split",
+        "rejects"
+    ],
+    "bundled": true
+}

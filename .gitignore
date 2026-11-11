@@ -18,3 +18,5 @@ documents/
 output/
 # written by the enrich-and-dedupe example at runtime
 audit/
+# written by the batch-file example at runtime
+rejects/

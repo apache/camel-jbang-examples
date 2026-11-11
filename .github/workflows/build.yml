@@ -87,6 +87,8 @@ jobs:
             path: route/enrich-and-dedupe
           - name: Dynamic routing
             path: route/dynamic-routing
+          - name: Batch file
+            path: route/batch-file
           - name: Error handling
             path: fail-well/error-handling
           - name: Circuit breaker
