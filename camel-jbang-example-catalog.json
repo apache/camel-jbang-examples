@@ -1258,7 +1258,9 @@
         "files": [
             "README.md",
             "application.properties",
-            "batch-file.camel.yaml"
+            "batch-file.camel.yaml",
+            "samples/settlement-2026-11-09.csv",
+            "samples/settlement-2026-11-10.csv"
         ],
         "order": 7
     },
