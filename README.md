@@ -77,6 +77,7 @@ The routing patterns: content-based router, splitter, aggregator, filter and mul
 | [Filter and multicast](route/filter-and-multicast/) | Three orders are read from the orders directory; a filter lets only the paid ones through and a multicast sends each paid order to both the warehouse route and the invoicing route, which log their part; the pending order is logged as received and goes no further. | nothing |
 | [Enrich and deduplicate](route/enrich-and-dedupe/) | The three orders and a resent copy of ORD-1001 are read; an idempotent consumer accepts each order id once and logs the resent one as a duplicate, each accepted order is enriched with its customer's name and tier from customers/ with pollEnrich, and a wire tap writes a copy to audit/ without holding the order up. | nothing |
 | [Dynamic routing](route/dynamic-routing/) | Each of the three orders goes to the warehouse of its country and to the billing of its status through a recipient list computed from the order; billing a paid order fails over from a primary invoice service that is down to a backup one, the pending order gets no invoice, and the US warehouse is throttled to one order per second. | nothing |
+| [Batch file](route/batch-file/) | Two settlement files of the payment provider, 5000 payments each, are read line by line with a streaming split; each payment of 500 EUR or more is logged, the two lines whose amount is not a number go to rejects/ while the rest of the file goes on, and a summary line is logged when a file is done. | nothing |
 
 ### [Fail well](fail-well/)
 
