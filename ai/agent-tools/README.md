@@ -22,6 +22,16 @@ INFO ... agent-tools.camel.yaml:32  : Answer question-3: Your order ORD-1003 is 
 
 The answers are the model's own words, so yours read differently; the tool calls are the same.
 
+And in the Camel TUI, the agent run of the third question: two model calls and the two tool calls between them,
+with the tokens and the time of each step.
+
+![The agent run of the third question in the Spans tab of the Camel TUI](agent-tools-tui-agent-run.png)
+
+Press `t` on the agent run, and the conversation shows what the model asked the tools, what they answered, and the
+answer it wrote from that.
+
+![The conversation of the agent run: the tool calls, their results and the answer](agent-tools-tui-conversation.png)
+
 ## Install Camel CLI
 
 Install [JBang](https://www.jbang.dev/download/) and the Camel CLI as described in the
