@@ -126,13 +126,14 @@ An OpenAPI contract served and called, and an API protected by Keycloak.
 
 ### [AI](ai/)
 
-A local model writing text, routes exposed as MCP tools, RAG over documents, PII redaction.
+A local model writing text, routes exposed as MCP tools, an agent calling route tools, RAG over documents, PII redaction.
 
 | Example | What you will see | Needs |
 |---|---|---|
 | [LangChain4j chat](ai/langchain4j-chat/) | A local Ollama model started with camel infra writes the shipping notification for each of the three orders; the chat model is configured by provider on the endpoint, the prompt comes from the order, and the log shows the reply with its token counts. | `camel infra run ollama`, a local model: `ollama pull granite4:3b` |
 | [Ticket classifier](ai/ticket-classifier/) | A local model reads each of three support tickets and names its category, shipping, billing or account; the route checks the answer and files the ticket in tickets-out/<category>/, and an answer outside the three, or no answer within the circuit breaker's timeout, files it under unknown. | `camel infra run ollama`, a local model: `ollama pull granite4:3b` |
 | [MCP server](ai/mcp-server/) | Two routes are exposed as MCP tools, stock_level by SKU and order_status by order id, on http://localhost:8080/mcp with nothing but properties to switch the server on; any MCP client, a coding agent included, can list and call them, and the log shows each call. | nothing |
+| [AI agent with route tools](ai/agent-tools/) | A local Ollama model answers three customer questions about orders and stock; it knows nothing of the shop, so camel-openai offers it the two routes tagged shop as tools, runs the tool calls it asks for and hands back the results, and the log shows each question, each tool call and the answer; with --observe the Camel TUI shows every agent run, its model and tool calls, the tokens and the conversation. | `camel infra run ollama`, Camel 4.24 or newer, a local model: `ollama pull granite4:3b` |
 | [OpenAI PII Redaction](ai/openai-pii-redaction/) | Text typed on standard input is sent to an OpenAI-compatible model with a JSON schema that asks for the personal identifiers redacted, and the redacted text is printed on standard output. | an OpenAI-compatible API: set `OPENAI_API_KEY` |
 | [Document Analysis with Docling and LangChain4j RAG](ai/docling-langchain4j-rag/) | Documents dropped in a directory are converted to Markdown by a Docling service, analysed by a local Ollama model through langchain4j-chat, and written as a report to an output directory; an HTTP endpoint answers questions against the latest document. | `camel infra run docling ollama`, a local model |
 

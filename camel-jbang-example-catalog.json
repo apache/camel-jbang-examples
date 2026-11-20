@@ -1,5 +1,64 @@
 [
     {
+        "name": "ai/agent-tools",
+        "title": "AI agent with route tools",
+        "description": "A local Ollama model answers three customer questions about orders and stock; it knows nothing of the shop, so camel-openai offers it the two routes tagged shop as tools, runs the tool calls it asks for and hands back the results, and the log shows each question, each tool call and the answer; with --observe the Camel TUI shows every agent run, its model and tool calls, the tokens and the conversation.",
+        "level": "ai",
+        "teaches": {
+            "components": [
+                "openai",
+                "ai-tool",
+                "file",
+                "log"
+            ],
+            "eips": [
+                "setBody",
+                "pollEnrich",
+                "choice",
+                "unmarshal"
+            ],
+            "languages": [
+                "simple",
+                "groovy",
+                "constant"
+            ],
+            "dataformats": [
+                "json"
+            ]
+        },
+        "tags": [
+            "shop",
+            "ai",
+            "llm",
+            "ollama",
+            "openai",
+            "agent",
+            "tools",
+            "observability"
+        ],
+        "bundled": false,
+        "requiresDocker": true,
+        "hasCitrusTests": true,
+        "files": [
+            "README.md",
+            "agent-tools.camel.yaml",
+            "application.properties",
+            "orders/order-1001.json",
+            "orders/order-1002.json",
+            "orders/order-1003.json",
+            "questions/question-1.txt",
+            "questions/question-2.txt",
+            "questions/question-3.txt",
+            "stock.json"
+        ],
+        "infraServices": [
+            "ollama"
+        ],
+        "needs": "Camel 4.24 or newer, a local model: `ollama pull granite4:3b`",
+        "ciSkip": true,
+        "order": 4
+    },
+    {
         "name": "ai/docling-langchain4j-rag",
         "title": "Document Analysis with Docling and LangChain4j RAG",
         "description": "Documents dropped in a directory are converted to Markdown by a Docling service, analysed by a local Ollama model through langchain4j-chat, and written as a report to an output directory; an HTTP endpoint answers questions against the latest document.",
@@ -44,7 +103,7 @@
         ],
         "needs": "a local model",
         "ciSkip": true,
-        "order": 5
+        "order": 6
     },
     {
         "name": "ai/langchain4j-chat",
@@ -169,7 +228,7 @@
         ],
         "needs": "an OpenAI-compatible API: set `OPENAI_API_KEY`",
         "ciSkip": true,
-        "order": 4
+        "order": 5
     },
     {
         "name": "ai/ticket-classifier",

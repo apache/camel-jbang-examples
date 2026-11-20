@@ -1,0 +1,116 @@
+# A local model answers the customers' questions about orders and stock. It
+# does not know the shop: openai finds the two routes tagged shop below and
+# offers them to the model as tools, runs the tool calls the model asks for and
+# hands the results back, until the model answers. Start the model with:
+# camel infra run ollama
+- route:
+    id: customer-questions
+    from:
+      uri: file
+      parameters:
+        directoryName: questions
+        noop: true
+        sortBy: "file:name"
+      steps:
+        - setBody:
+            expression:
+              simple:
+                expression: "${bodyAs(String).trim()}"
+        - log:
+            message: "Question ${file:onlyname.noext}: ${body}"
+        - to:
+            uri: openai:chat-completion
+            parameters:
+              baseUrl: "{{openai.base.url}}"
+              apiKey: "{{openai.api.key}}"
+              model: "{{openai.model}}"
+              temperature: 0
+              tags: shop
+              systemMessage: >-
+                You answer the customers of a web shop that sells Apache Camel merchandise.
+                Look up orders and stock with the tools, never guess, and answer in one or two sentences.
+        - log:
+            message: "Answer ${file:onlyname.noext}: ${body}"
+
+- route:
+    id: stock-level
+    from:
+      uri: ai-tool:stock_level
+      parameters:
+        tags: shop
+        description: "Stock level of one product in the warehouse, by SKU"
+        parameter.sku: string
+        parameter.sku.description: "The product SKU, for example CAMEL-MUG"
+        parameter.sku.required: "true"
+        readOnlyHint: "true"
+      steps:
+        - setBody:
+            expression:
+              constant:
+                expression: resource:file:stock.json
+        - unmarshal:
+            json:
+              library: Jackson
+        # the item of that SKU as a map, or null when there is none
+        - setBody:
+            expression:
+              groovy:
+                expression: "body.find { it.sku == headers.sku }"
+        - choice:
+            when:
+              - expression:
+                  simple:
+                    expression: "${body} == null"
+                steps:
+                  - setBody:
+                      expression:
+                        simple:
+                          expression: "Unknown SKU ${header.sku}"
+            otherwise:
+              steps:
+                - setBody:
+                    expression:
+                      simple:
+                        expression: "${body[qty]} ${header.sku} in stock"
+        - log:
+            message: "Tool stock_level(${header.sku}): ${body}"
+
+- route:
+    id: order-status
+    from:
+      uri: ai-tool:order_status
+      parameters:
+        tags: shop
+        description: "Status and lines of an order, by order id"
+        parameter.orderId: string
+        parameter.orderId.description: "The order id, for example ORD-1001"
+        parameter.orderId.required: "true"
+        readOnlyHint: "true"
+      steps:
+        # order ORD-1001 is the file orders/order-1001.json
+        - pollEnrich:
+            expression:
+              simple:
+                expression: "file:orders?fileName=order-${header.orderId.substring(4)}.json&noop=true&idempotent=false"
+            timeout: 1000
+        - choice:
+            when:
+              - expression:
+                  simple:
+                    expression: "${body} == null"
+                steps:
+                  - setBody:
+                      expression:
+                        simple:
+                          expression: "Unknown order ${header.orderId}"
+            otherwise:
+              steps:
+                - unmarshal:
+                    json:
+                      library: Jackson
+                - setBody:
+                    expression:
+                      simple:
+                        expression: "Order ${body[orderId]} for customer ${body[customer]} in ${body[country]} is ${body[status]} with ${body[lines].size()} line(s)"
+        - log:
+            message: "Tool order_status(${header.orderId}): ${body}"

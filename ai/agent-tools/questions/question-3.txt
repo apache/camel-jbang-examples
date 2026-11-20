@@ -1,0 +1,1 @@
+Order ORD-1003 has a Camel cap in it: is the order paid, and is the cap in stock?
