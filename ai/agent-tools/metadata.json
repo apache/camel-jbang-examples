@@ -1,0 +1,45 @@
+{
+    "title": "AI agent with route tools",
+    "description": "A local Ollama model answers three customer questions about orders and stock; it knows nothing of the shop, so camel-openai offers it the two routes tagged shop as tools, runs the tool calls it asks for and hands back the results, and the log shows each question, each tool call and the answer; with --observe the Camel TUI shows every agent run, its model and tool calls, the tokens and the conversation.",
+    "level": "ai",
+    "order": 4,
+    "teaches": {
+        "components": [
+            "openai",
+            "ai-tool",
+            "file",
+            "log"
+        ],
+        "eips": [
+            "setBody",
+            "pollEnrich",
+            "choice",
+            "unmarshal"
+        ],
+        "languages": [
+            "simple",
+            "groovy",
+            "constant"
+        ],
+        "dataformats": [
+            "json"
+        ]
+    },
+    "tags": [
+        "shop",
+        "ai",
+        "llm",
+        "ollama",
+        "openai",
+        "agent",
+        "tools",
+        "observability"
+    ],
+    "infraServices": [
+        "ollama"
+    ],
+    "requiresDocker": true,
+    "bundled": false,
+    "ciSkip": true,
+    "needs": "Camel 4.24 or newer, a local model: `ollama pull granite4:3b`"
+}

@@ -158,7 +158,7 @@ GROUPS = [
     ("connect", "Connect without a service", "Files, an HTTP client and a REST server; everything runs inside the example."),
     ("connect-service", "Connect to one service", "SQL, JMS, MQTT, Kafka and FTP against a service the Camel CLI starts for you with `camel infra run`."),
     ("contracts", "Contracts and security", "An OpenAPI contract served and called, and an API protected by Keycloak."),
-    ("ai", "AI", "A local model writing text, routes exposed as MCP tools, RAG over documents, PII redaction."),
+    ("ai", "AI", "A local model writing text, routes exposed as MCP tools, an agent calling route tools, RAG over documents, PII redaction."),
     ("cloud", "Cloud", "A cloud service, run locally through LocalStack and switched to the real thing by properties."),
     ("showcase", "Showcase", "Tooling demos outside the ladder: the TUI, a memory leak, message sizes, log analysis."),
 ]
