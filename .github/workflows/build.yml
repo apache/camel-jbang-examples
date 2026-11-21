@@ -113,6 +113,8 @@ jobs:
             path: transformation/edi-x12-as2
           - name: Smart log analyzer
             path: showcase/smart-log-analyzer/first-iteration
+          - name: CVE audit
+            path: security/cve-audit
       fail-fast: false
     name: ${{ matrix.name }}
     steps:
