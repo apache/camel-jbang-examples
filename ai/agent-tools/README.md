@@ -73,15 +73,18 @@ camel tui
   `●` a model call with its tokens, and `⚙` a tool call with its arguments; select the agent run to see its steps,
   tokens and time in the detail panel, and press `t` to read the conversation.
 
-Without the TUI, read the `genai` dev console over HTTP: run with `camel run * --console` and
+Without the TUI, `camel get genai` shows the `genai` dev console in the terminal: the model calls per model, and
+the newest agent runs with their model and tool calls (`--content` adds the question of each run). Pick a run by its
+id to read it from question to answer, with each tool call's arguments and result:
 
 ```shell
-curl http://localhost:8080/q/dev/genai?content=true
+camel get genai --content
+camel get genai --id 7
 ```
 
-lists the runs with their question, each model call and tool call, and the answer. An AI coding agent reads the
-same over the Camel MCP server: `camel_runtime_ai_trace` for the runs, and `camel_runtime_ai_conversation` for the
-messages of one run.
+Over HTTP, run with `camel run * --console`, and `curl http://localhost:8080/q/dev/genai?content=true` gives the same.
+An AI coding agent reads it over the Camel MCP server: `camel_runtime_ai_trace` for the runs, and
+`camel_runtime_ai_conversation` for the messages of one run.
 
 An Ollama installed on the machine works too, if its model can call tools: set `openai.model` in
 `application.properties` to a model you have pulled. Stop the example with `ctrl` + `c` and the container with
