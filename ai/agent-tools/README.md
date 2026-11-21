@@ -55,8 +55,10 @@ camel run * --observe
 ```
 
 `--observe` turns on the observability services: health, metrics, and tracing of the routes for the Camel TUI.
-Because the routes call a model, it adds the GenAI observability too, and `camel.aiObservability.level=full` in
-`application.properties` has it record each agent run with its model and tool calls, and the messages.
+`camel.aiObservability.level=full` in `application.properties` adds the GenAI observability (camel-ai-observability)
+and has it record each agent run with its model and tool calls, and the messages. Besides the spans, it keeps the
+newest runs in the `genai` dev console, which needs no tracer: the AI usage view of the TUI and the Camel MCP server
+read it, so they work with a plain `camel run *` too. The Spans tab needs `--observe`.
 
 In a third terminal, open the TUI and select the integration:
 
@@ -65,10 +67,21 @@ camel tui
 ```
 
 - Press `F8` for the AI panel, then `Ctrl+U` for the AI usage: the model calls with their tokens, and a line with
-  the agent runs and their model and tool calls.
+  the agent runs, their model and tool calls, and the GenAI level. It reads the `genai` dev console and refreshes
+  while it is open.
 - Open the Spans tab (under More, shortcut `o`) and press `Enter` on a trace. In the waterfall, `◆` is the agent run,
   `●` a model call with its tokens, and `⚙` a tool call with its arguments; select the agent run to see its steps,
   tokens and time in the detail panel, and press `t` to read the conversation.
+
+Without the TUI, read the `genai` dev console over HTTP: run with `camel run * --console` and
+
+```shell
+curl http://localhost:8080/q/dev/genai?content=true
+```
+
+lists the runs with their question, each model call and tool call, and the answer. An AI coding agent reads the
+same over the Camel MCP server: `camel_runtime_ai_trace` for the runs, and `camel_runtime_ai_conversation` for the
+messages of one run.
 
 An Ollama installed on the machine works too, if its model can call tools: set `openai.model` in
 `application.properties` to a model you have pulled. Stop the example with `ctrl` + `c` and the container with
